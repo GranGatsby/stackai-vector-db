@@ -4,6 +4,7 @@ import os
 from unittest.mock import patch
 
 import pytest
+from pydantic import ValidationError
 
 from app.core.config import Settings
 
@@ -11,11 +12,10 @@ from app.core.config import Settings
 class TestSettings:
     """Test cases for Settings configuration."""
 
-    def test_default_settings(self):
+    def test_default_settings(self, mock_cohere_env):
         """Test that default settings are loaded correctly."""
         # Create settings without .env file to test defaults
-        with patch.dict(os.environ, {"COHERE_API_KEY": "test-key"}):
-            settings = Settings(_env_file=None)
+        settings = Settings(_env_file=None)
         
         assert settings.api_title == "StackAI Vector Database"
         assert settings.api_version == "0.1.0"
@@ -49,16 +49,27 @@ class TestSettings:
             assert settings.max_chunks_per_library == 5000
             assert settings.cohere_api_key == "test-key-123"
 
-    def test_cohere_api_key_required(self):
+    def test_cohere_api_key_required(self, mock_cohere_env):
         """Test that cohere_api_key is required."""
-        with patch.dict(os.environ, {"COHERE_API_KEY": "test-key"}):
-            settings = Settings(_env_file=None)
-            assert settings.cohere_api_key == "test-key"
+        settings = Settings(_env_file=None)
+        assert settings.cohere_api_key == "test-key-123"
 
-    def test_logging_formats(self):
+    def test_cohere_api_key_missing_fails(self):
+        """Test that missing COHERE_API_KEY raises ValidationError."""
+        # Ensure COHERE_API_KEY is not set
+        with patch.dict(os.environ, {}, clear=True):
+            with pytest.raises(ValidationError) as exc_info:
+                Settings(_env_file=None)
+            
+            # Verify the error is about the missing cohere_api_key field
+            error = exc_info.value
+            assert len(error.errors()) == 1
+            assert error.errors()[0]["loc"] == ("cohere_api_key",)
+            assert error.errors()[0]["type"] == "missing"
+
+    def test_logging_formats(self, mock_cohere_env):
         """Test that logging formats are configured correctly."""
-        with patch.dict(os.environ, {"COHERE_API_KEY": "test-key"}):
-            settings = Settings(_env_file=None)
+        settings = Settings(_env_file=None)
         
         assert "%(asctime)s" in settings.log_format_general
         assert "%(name)s" in settings.log_format_general
@@ -72,20 +83,18 @@ class TestSettings:
         assert "duration_ms=%(duration_ms)s" in settings.log_format_request
         assert "request_id=%(request_id)s" in settings.log_format_request
 
-    def test_cors_configuration(self):
+    def test_cors_configuration(self, mock_cohere_env):
         """Test CORS configuration defaults."""
-        with patch.dict(os.environ, {"COHERE_API_KEY": "test-key"}):
-            settings = Settings(_env_file=None)
+        settings = Settings(_env_file=None)
         
         assert settings.cors_origins == ["*"]
         assert settings.cors_allow_credentials is True
         assert settings.cors_allow_methods == ["*"]
         assert settings.cors_allow_headers == ["*"]
 
-    def test_index_configuration(self):
+    def test_index_configuration(self, mock_cohere_env):
         """Test index configuration defaults."""
-        with patch.dict(os.environ, {"COHERE_API_KEY": "test-key"}):
-            settings = Settings(_env_file=None)
+        settings = Settings(_env_file=None)
         
         assert settings.default_index_type == "linear"
         assert settings.index_rebuild_threshold == 0.1

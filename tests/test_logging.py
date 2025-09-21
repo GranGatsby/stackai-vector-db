@@ -1,13 +1,11 @@
 """Tests for logging configuration."""
 
 import logging
-from io import StringIO
-from unittest.mock import patch
 
 import pytest
 
-from app.core.config import settings
 from app.core.logging import get_logger, log_request_info, setup_logging
+from tests.conftest import capture_logger
 
 
 class TestLogging:
@@ -38,120 +36,104 @@ class TestLogging:
         assert isinstance(api_logger, logging.Logger)
         assert api_logger.name == "api.request"
 
-    def test_log_request_info_logs_correctly(self):
+    def test_log_request_info_logs_correctly(self, caplog):
         """Test that log_request_info logs with correct format."""
         setup_logging()
+        with capture_logger(caplog, "api.request"):
+            log_request_info(
+                method="GET",
+                path="/api/v1/health",
+                status_code=200,
+                duration_ms=1.23,
+                request_id="test-uuid-123"
+            )
         
-        # Create a StringIO handler to capture logs
-        log_capture = StringIO()
-        handler = logging.StreamHandler(log_capture)
-        handler.setFormatter(logging.Formatter(settings.log_format_request))
+        # Verify log was captured
+        assert len(caplog.records) == 1
+        record = caplog.records[0]
         
-        # Get the api.request logger and add our handler
-        api_logger = get_logger("api.request")
-        api_logger.handlers.clear()  # Clear existing handlers
-        api_logger.addHandler(handler)
-        api_logger.propagate = False
+        # Verify log metadata
+        assert record.name == "api.request"
+        assert record.levelname == "INFO"
+        assert record.getMessage() == "Request completed"
         
-        log_request_info(
-            method="GET",
-            path="/api/v1/health",
-            status_code=200,
-            duration_ms=1.23,
-            request_id="test-uuid-123"
-        )
-        
-        log_output = log_capture.getvalue()
-        
-        # Verify log contains expected information
-        assert "Request completed" in log_output
-        assert "method=GET" in log_output
-        assert "path=/api/v1/health" in log_output
-        assert "status=200" in log_output
-        assert "duration_ms=1.23" in log_output
-        assert "request_id=test-uuid-123" in log_output
+        # Verify extra fields are present
+        assert record.method == "GET"
+        assert record.path == "/api/v1/health"
+        assert record.status_code == 200
+        assert record.duration_ms == 1.23
+        assert record.request_id == "test-uuid-123"
 
-    def test_log_request_info_with_extra_kwargs(self):
+    def test_log_request_info_with_extra_kwargs(self, caplog):
         """Test that log_request_info handles extra kwargs correctly."""
         setup_logging()
+        with capture_logger(caplog, "api.request"):
+            log_request_info(
+                method="POST",
+                path="/api/v1/test",
+                status_code=201,
+                duration_ms=5.67,
+                request_id="test-uuid-456",
+                user_id="user123",
+                extra_field="extra_value"
+            )
         
-        # Create a StringIO handler to capture logs
-        log_capture = StringIO()
-        handler = logging.StreamHandler(log_capture)
-        handler.setFormatter(logging.Formatter(settings.log_format_request))
-
-        # Get the api.request logger and add our handler
-        api_logger = get_logger("api.request")
-        api_logger.handlers.clear()
-        api_logger.addHandler(handler)
-        api_logger.propagate = False
-        
-        log_request_info(
-            method="POST",
-            path="/api/v1/test",
-            status_code=201,
-            duration_ms=5.67,
-            request_id="test-uuid-456",
-            user_id="user123",
-            extra_field="extra_value"
-        )
-        
-        log_output = log_capture.getvalue()
+        # Verify log was captured
+        assert len(caplog.records) == 1
+        record = caplog.records[0]
         
         # Verify base fields are present
-        assert "method=POST" in log_output
-        assert "status=201" in log_output
-        assert "request_id=test-uuid-456" in log_output
+        assert record.method == "POST"
+        assert record.path == "/api/v1/test"
+        assert record.status_code == 201
+        assert record.duration_ms == 5.67
+        assert record.request_id == "test-uuid-456"
+        
+        # Verify extra kwargs are captured
+        assert record.user_id == "user123"
+        assert record.extra_field == "extra_value"
 
-    def test_general_logging_works(self):
+    def test_general_logging_works(self, caplog):
         """Test that general logging works correctly."""
         setup_logging()
-        
-        # Create a StringIO handler to capture logs
-        log_capture = StringIO()
-        handler = logging.StreamHandler(log_capture)
-        handler.setFormatter(logging.Formatter(settings.log_format_general))
-
         logger = get_logger("test.general")
-        logger.handlers.clear()
-        logger.addHandler(handler)
-        logger.propagate = False
-        logger.setLevel(logging.INFO)
+        with capture_logger(caplog, "test.general"):
+            logger.info("Test general message")
         
-        logger.info("Test general message")
+        # Verify log was captured
+        assert len(caplog.records) == 1
+        record = caplog.records[0]
         
-        log_output = log_capture.getvalue()
-        
-        assert "test.general" in log_output
-        assert "INFO" in log_output
-        assert "Test general message" in log_output
+        assert record.name == "test.general"
+        assert record.levelname == "INFO"
+        assert record.getMessage() == "Test general message"
 
-    def test_different_log_levels(self):
+    def test_different_log_levels(self, caplog):
         """Test that different log levels work correctly."""
         setup_logging()
-        
-        # Create a StringIO handler to capture logs
-        log_capture = StringIO()
-        handler = logging.StreamHandler(log_capture)
-        handler.setFormatter(logging.Formatter(settings.log_format_general))
-        
+
         logger = get_logger("test.levels")
-        logger.handlers.clear()
-        logger.addHandler(handler)
-        logger.propagate = False
-        logger.setLevel(logging.INFO)
         
-        logger.debug("Debug message")
-        logger.info("Info message")
-        logger.warning("Warning message")
-        logger.error("Error message")
+        with capture_logger(caplog, "test.levels"):
+            logger.debug("Debug message")
+            logger.info("Info message")
+            logger.warning("Warning message")
+            logger.error("Error message")
         
-        log_output = log_capture.getvalue()
+        # Verify only INFO and above were captured
+        messages = [record.getMessage() for record in caplog.records]
         
-        # Debug should not appear (default level is INFO)
-        assert "Debug message" not in log_output
+        # Debug should not appear (level is INFO)
+        assert "Debug message" not in messages
         
         # Others should appear
-        assert "Info message" in log_output
-        assert "Warning message" in log_output
-        assert "Error message" in log_output
+        assert "Info message" in messages
+        assert "Warning message" in messages
+        assert "Error message" in messages
+        
+        # Verify log levels
+        levels = [record.levelname for record in caplog.records]
+        assert "DEBUG" not in levels
+        assert "INFO" in levels
+        assert "WARNING" in levels
+        assert "ERROR" in levels

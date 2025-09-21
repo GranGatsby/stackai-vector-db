@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter, status
 
+from app.core.constants import HEALTH_STATUS, HEALTH_MESSAGE
 from app.schemas.health import HealthResponse
 
 router = APIRouter(tags=["health"])
@@ -16,4 +17,4 @@ router = APIRouter(tags=["health"])
 )
 async def health_check() -> HealthResponse:
     """Health check endpoint."""
-    return HealthResponse(status="healthy", message="Vector DB API is running")
+    return HealthResponse(status=HEALTH_STATUS, message=HEALTH_MESSAGE)
