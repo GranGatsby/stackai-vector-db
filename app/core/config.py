@@ -58,4 +58,4 @@ class Settings(BaseSettings):
 
 
 # Global settings instance
-settings = Settings() # type: ignore[call-arg]
+settings = Settings()  # type: ignore[call-arg]

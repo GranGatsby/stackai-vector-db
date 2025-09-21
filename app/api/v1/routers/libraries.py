@@ -20,13 +20,17 @@ router = APIRouter(prefix="/libraries", tags=["libraries"])
     description="Retrieve a paginated list of libraries in the system",
 )
 async def list_libraries(
-    limit: Optional[int] = Query(None, ge=1, le=100, description="Maximum number of libraries to return"),
+    limit: Optional[int] = Query(
+        None, ge=1, le=100, description="Maximum number of libraries to return"
+    ),
     offset: int = Query(0, ge=0, description="Number of libraries to skip"),
-    service: LibraryService = Depends(get_library_service)
+    service: LibraryService = Depends(get_library_service),
 ) -> LibraryList:
     """List libraries with optional pagination."""
     libraries, total = service.list_libraries(limit=limit, offset=offset)
-    return LibraryList.from_domain_list(libraries, total=total, limit=limit, offset=offset)
+    return LibraryList.from_domain_list(
+        libraries, total=total, limit=limit, offset=offset
+    )
 
 
 @router.get(
@@ -35,13 +39,10 @@ async def list_libraries(
     status_code=status.HTTP_200_OK,
     summary="Get a library by ID",
     description="Retrieve a specific library by its unique identifier",
-    responses={
-        404: {"description": "Library not found"}
-    }
+    responses={404: {"description": "Library not found"}},
 )
 async def get_library(
-    library_id: UUID,
-    service: LibraryService = Depends(get_library_service)
+    library_id: UUID, service: LibraryService = Depends(get_library_service)
 ) -> LibraryOut:
     """Get a library by its ID."""
     library = service.get_library(library_id)
@@ -56,18 +57,17 @@ async def get_library(
     description="Create a new library with the provided information",
     responses={
         409: {"description": "Library with the same name already exists"},
-        422: {"description": "Validation error"}
-    }
+        422: {"description": "Validation error"},
+    },
 )
 async def create_library(
-    library_data: LibraryCreate,
-    service: LibraryService = Depends(get_library_service)
+    library_data: LibraryCreate, service: LibraryService = Depends(get_library_service)
 ) -> LibraryOut:
     """Create a new library."""
     library = service.create_library(
         name=library_data.name,
         description=library_data.description,
-        metadata=library_data.metadata
+        metadata=library_data.metadata,
     )
     return LibraryOut.from_domain(library)
 
@@ -81,20 +81,20 @@ async def create_library(
     responses={
         404: {"description": "Library not found"},
         409: {"description": "Library name conflicts with existing library"},
-        422: {"description": "Validation error"}
-    }
+        422: {"description": "Validation error"},
+    },
 )
 async def update_library(
     library_id: UUID,
     library_data: LibraryUpdate,
-    service: LibraryService = Depends(get_library_service)
+    service: LibraryService = Depends(get_library_service),
 ) -> LibraryOut:
     """Update an existing library."""
     library = service.update_library(
         library_id=library_id,
         name=library_data.name,
         description=library_data.description,
-        metadata=library_data.metadata
+        metadata=library_data.metadata,
     )
     return LibraryOut.from_domain(library)
 
@@ -104,17 +104,14 @@ async def update_library(
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a library",
     description="Delete a library by its unique identifier",
-    responses={
-        404: {"description": "Library not found"}
-    }
+    responses={404: {"description": "Library not found"}},
 )
 async def delete_library(
-    library_id: UUID,
-    service: LibraryService = Depends(get_library_service)
+    library_id: UUID, service: LibraryService = Depends(get_library_service)
 ) -> None:
     """Delete a library by its ID."""
     # First check if the library exists (will raise LibraryNotFoundError if not)
     service.get_library(library_id)
-    
+
     # Then delete it
     service.delete_library(library_id)

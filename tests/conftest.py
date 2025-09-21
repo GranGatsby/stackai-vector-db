@@ -14,7 +14,7 @@ from app.main import app
 @pytest.fixture(scope="session")
 def client() -> TestClient:
     """Create a test client for the FastAPI application.
-    
+
     Uses session scope for efficiency since the app is stateless
     and doesn't change between tests.
     """
@@ -32,20 +32,22 @@ def mock_cohere_env():
 def reset_logging():
     """Reset logging configuration between tests to avoid interference."""
     import logging
-    
+
     # Store original state
     original_handlers = logging.root.handlers[:]
     original_level = logging.root.level
-    
+
     yield
-    
+
     # Restore original state
     logging.root.handlers = original_handlers
     logging.root.level = original_level
 
 
 @contextlib.contextmanager
-def capture_logger(caplog: pytest.LogCaptureFixture, logger_name: str, level: int = logging.INFO):
+def capture_logger(
+    caplog: pytest.LogCaptureFixture, logger_name: str, level: int = logging.INFO
+):
     logger = logging.getLogger(logger_name)
     with caplog.at_level(level, logger=logger_name):
         logger.addHandler(caplog.handler)

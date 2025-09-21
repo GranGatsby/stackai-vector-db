@@ -15,7 +15,7 @@ __all__ = [
     # Library
     "LibraryBase",
     "LibraryCreate",
-    "LibraryUpdate", 
+    "LibraryUpdate",
     "LibraryOut",
     "LibraryList",
     # Errors

@@ -27,7 +27,7 @@ from .errors import (
 __all__ = [
     # Entities
     "Library",
-    "Document", 
+    "Document",
     "Chunk",
     # Errors
     "DomainError",
