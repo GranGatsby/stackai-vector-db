@@ -9,7 +9,8 @@ import uvicorn
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.v1.routers import health
+from app.api.v1.routers import health_router, libraries_router
+from app.api.v1.errors import ERROR_HANDLERS
 from app.core.config import settings
 from app.core.logging import log_request_info, setup_logging
 
@@ -68,8 +69,13 @@ def create_app() -> FastAPI:
         allow_headers=settings.cors_allow_headers,
     )
 
+    # Register error handlers
+    for exception_class, handler in ERROR_HANDLERS.items():
+        app.add_exception_handler(exception_class, handler)
+
     # Include routers
-    app.include_router(health.router, prefix=settings.api_prefix)
+    app.include_router(health_router, prefix=settings.api_prefix)
+    app.include_router(libraries_router, prefix=settings.api_prefix)
 
     return app
 
