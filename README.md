@@ -7,9 +7,12 @@ Una API REST para indexar y consultar documentos en una base de datos vectorial,
 - **API REST completa** para operaciones CRUD en bibliotecas, documentos y chunks
 - **Búsqueda vectorial k-NN** con múltiples algoritmos de indexación
 - **Arquitectura limpia** siguiendo principios DDD y SOLID
+- **Logging estructurado** con request tracking y múltiples formatters
+- **Request middleware** con IDs únicos y métricas de timing
 - **Tipado estático** completo con MyPy
 - **Containerización** con Docker
 - **Herramientas de desarrollo** integradas (Black, Ruff, Pre-commit)
+- **Suite de tests completa** con cobertura de componentes principales
 
 ## 📋 Requisitos
 
@@ -90,9 +93,25 @@ curl http://localhost:8000/api/v1/health
 # Ejecutar todos los tests
 make test
 
+# Ejecutar tests específicos
+pytest tests/test_health.py -v
+pytest tests/test_config.py -v
+pytest tests/test_logging.py -v
+
 # Con cobertura
 pytest tests/ --cov=app --cov-report=html
+
+# Ejecutar solo tests unitarios
+pytest tests/ -m "not integration" -v
 ```
+
+### Tests Incluidos
+
+- **test_health.py**: Tests para endpoints de health check y middleware
+- **test_config.py**: Tests para configuración de Pydantic Settings
+- **test_logging.py**: Tests para sistema de logging estructurado
+- **test_main.py**: Tests para aplicación principal y middleware
+- **test_schemas.py**: Tests para validación de esquemas Pydantic
 
 ## 🔧 Herramientas de Desarrollo
 
@@ -149,10 +168,21 @@ El proyecto sigue una arquitectura limpia basada en Domain-Driven Design (DDD):
 
 Todas las configuraciones se manejan a través de variables de entorno usando Pydantic Settings:
 
+### Variables Principales
+
 - `COHERE_API_KEY`: Clave API de Cohere (requerida)
 - `DEFAULT_INDEX_TYPE`: Tipo de índice por defecto (linear, kdtree, ivf)
 - `MAX_CHUNKS_PER_LIBRARY`: Máximo número de chunks por biblioteca
-- Ver `env.example` para todas las opciones
+- `LOG_LEVEL`: Nivel de logging (DEBUG, INFO, WARNING, ERROR)
+
+### Logging Configuración
+
+- `LOG_FORMAT_GENERAL`: Formato para logs generales
+- `LOG_FORMAT_REQUEST`: Formato para logs de requests con campos estructurados
+- Logging estructurado con request IDs únicos
+- Múltiples handlers y formatters configurados via dictConfig
+
+Ver `env.example` para todas las opciones disponibles.
 
 ## 🔍 Algoritmos de Indexación
 
@@ -186,11 +216,28 @@ Todas las configuraciones se manejan a través de variables de entorno usando Py
 
 ## 📝 TODO
 
+### Próximas Funcionalidades
+- [ ] Implementar modelos de dominio (Library, Document, Chunk)
+- [ ] Desarrollar algoritmos de indexación (Linear, KD-Tree, IVF)
+- [ ] Crear servicios de aplicación (CRUD, búsqueda k-NN)
+- [ ] Implementar cliente Cohere para embeddings
+- [ ] Agregar endpoints REST completos
+
+### Mejoras Futuras
 - [ ] Implementar persistencia en disco
 - [ ] Agregar filtros de metadata
 - [ ] Implementar arquitectura leader-follower
 - [ ] Crear SDK cliente de Python
 - [ ] Agregar métricas y monitoring
+
+### ✅ Completado
+- [x] Estructura base del proyecto con arquitectura DDD
+- [x] Configuración de herramientas de desarrollo (Black, Ruff, MyPy)
+- [x] Sistema de logging estructurado con múltiples formatters
+- [x] Request middleware con tracking de IDs únicos
+- [x] Suite de tests completa para componentes base
+- [x] Containerización con Docker
+- [x] Health check endpoint funcional
 
 ## 🤝 Contribución
 
