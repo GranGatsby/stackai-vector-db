@@ -7,8 +7,12 @@ pattern to decouple the API layer from concrete implementations.
 
 from functools import lru_cache
 
-from app.repositories.in_memory import InMemoryLibraryRepository
-from app.services import LibraryService
+from app.repositories.in_memory import (
+    InMemoryChunkRepository,
+    InMemoryDocumentRepository,
+    InMemoryLibraryRepository,
+)
+from app.services import ChunkService, DocumentService, LibraryService
 
 
 @lru_cache
@@ -26,15 +30,69 @@ def get_library_repository() -> InMemoryLibraryRepository:
 
 
 @lru_cache
+def get_document_repository() -> InMemoryDocumentRepository:
+    """Get the document repository instance.
+
+    Returns:
+        The document repository instance
+    """
+    return InMemoryDocumentRepository()
+
+
+@lru_cache
+def get_chunk_repository() -> InMemoryChunkRepository:
+    """Get the chunk repository instance.
+
+    Returns:
+        The chunk repository instance
+    """
+    return InMemoryChunkRepository()
+
+
+@lru_cache
 def get_library_service() -> LibraryService:
-    """Get the library service instance.
+    """Get the library service instance with cascade support.
 
     This function provides a singleton instance of the library service
-    with its required dependencies injected. The service is configured
-    with the appropriate repository implementation.
+    with its required dependencies injected, including repositories
+    for cascading delete operations.
 
     Returns:
         The library service instance
     """
-    repository = get_library_repository()
-    return LibraryService(repository)
+    library_repo = get_library_repository()
+    document_repo = get_document_repository()
+    chunk_repo = get_chunk_repository()
+    return LibraryService(library_repo, document_repo, chunk_repo)
+
+
+@lru_cache
+def get_document_service() -> DocumentService:
+    """Get the document service instance.
+
+    This function provides a singleton instance of the document service
+    with its required dependencies injected.
+
+    Returns:
+        The document service instance
+    """
+    document_repo = get_document_repository()
+    library_repo = get_library_repository()
+    chunk_repo = get_chunk_repository()
+    return DocumentService(document_repo, library_repo, chunk_repo)
+
+
+@lru_cache
+def get_chunk_service() -> ChunkService:
+    """Get the chunk service instance.
+
+    This function provides a singleton instance of the chunk service
+    with its required dependencies injected.
+
+    Returns:
+        The chunk service instance
+    """
+    chunk_repo = get_chunk_repository()
+    document_repo = get_document_repository()
+    library_repo = get_library_repository()
+    return ChunkService(chunk_repo, document_repo, library_repo)

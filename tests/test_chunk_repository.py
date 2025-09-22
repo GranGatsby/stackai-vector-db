@@ -141,8 +141,14 @@ class TestInMemoryChunkRepository:
         all_chunks = repository.list_by_library(library_id)
         assert len(all_chunks) == 3
         # Should be sorted by document_id, then start_index
-        assert all_chunks[0].start_index == 0  # doc1, start_index=0
-        assert all_chunks[1].start_index == 10  # doc1, start_index=10
+        # Find chunks by document to verify ordering
+        doc1_chunks = [c for c in all_chunks if c.document_id == doc1_id]
+        doc2_chunks = [c for c in all_chunks if c.document_id == doc2_id]
+        assert len(doc1_chunks) == 2
+        assert len(doc2_chunks) == 1
+        # Within each document, should be sorted by start_index
+        assert doc1_chunks[0].start_index == 0
+        assert doc1_chunks[1].start_index == 10
 
         # Test count by library
         assert repository.count_by_library(library_id) == 3

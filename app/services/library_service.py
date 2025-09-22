@@ -9,7 +9,7 @@ from typing import Optional
 from uuid import UUID
 
 from app.domain import Library, LibraryMetadata, LibraryNotFoundError
-from app.repositories.ports import LibraryRepository
+from app.repositories.ports import ChunkRepository, DocumentRepository, LibraryRepository
 
 
 class LibraryService:
@@ -22,15 +22,26 @@ class LibraryService:
 
     Attributes:
         _repository: The library repository implementation
+        _document_repository: The document repository for cascade operations
+        _chunk_repository: The chunk repository for cascade operations
     """
 
-    def __init__(self, repository: LibraryRepository) -> None:
+    def __init__(
+        self,
+        repository: LibraryRepository,
+        document_repository: DocumentRepository = None,
+        chunk_repository: ChunkRepository = None,
+    ) -> None:
         """Initialize the library service.
 
         Args:
             repository: The library repository implementation to use
+            document_repository: Document repository for cascade operations (optional)
+            chunk_repository: Chunk repository for cascade operations (optional)
         """
         self._repository = repository
+        self._document_repository = document_repository
+        self._chunk_repository = chunk_repository
 
     def list_libraries(
         self, limit: int = None, offset: int = 0
@@ -140,19 +151,31 @@ class LibraryService:
         return self._repository.update(updated_library)
 
     def delete_library(self, library_id: UUID) -> bool:
-        """Delete a library by its ID.
+        """Delete a library by its ID with cascading deletes.
+
+        This method performs cascading deletes in the correct order:
+        1. Delete all chunks in the library
+        2. Delete all documents in the library  
+        3. Delete the library itself
 
         Args:
             library_id: The unique identifier of the library to delete
 
         Returns:
             True if the library was deleted, False if it didn't exist
-
-        Note:
-            In a more complete implementation, this would also handle
-            cascading deletes of documents and chunks, possibly through
-            domain events or explicit coordination with other services.
         """
+        # Check if library exists
+        if not self._repository.exists(library_id):
+            return False
+
+        # Perform cascading deletes if repositories are available
+        if self._chunk_repository:
+            chunks_deleted = self._chunk_repository.delete_by_library(library_id)
+        
+        if self._document_repository:
+            docs_deleted = self._document_repository.delete_by_library(library_id)
+
+        # Finally, delete the library itself
         return self._repository.delete(library_id)
 
     def library_exists(self, library_id: UUID) -> bool:
