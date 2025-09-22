@@ -1,12 +1,17 @@
 """Basic concurrency tests for the library repository."""
 
 import time
+import uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import pytest
 
-from app.domain import Library, LibraryAlreadyExistsError
-from app.repositories.in_memory import InMemoryLibraryRepository
+from app.domain import Chunk, Document, Library, LibraryAlreadyExistsError
+from app.repositories.in_memory import (
+    InMemoryChunkRepository,
+    InMemoryDocumentRepository,
+    InMemoryLibraryRepository,
+)
 
 
 class TestConcurrency:
@@ -235,3 +240,143 @@ class TestConcurrency:
         assert write_start_time is not None
         assert write_end_time is not None
         assert write_start_time >= min_read_start
+
+    def test_document_repo_supports_concurrent_reads(self):
+        """Test that DocumentRepository supports concurrent reads."""
+        repository = InMemoryDocumentRepository()
+        library_id = uuid.uuid4()
+
+        # Create some test documents
+        for i in range(3):
+            doc = Document.create(library_id=library_id, title=f"Document {i}")
+            repository.create(doc)
+
+        results = []
+        start_time = time.time()
+
+        def read_operation():
+            """Perform a read operation with some delay."""
+            time.sleep(0.1)
+            return repository.list_by_library(library_id)
+
+        # Run multiple reads concurrently
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            futures = [executor.submit(read_operation) for _ in range(3)]
+            for future in as_completed(futures):
+                results.append(future.result())
+
+        end_time = time.time()
+
+        # All reads should return the same data
+        for result in results:
+            assert len(result) == 3
+
+        # Concurrent reads should be faster than sequential
+        assert end_time - start_time < 0.2
+
+    def test_document_repo_writes_are_exclusive(self):
+        """Test that DocumentRepository writes are exclusive."""
+        repository = InMemoryDocumentRepository()
+        library_id = uuid.uuid4()
+
+        successes = []
+        failures = []
+
+        def create_document_operation(index: int):
+            """Try to create a document."""
+            try:
+                doc = Document.create(library_id=library_id, title=f"Doc {index}")
+                repository.create(doc)
+                successes.append(index)
+                return True
+            except Exception as e:
+                failures.append(str(e))
+                return False
+
+        # Run multiple writes concurrently
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            futures = [executor.submit(create_document_operation, i) for i in range(5)]
+            results = [future.result() for future in as_completed(futures)]
+
+        # All writes should succeed (different titles)
+        assert sum(results) == 5
+        assert len(successes) == 5
+        assert len(failures) == 0
+        assert repository.count_by_library(library_id) == 5
+
+    def test_chunk_repo_supports_concurrent_reads(self):
+        """Test that ChunkRepository supports concurrent reads."""
+        repository = InMemoryChunkRepository()
+        library_id = uuid.uuid4()
+        document_id = uuid.uuid4()
+
+        # Create some test chunks
+        for i in range(3):
+            chunk = Chunk.create(
+                document_id=document_id,
+                library_id=library_id,
+                text=f"Chunk {i}",
+                start_index=i * 10,
+                end_index=i * 10 + 7,
+            )
+            repository.create(chunk)
+
+        results = []
+        start_time = time.time()
+
+        def read_operation():
+            """Perform a read operation with some delay."""
+            time.sleep(0.1)
+            return repository.list_by_document(document_id)
+
+        # Run multiple reads concurrently
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            futures = [executor.submit(read_operation) for _ in range(3)]
+            for future in as_completed(futures):
+                results.append(future.result())
+
+        end_time = time.time()
+
+        # All reads should return the same data
+        for result in results:
+            assert len(result) == 3
+
+        # Concurrent reads should be faster than sequential
+        assert end_time - start_time < 0.2
+
+    def test_chunk_repo_writes_are_exclusive(self):
+        """Test that ChunkRepository writes are exclusive."""
+        repository = InMemoryChunkRepository()
+        library_id = uuid.uuid4()
+        document_id = uuid.uuid4()
+
+        successes = []
+        failures = []
+
+        def create_chunk_operation(index: int):
+            """Try to create a chunk."""
+            try:
+                chunk = Chunk.create(
+                    document_id=document_id,
+                    library_id=library_id,
+                    text=f"Chunk {index}",
+                    start_index=index * 10,
+                    end_index=index * 10 + 9,
+                )
+                repository.create(chunk)
+                successes.append(index)
+                return True
+            except Exception as e:
+                failures.append(str(e))
+                return False
+
+        # Run multiple writes concurrently
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            futures = [executor.submit(create_chunk_operation, i) for i in range(5)]
+            results = [future.result() for future in as_completed(futures)]
+
+        # All writes should succeed (different start_indexes)
+        assert sum(results) == 5
+        assert len(successes) == 5
+        assert len(failures) == 0
+        assert repository.count_by_document(document_id) == 5
