@@ -5,57 +5,49 @@ import uuid
 import pytest
 from pydantic import ValidationError
 
-from app.schemas import DocumentCreate, DocumentRead, DocumentUpdate
+from app.schemas import DocumentCreateInLibrary, DocumentRead, DocumentUpdate
 
 
 class TestDocumentSchemas:
     """Test suite for document schemas."""
 
-    def test_document_create_valid(self):
-        """Test valid document creation schema."""
-        library_id = uuid.uuid4()
+    def test_document_create_in_library_valid(self):
+        """Test valid document creation in library schema."""
         data = {
-            "library_id": library_id,
             "title": "Test Document",
             "content": "Test content",
             "metadata": {"author": "Test Author"},
         }
 
-        schema = DocumentCreate(**data)
-        assert schema.library_id == library_id
+        schema = DocumentCreateInLibrary(**data)
         assert schema.title == "Test Document"
         assert schema.content == "Test content"
         assert schema.metadata["author"] == "Test Author"
 
-    def test_document_create_minimal(self):
-        """Test document creation with minimal required fields."""
-        library_id = uuid.uuid4()
+    def test_document_create_in_library_minimal(self):
+        """Test document creation in library with minimal required fields."""
         data = {
-            "library_id": library_id,
             "title": "Minimal Document",
         }
 
-        schema = DocumentCreate(**data)
-        assert schema.library_id == library_id
+        schema = DocumentCreateInLibrary(**data)
         assert schema.title == "Minimal Document"
         assert schema.content == ""  # Default
         assert schema.metadata == {}  # Default
 
-    def test_document_create_invalid_title(self):
-        """Test document creation with invalid title."""
-        library_id = uuid.uuid4()
-
+    def test_document_create_in_library_invalid_title(self):
+        """Test document creation in library with invalid title."""
         # Empty title
         with pytest.raises(ValidationError, match="at least 1 character"):
-            DocumentCreate(library_id=library_id, title="")
+            DocumentCreateInLibrary(title="")
 
         # Whitespace only title
         with pytest.raises(ValidationError, match="empty or whitespace"):
-            DocumentCreate(library_id=library_id, title="   ")
+            DocumentCreateInLibrary(title="   ")
 
         # Title too long
         with pytest.raises(ValidationError, match="at most 255 characters"):
-            DocumentCreate(library_id=library_id, title="a" * 256)
+            DocumentCreateInLibrary(title="a" * 256)
 
     def test_document_update_partial(self):
         """Test partial document update schema."""

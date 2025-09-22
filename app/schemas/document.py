@@ -128,15 +128,6 @@ class DocumentBase(BaseModel):
         return v.strip()
 
 
-class DocumentCreate(DocumentBase):
-    """Schema for creating a new document."""
-
-    library_id: UUID = Field(
-        ..., description="Library ID where document will be created"
-    )
-
-    # All other fields inherited from DocumentBase
-
 
 class DocumentCreateInLibrary(DocumentBase):
     """Schema for creating a new document within a specific library.

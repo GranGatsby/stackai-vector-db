@@ -7,7 +7,6 @@ and its clients.
 
 from .chunk import ChunkCreate, ChunkCreateInDocument, ChunkList, ChunkRead, ChunkUpdate
 from .document import (
-    DocumentCreate,
     DocumentCreateInLibrary,
     DocumentList,
     DocumentRead,
@@ -27,7 +26,6 @@ __all__ = [
     "LibraryOut",
     "LibraryList",
     # Document
-    "DocumentCreate",
     "DocumentCreateInLibrary",
     "DocumentUpdate",
     "DocumentRead",

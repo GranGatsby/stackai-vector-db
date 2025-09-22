@@ -5,35 +5,11 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, status
 
 from app.api.v1.deps import get_document_service
-from app.schemas import DocumentCreate, DocumentList, DocumentRead, DocumentUpdate
+from app.schemas import DocumentList, DocumentRead, DocumentUpdate
 from app.schemas.document import DocumentCreateInLibrary, DocumentMetadataSchema
 from app.services import DocumentService
 
 router = APIRouter(prefix="/documents", tags=["documents"])
-
-
-@router.post(
-    "/",
-    response_model=DocumentRead,
-    status_code=status.HTTP_201_CREATED,
-    summary="Create a new document",
-    description="Create a new document in the specified library",
-    responses={
-        422: {"description": "Validation error or library not found"},
-    },
-)
-async def create_document(
-    document_data: DocumentCreate,
-    service: DocumentService = Depends(get_document_service),
-) -> DocumentRead:
-    """Create a new document."""
-    document = service.create_document(
-        library_id=document_data.library_id,
-        title=document_data.title,
-        content=document_data.content,
-        metadata=DocumentMetadataSchema.dict_to_domain(document_data.metadata),
-    )
-    return DocumentRead.from_domain(document)
 
 
 @router.get(
