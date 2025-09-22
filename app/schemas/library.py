@@ -96,7 +96,7 @@ class LibraryMetadataSchema(BaseModel):
 class LibraryBase(BaseModel):
     """Base schema for library data."""
 
-    model_config = ConfigDict(strict=True, extra="forbid")
+    model_config = ConfigDict(strict=False, extra="forbid")
 
     name: str = Field(..., min_length=1, max_length=255, description="Library name")
     description: str = Field(
@@ -128,7 +128,7 @@ class LibraryUpdate(BaseModel):
     All fields are optional to support partial updates.
     """
 
-    model_config = ConfigDict(strict=True, extra="forbid")
+    model_config = ConfigDict(strict=False, extra="forbid")
 
     name: str | None = Field(
         None, min_length=1, max_length=255, description="Library name"
@@ -173,7 +173,7 @@ class LibraryOut(LibraryBase):
 class LibraryList(BaseModel):
     """Schema for paginated library listings."""
 
-    model_config = ConfigDict(strict=True, extra="forbid")
+    model_config = ConfigDict(strict=False, extra="forbid")
 
     libraries: list[LibraryOut] = Field(..., description="List of libraries")
     total: int = Field(..., ge=0, description="Total number of libraries")

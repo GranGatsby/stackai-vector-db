@@ -101,7 +101,7 @@ class DocumentMetadataSchema(BaseModel):
 class DocumentBase(BaseModel):
     """Base schema for document data."""
 
-    model_config = ConfigDict(strict=True, extra="forbid")
+    model_config = ConfigDict(strict=False, extra="forbid")
 
     title: str = Field(..., min_length=1, max_length=255, description="Document title")
     content: str = Field(default="", description="Document content")
@@ -126,13 +126,24 @@ class DocumentCreate(DocumentBase):
     # All other fields inherited from DocumentBase
 
 
+class DocumentCreateInLibrary(DocumentBase):
+    """Schema for creating a new document within a specific library.
+    
+    This schema is used when the library_id is provided in the URL path,
+    so it doesn't need to be included in the request body.
+    """
+    
+    # All fields inherited from DocumentBase (title, content, metadata)
+    # No library_id field needed since it comes from URL path
+
+
 class DocumentUpdate(BaseModel):
     """Schema for updating an existing document.
 
     All fields are optional to support partial updates.
     """
 
-    model_config = ConfigDict(strict=True, extra="forbid")
+    model_config = ConfigDict(strict=False, extra="forbid")
 
     title: str | None = Field(
         None, min_length=1, max_length=255, description="Document title"
@@ -177,7 +188,7 @@ class DocumentRead(DocumentBase):
 class DocumentList(BaseModel):
     """Schema for paginated document listings."""
 
-    model_config = ConfigDict(strict=True, extra="forbid")
+    model_config = ConfigDict(strict=False, extra="forbid")
 
     documents: list[DocumentRead] = Field(..., description="List of documents")
     total: int = Field(..., ge=0, description="Total number of documents")

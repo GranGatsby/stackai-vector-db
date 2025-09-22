@@ -97,7 +97,7 @@ class ChunkMetadataSchema(BaseModel):
 class ChunkBase(BaseModel):
     """Base schema for chunk data."""
 
-    model_config = ConfigDict(strict=True, extra="forbid")
+    model_config = ConfigDict(strict=False, extra="forbid")
 
     text: str = Field(..., min_length=1, description="Chunk text content")
     embedding: list[float] = Field(default_factory=list, description="Embedding vector")
@@ -138,13 +138,29 @@ class ChunkCreate(ChunkBase):
     # All other fields inherited from ChunkBase
 
 
+class ChunkCreateInDocument(ChunkBase):
+    """Schema for creating a new chunk within a specific document.
+    
+    This schema is used when the document_id is provided in the URL path,
+    so it doesn't need to be included in the request body.
+    """
+    
+    library_id: UUID = Field(..., description="Library ID where chunk belongs")
+    compute_embedding: bool = Field(
+        False, description="Whether to compute embedding automatically"
+    )
+    
+    # All other fields inherited from ChunkBase (text, embedding, start_index, end_index, metadata)
+    # No document_id field needed since it comes from URL path
+
+
 class ChunkUpdate(BaseModel):
     """Schema for updating an existing chunk.
 
     All fields are optional to support partial updates.
     """
 
-    model_config = ConfigDict(strict=True, extra="forbid")
+    model_config = ConfigDict(strict=False, extra="forbid")
 
     text: str | None = Field(None, min_length=1, description="Chunk text content")
     embedding: list[float] | None = Field(None, description="Embedding vector")
@@ -206,7 +222,7 @@ class ChunkRead(ChunkBase):
 class ChunkList(BaseModel):
     """Schema for paginated chunk listings."""
 
-    model_config = ConfigDict(strict=True, extra="forbid")
+    model_config = ConfigDict(strict=False, extra="forbid")
 
     chunks: list[ChunkRead] = Field(..., description="List of chunks")
     total: int = Field(..., ge=0, description="Total number of chunks")

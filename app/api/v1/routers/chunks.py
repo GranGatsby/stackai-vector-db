@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Query, status
 
 from app.api.v1.deps import get_chunk_service
 from app.schemas import ChunkCreate, ChunkList, ChunkRead, ChunkUpdate
+from app.schemas.chunk import ChunkCreateInDocument
 from app.schemas.chunk import ChunkMetadataSchema
 from app.services import ChunkService
 
@@ -116,7 +117,7 @@ async def list_chunks_by_document(
 )
 async def create_chunk_in_document(
     document_id: UUID,
-    chunk_data: ChunkCreate,
+    chunk_data: ChunkCreateInDocument,
     service: ChunkService = Depends(get_chunk_service),
 ) -> ChunkRead:
     """Create a new chunk in a document."""

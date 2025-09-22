@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Query, status
 
 from app.api.v1.deps import get_document_service
 from app.schemas import DocumentCreate, DocumentList, DocumentRead, DocumentUpdate
+from app.schemas.document import DocumentCreateInLibrary
 from app.schemas.document import DocumentMetadataSchema
 from app.services import DocumentService
 
@@ -137,7 +138,7 @@ async def list_documents_by_library(
 )
 async def create_document_in_library(
     library_id: UUID,
-    document_data: DocumentCreate,
+    document_data: DocumentCreateInLibrary,
     service: DocumentService = Depends(get_document_service),
 ) -> DocumentRead:
     """Create a new document in a library."""
