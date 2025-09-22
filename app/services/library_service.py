@@ -5,7 +5,7 @@ for library management, providing a clean interface between the API layer
 and the domain/repository layers.
 """
 
-from typing import List, Dict, Any, Tuple
+from typing import Any
 from uuid import UUID
 
 from app.domain import Library, LibraryNotFoundError
@@ -34,7 +34,7 @@ class LibraryService:
 
     def list_libraries(
         self, limit: int = None, offset: int = 0
-    ) -> Tuple[List[Library], int]:
+    ) -> tuple[list[Library], int]:
         """Retrieve libraries with pagination.
 
         Args:
@@ -83,7 +83,7 @@ class LibraryService:
         return library
 
     def create_library(
-        self, name: str, description: str = "", metadata: Dict[str, Any] = None
+        self, name: str, description: str = "", metadata: dict[str, Any] = None
     ) -> Library:
         """Create a new library.
 
@@ -110,7 +110,7 @@ class LibraryService:
         library_id: UUID,
         name: str = None,
         description: str = None,
-        metadata: Dict[str, Any] = None,
+        metadata: dict[str, Any] = None,
     ) -> Library:
         """Update an existing library.
 

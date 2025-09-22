@@ -5,10 +5,10 @@ enabling dependency inversion and allowing different storage implementations
 without changing the business logic.
 """
 
-from typing import Protocol, List, Optional
+from typing import Protocol
 from uuid import UUID
 
-from app.domain import Library, Document, Chunk
+from app.domain import Chunk, Document, Library
 
 
 class LibraryRepository(Protocol):
@@ -19,7 +19,7 @@ class LibraryRepository(Protocol):
     maintaining consistent behavior for the business layer.
     """
 
-    def list_all(self, limit: int = None, offset: int = 0) -> List[Library]:
+    def list_all(self, limit: int = None, offset: int = 0) -> list[Library]:
         """Retrieve all libraries with optional pagination.
 
         Args:
@@ -39,7 +39,7 @@ class LibraryRepository(Protocol):
         """
         ...
 
-    def get_by_id(self, library_id: UUID) -> Optional[Library]:
+    def get_by_id(self, library_id: UUID) -> Library | None:
         """Retrieve a library by its ID.
 
         Args:
@@ -50,7 +50,7 @@ class LibraryRepository(Protocol):
         """
         ...
 
-    def get_by_name(self, name: str) -> Optional[Library]:
+    def get_by_name(self, name: str) -> Library | None:
         """Retrieve a library by its name.
 
         Args:
@@ -115,11 +115,11 @@ class LibraryRepository(Protocol):
 class DocumentRepository(Protocol):
     """Repository interface for Document entities."""
 
-    def list_by_library(self, library_id: UUID) -> List[Document]:
+    def list_by_library(self, library_id: UUID) -> list[Document]:
         """Retrieve all documents in a library."""
         ...
 
-    def get_by_id(self, document_id: UUID) -> Optional[Document]:
+    def get_by_id(self, document_id: UUID) -> Document | None:
         """Retrieve a document by its ID."""
         ...
 
@@ -147,15 +147,15 @@ class DocumentRepository(Protocol):
 class ChunkRepository(Protocol):
     """Repository interface for Chunk entities."""
 
-    def list_by_library(self, library_id: UUID) -> List[Chunk]:
+    def list_by_library(self, library_id: UUID) -> list[Chunk]:
         """Retrieve all chunks in a library."""
         ...
 
-    def list_by_document(self, document_id: UUID) -> List[Chunk]:
+    def list_by_document(self, document_id: UUID) -> list[Chunk]:
         """Retrieve all chunks in a document."""
         ...
 
-    def get_by_id(self, chunk_id: UUID) -> Optional[Chunk]:
+    def get_by_id(self, chunk_id: UUID) -> Chunk | None:
         """Retrieve a chunk by its ID."""
         ...
 

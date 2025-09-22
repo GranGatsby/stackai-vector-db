@@ -1,6 +1,5 @@
 """Tests for main application module."""
 
-import pytest
 from fastapi import status
 
 from app.main import create_app

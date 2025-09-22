@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, status
 
-from app.core.constants import HEALTH_STATUS, HEALTH_MESSAGE
+from app.core.constants import HEALTH_MESSAGE, HEALTH_STATUS
 from app.schemas.health import HealthResponse
 
 router = APIRouter(tags=["health"])

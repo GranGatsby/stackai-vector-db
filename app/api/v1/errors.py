@@ -5,21 +5,22 @@ exceptions into appropriate HTTP responses with consistent error formatting.
 """
 
 from fastapi import Request, status
-from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
-from pydantic import ValidationError
+from fastapi.responses import JSONResponse
 
 from app.domain import (
-    LibraryNotFoundError,
-    LibraryAlreadyExistsError,
-    DocumentNotFoundError,
-    DocumentAlreadyExistsError,
     ChunkNotFoundError,
-    IndexNotBuiltError,
-    IndexBuildError,
-    EmbeddingDimensionMismatchError,
-    ValidationError as DomainValidationError,
+    DocumentAlreadyExistsError,
+    DocumentNotFoundError,
     DomainError,
+    EmbeddingDimensionMismatchError,
+    IndexBuildError,
+    IndexNotBuiltError,
+    LibraryAlreadyExistsError,
+    LibraryNotFoundError,
+)
+from app.domain import (
+    ValidationError as DomainValidationError,
 )
 from app.schemas import ErrorResponse
 

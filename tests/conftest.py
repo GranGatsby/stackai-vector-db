@@ -1,10 +1,10 @@
 """Shared test fixtures and configuration."""
 
+import contextlib
+import logging
 import os
 from unittest.mock import patch
 
-import contextlib
-import logging
 import pytest
 from fastapi.testclient import TestClient
 

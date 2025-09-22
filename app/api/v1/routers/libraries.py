@@ -1,13 +1,12 @@
 """Library management endpoints."""
 
-from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, status
 
-from app.services import LibraryService
-from app.schemas import LibraryCreate, LibraryUpdate, LibraryOut, LibraryList
 from app.api.v1.deps import get_library_service
+from app.schemas import LibraryCreate, LibraryList, LibraryOut, LibraryUpdate
+from app.services import LibraryService
 
 router = APIRouter(prefix="/libraries", tags=["libraries"])
 
@@ -20,7 +19,7 @@ router = APIRouter(prefix="/libraries", tags=["libraries"])
     description="Retrieve a paginated list of libraries in the system",
 )
 async def list_libraries(
-    limit: Optional[int] = Query(
+    limit: int | None = Query(
         None, ge=1, le=100, description="Maximum number of libraries to return"
     ),
     offset: int = Query(0, ge=0, description="Number of libraries to skip"),

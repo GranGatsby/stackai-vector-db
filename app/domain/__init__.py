@@ -5,22 +5,22 @@ exceptions. It's framework-agnostic and represents the heart of the application'
 business rules.
 """
 
-from .entities import Library, Document, Chunk
+from .entities import Chunk, Document, Library
 from .errors import (
-    DomainError,
-    LibraryError,
-    LibraryNotFoundError,
-    LibraryAlreadyExistsError,
-    DocumentError,
-    DocumentNotFoundError,
-    DocumentAlreadyExistsError,
     ChunkError,
     ChunkNotFoundError,
+    DocumentAlreadyExistsError,
+    DocumentError,
+    DocumentNotFoundError,
+    DomainError,
+    EmbeddingDimensionMismatchError,
+    EmbeddingError,
+    IndexBuildError,
     IndexError,
     IndexNotBuiltError,
-    IndexBuildError,
-    EmbeddingError,
-    EmbeddingDimensionMismatchError,
+    LibraryAlreadyExistsError,
+    LibraryError,
+    LibraryNotFoundError,
     ValidationError,
 )
 

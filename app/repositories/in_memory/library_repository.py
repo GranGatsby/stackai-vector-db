@@ -5,11 +5,11 @@ Library entities using a reader-writer lock to ensure data consistency
 during concurrent operations.
 """
 
-from typing import Dict, List, Optional
 from uuid import UUID
 
-from app.domain import Library, LibraryNotFoundError, LibraryAlreadyExistsError
+from app.domain import Library, LibraryAlreadyExistsError, LibraryNotFoundError
 from app.repositories.ports import LibraryRepository
+
 from .rwlock import RWLock
 
 
@@ -28,8 +28,8 @@ class InMemoryLibraryRepository(LibraryRepository):
 
     def __init__(self) -> None:
         """Initialize the in-memory repository."""
-        self._libraries: Dict[UUID, Library] = {}
-        self._name_index: Dict[str, UUID] = {}
+        self._libraries: dict[UUID, Library] = {}
+        self._name_index: dict[str, UUID] = {}
         self._lock = RWLock()
 
     def _normalize_name(self, name: str) -> str:
@@ -43,7 +43,7 @@ class InMemoryLibraryRepository(LibraryRepository):
         """
         return name.casefold()
 
-    def list_all(self, limit: int = None, offset: int = 0) -> List[Library]:
+    def list_all(self, limit: int = None, offset: int = 0) -> list[Library]:
         """Retrieve all libraries with optional pagination.
 
         Args:
@@ -75,7 +75,7 @@ class InMemoryLibraryRepository(LibraryRepository):
         with self._lock.read_lock():
             return len(self._libraries)
 
-    def get_by_id(self, library_id: UUID) -> Optional[Library]:
+    def get_by_id(self, library_id: UUID) -> Library | None:
         """Retrieve a library by its ID.
 
         Args:
@@ -87,7 +87,7 @@ class InMemoryLibraryRepository(LibraryRepository):
         with self._lock.read_lock():
             return self._libraries.get(library_id)
 
-    def get_by_name(self, name: str) -> Optional[Library]:
+    def get_by_name(self, name: str) -> Library | None:
         """Retrieve a library by its name.
 
         Args:

@@ -7,8 +7,8 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
-from app.main import app
 from app.api.v1.deps import get_library_repository
+from app.main import app
 
 
 @pytest.fixture

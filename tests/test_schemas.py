@@ -3,7 +3,7 @@
 import pytest
 from pydantic import ValidationError
 
-from app.core.constants import HEALTH_STATUS, HEALTH_MESSAGE
+from app.core.constants import HEALTH_MESSAGE, HEALTH_STATUS
 from app.schemas.health import HealthResponse
 
 

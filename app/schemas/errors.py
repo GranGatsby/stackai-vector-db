@@ -1,6 +1,6 @@
 """Error response schemas for the API."""
 
-from typing import Optional, Dict, Any
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -12,10 +12,10 @@ class ErrorDetail(BaseModel):
 
     code: str = Field(..., description="Error code")
     message: str = Field(..., description="Human-readable error message")
-    field: Optional[str] = Field(
+    field: str | None = Field(
         None, description="Field name if error is field-specific"
     )
-    context: Optional[Dict[str, Any]] = Field(
+    context: dict[str, Any] | None = Field(
         None, description="Additional error context"
     )
 

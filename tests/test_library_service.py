@@ -1,12 +1,11 @@
 """Unit tests for the LibraryService."""
 
 import uuid
-from unittest.mock import Mock, MagicMock
-from uuid import UUID
+from unittest.mock import Mock
 
 import pytest
 
-from app.domain import Library, LibraryNotFoundError, LibraryAlreadyExistsError
+from app.domain import Library, LibraryAlreadyExistsError, LibraryNotFoundError
 from app.services import LibraryService
 
 

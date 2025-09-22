@@ -2,8 +2,6 @@
 
 import logging
 
-import pytest
-
 from app.core.logging import get_logger, log_request_info, setup_logging
 from tests.conftest import capture_logger
 

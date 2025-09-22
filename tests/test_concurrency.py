@@ -1,9 +1,7 @@
 """Basic concurrency tests for the library repository."""
 
-import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from uuid import uuid4
 
 import pytest
 

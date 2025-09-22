@@ -7,11 +7,11 @@ pattern to decouple the API layer from concrete implementations.
 
 from functools import lru_cache
 
-from app.services import LibraryService
 from app.repositories.in_memory import InMemoryLibraryRepository
+from app.services import LibraryService
 
 
-@lru_cache()
+@lru_cache
 def get_library_repository() -> InMemoryLibraryRepository:
     """Get the library repository instance.
 
@@ -25,7 +25,7 @@ def get_library_repository() -> InMemoryLibraryRepository:
     return InMemoryLibraryRepository()
 
 
-@lru_cache()
+@lru_cache
 def get_library_service() -> LibraryService:
     """Get the library service instance.
 

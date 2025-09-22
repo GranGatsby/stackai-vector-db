@@ -1,10 +1,11 @@
 """Tests for health check endpoints."""
 
 import uuid
+
 import pytest
 from fastapi import status
 
-from app.core.constants import HEALTH_STATUS, HEALTH_MESSAGE
+from app.core.constants import HEALTH_MESSAGE, HEALTH_STATUS
 
 
 class TestHealthEndpoint:

@@ -4,10 +4,10 @@ This module contains the core business entities that represent the fundamental
 concepts of the vector database: Library, Document, and Chunk.
 """
 
-from dataclasses import dataclass
-from typing import Dict, Any
-from uuid import UUID
 import uuid
+from dataclasses import dataclass
+from typing import Any
+from uuid import UUID
 
 
 @dataclass(frozen=True)
@@ -28,7 +28,7 @@ class Library:
     id: UUID
     name: str
     description: str = ""
-    metadata: Dict[str, Any] = None
+    metadata: dict[str, Any] = None
 
     def __post_init__(self) -> None:
         """Validate library invariants after initialization."""
@@ -44,7 +44,7 @@ class Library:
 
     @classmethod
     def create(
-        cls, name: str, description: str = "", metadata: Dict[str, Any] = None
+        cls, name: str, description: str = "", metadata: dict[str, Any] = None
     ) -> "Library":
         """Factory method to create a new Library with generated ID.
 
@@ -67,7 +67,7 @@ class Library:
         )
 
     def update(
-        self, name: str = None, description: str = None, metadata: Dict[str, Any] = None
+        self, name: str = None, description: str = None, metadata: dict[str, Any] = None
     ) -> "Library":
         """Create a new Library instance with updated fields.
 
@@ -113,7 +113,7 @@ class Document:
     library_id: UUID
     title: str
     content: str = ""
-    metadata: Dict[str, Any] = None
+    metadata: dict[str, Any] = None
 
     def __post_init__(self) -> None:
         """Validate document invariants."""
@@ -132,7 +132,7 @@ class Document:
         library_id: UUID,
         title: str,
         content: str = "",
-        metadata: Dict[str, Any] = None,
+        metadata: dict[str, Any] = None,
     ) -> "Document":
         """Factory method to create a new Document with generated ID."""
         return cls(
@@ -170,7 +170,7 @@ class Chunk:
     embedding: list[float] = None
     start_index: int = 0
     end_index: int = 0
-    metadata: Dict[str, Any] = None
+    metadata: dict[str, Any] = None
 
     def __post_init__(self) -> None:
         """Validate chunk invariants."""
@@ -198,7 +198,7 @@ class Chunk:
         embedding: list[float] = None,
         start_index: int = 0,
         end_index: int = 0,
-        metadata: Dict[str, Any] = None,
+        metadata: dict[str, Any] = None,
     ) -> "Chunk":
         """Factory method to create a new Chunk with generated ID."""
         return cls(

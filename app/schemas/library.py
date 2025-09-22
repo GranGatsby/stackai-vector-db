@@ -1,6 +1,6 @@
 """Library schemas for API requests and responses."""
 
-from typing import Dict, Any, Optional
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -15,7 +15,7 @@ class LibraryBase(BaseModel):
     description: str = Field(
         default="", max_length=1000, description="Library description"
     )
-    metadata: Dict[str, Any] = Field(
+    metadata: dict[str, Any] = Field(
         default_factory=dict, description="Additional metadata"
     )
 
@@ -43,17 +43,17 @@ class LibraryUpdate(BaseModel):
 
     model_config = ConfigDict(strict=True, extra="forbid")
 
-    name: Optional[str] = Field(
+    name: str | None = Field(
         None, min_length=1, max_length=255, description="Library name"
     )
-    description: Optional[str] = Field(
+    description: str | None = Field(
         None, max_length=1000, description="Library description"
     )
-    metadata: Optional[Dict[str, Any]] = Field(None, description="Additional metadata")
+    metadata: dict[str, Any] | None = Field(None, description="Additional metadata")
 
     @field_validator("name")
     @classmethod
-    def validate_name(cls, v: Optional[str]) -> Optional[str]:
+    def validate_name(cls, v: str | None) -> str | None:
         """Validate library name if provided."""
         if v is not None and not v.strip():
             raise ValueError("Library name cannot be empty or whitespace only")
@@ -90,12 +90,12 @@ class LibraryList(BaseModel):
 
     libraries: list[LibraryOut] = Field(..., description="List of libraries")
     total: int = Field(..., ge=0, description="Total number of libraries")
-    limit: Optional[int] = Field(None, ge=1, description="Number of items requested")
+    limit: int | None = Field(None, ge=1, description="Number of items requested")
     offset: int = Field(0, ge=0, description="Number of items skipped")
 
     @classmethod
     def from_domain_list(
-        cls, libraries, total: int, limit: Optional[int] = None, offset: int = 0
+        cls, libraries, total: int, limit: int | None = None, offset: int = 0
     ) -> "LibraryList":
         """Create a LibraryList from a list of domain Library entities.
 

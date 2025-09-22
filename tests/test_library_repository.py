@@ -1,11 +1,10 @@
 """Unit tests for the InMemoryLibraryRepository."""
 
 import uuid
-from uuid import UUID
 
 import pytest
 
-from app.domain import Library, LibraryNotFoundError, LibraryAlreadyExistsError
+from app.domain import Library, LibraryAlreadyExistsError, LibraryNotFoundError
 from app.repositories.in_memory import InMemoryLibraryRepository
 
 
