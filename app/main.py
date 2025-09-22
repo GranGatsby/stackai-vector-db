@@ -10,7 +10,14 @@ from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.errors import ERROR_HANDLERS
-from app.api.v1.routers import health_router, libraries_router
+from app.api.v1.routers import (
+    chunks_document_router,
+    chunks_router,
+    documents_library_router,
+    documents_router,
+    health_router,
+    libraries_router,
+)
 from app.core.config import settings
 from app.core.logging import log_request_info, setup_logging
 
@@ -76,6 +83,10 @@ def create_app() -> FastAPI:
     # Include routers
     app.include_router(health_router, prefix=settings.api_prefix)
     app.include_router(libraries_router, prefix=settings.api_prefix)
+    app.include_router(documents_router, prefix=settings.api_prefix)
+    app.include_router(documents_library_router, prefix=settings.api_prefix)
+    app.include_router(chunks_router, prefix=settings.api_prefix)
+    app.include_router(chunks_document_router, prefix=settings.api_prefix)
 
     return app
 

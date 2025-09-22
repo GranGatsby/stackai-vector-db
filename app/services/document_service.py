@@ -8,7 +8,7 @@ and the domain/repository layers.
 from typing import Any, Optional
 from uuid import UUID
 
-from app.domain import Document, DocumentNotFoundError
+from app.domain import Document, DocumentMetadata, DocumentNotFoundError
 from app.repositories.ports import ChunkRepository, DocumentRepository, LibraryRepository
 
 
@@ -90,7 +90,7 @@ class DocumentService:
         library_id: UUID,
         title: str,
         content: str = "",
-        metadata: dict[str, Any] = None,
+        metadata: Optional[DocumentMetadata] = None,
     ) -> Document:
         """Create a new document.
 
@@ -126,7 +126,7 @@ class DocumentService:
         document_id: UUID,
         title: str = None,
         content: str = None,
-        metadata: dict[str, Any] = None,
+        metadata: Optional[DocumentMetadata] = None,
     ) -> Document:
         """Update an existing document with partial data.
 

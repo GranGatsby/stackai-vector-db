@@ -8,7 +8,7 @@ and the domain/repository layers.
 from typing import Any, Optional
 from uuid import UUID
 
-from app.domain import Chunk, ChunkNotFoundError
+from app.domain import Chunk, ChunkMetadata, ChunkNotFoundError
 from app.repositories.ports import ChunkRepository, DocumentRepository, LibraryRepository
 
 
@@ -119,7 +119,7 @@ class ChunkService:
         embedding: list[float] = None,
         start_index: int = 0,
         end_index: int = 0,
-        metadata: dict[str, Any] = None,
+        metadata: Optional[ChunkMetadata] = None,
         compute_embedding: bool = False,
     ) -> Chunk:
         """Create a new chunk.
@@ -181,7 +181,7 @@ class ChunkService:
         embedding: list[float] = None,
         start_index: int = None,
         end_index: int = None,
-        metadata: dict[str, Any] = None,
+        metadata: Optional[ChunkMetadata] = None,
         compute_embedding: bool = False,
     ) -> Chunk:
         """Update an existing chunk with partial data.

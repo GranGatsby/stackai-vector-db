@@ -11,6 +11,52 @@ from uuid import UUID
 
 
 @dataclass(frozen=True)
+class DocumentMetadata:
+    """Fixed metadata schema for Document entities.
+    
+    Provides a structured schema for document metadata instead of dict[str, Any].
+    This follows the task requirement for fixed schemas to reduce validation complexity.
+    """
+    
+    author: Optional[str] = None
+    source: Optional[str] = None
+    language: Optional[str] = None
+    format: Optional[str] = None  # pdf, txt, markdown, etc.
+    created_at: Optional[str] = None  # ISO datetime string
+    modified_at: Optional[str] = None  # ISO datetime string
+    tags: list[str] = field(default_factory=list)
+    category: Optional[str] = None
+    is_public: bool = True
+    # Processing fields
+    processed: Optional[bool] = None
+    chunk_count: Optional[int] = None
+    word_count: Optional[int] = None
+
+
+@dataclass(frozen=True)
+class ChunkMetadata:
+    """Fixed metadata schema for Chunk entities.
+    
+    Provides a structured schema for chunk metadata instead of dict[str, Any].
+    This follows the task requirement for fixed schemas to reduce validation complexity.
+    """
+    
+    chunk_type: Optional[str] = None  # paragraph, heading, table, etc.
+    section: Optional[str] = None
+    page_number: Optional[int] = None
+    confidence: Optional[float] = None  # extraction confidence
+    language: Optional[str] = None
+    tags: list[str] = field(default_factory=list)
+    # Embedding fields
+    embedding_model: Optional[str] = None
+    embedding_dim: Optional[int] = None
+    similarity_threshold: Optional[float] = None
+    # Processing fields
+    processed_at: Optional[str] = None  # ISO datetime string
+    is_indexed: bool = False
+
+
+@dataclass(frozen=True)
 class LibraryMetadata:
     """Fixed metadata schema for Library entities.
     
@@ -131,7 +177,7 @@ class Document:
     library_id: UUID
     title: str
     content: str = ""
-    metadata: dict[str, Any] = None
+    metadata: DocumentMetadata = field(default_factory=DocumentMetadata)
 
     def __post_init__(self) -> None:
         """Validate document invariants."""
@@ -141,8 +187,7 @@ class Document:
         if len(self.title.strip()) > 255:
             raise ValueError("Document title cannot exceed 255 characters")
 
-        if self.metadata is None:
-            object.__setattr__(self, "metadata", {})
+        # Metadata is already initialized with default_factory, no need for None check
 
     @classmethod
     def create(
@@ -150,7 +195,7 @@ class Document:
         library_id: UUID,
         title: str,
         content: str = "",
-        metadata: dict[str, Any] = None,
+        metadata: Optional[DocumentMetadata] = None,
     ) -> "Document":
         """Factory method to create a new Document with generated ID."""
         return cls(
@@ -158,14 +203,14 @@ class Document:
             library_id=library_id,
             title=title.strip(),
             content=content,
-            metadata=metadata or {},
+            metadata=metadata or DocumentMetadata(),
         )
 
     def update(
         self,
         title: str = None,
         content: str = None,
-        metadata: dict[str, Any] = None,
+        metadata: Optional[DocumentMetadata] = None,
     ) -> "Document":
         """Create a new Document instance with updated fields.
 
@@ -218,7 +263,7 @@ class Chunk:
     embedding: list[float] = None
     start_index: int = 0
     end_index: int = 0
-    metadata: dict[str, Any] = None
+    metadata: ChunkMetadata = field(default_factory=ChunkMetadata)
 
     def __post_init__(self) -> None:
         """Validate chunk invariants."""
@@ -231,8 +276,7 @@ class Chunk:
         if self.end_index < self.start_index:
             raise ValueError("Chunk end_index must be >= start_index")
 
-        if self.metadata is None:
-            object.__setattr__(self, "metadata", {})
+        # Metadata is already initialized with default_factory, no need for None check
 
         if self.embedding is None:
             object.__setattr__(self, "embedding", [])
@@ -246,7 +290,7 @@ class Chunk:
         embedding: list[float] = None,
         start_index: int = 0,
         end_index: int = 0,
-        metadata: dict[str, Any] = None,
+        metadata: Optional[ChunkMetadata] = None,
     ) -> "Chunk":
         """Factory method to create a new Chunk with generated ID."""
         return cls(
@@ -257,7 +301,7 @@ class Chunk:
             embedding=embedding or [],
             start_index=start_index,
             end_index=end_index or len(text.strip()),
-            metadata=metadata or {},
+            metadata=metadata or ChunkMetadata(),
         )
 
     def update(
@@ -266,7 +310,7 @@ class Chunk:
         embedding: list[float] = None,
         start_index: int = None,
         end_index: int = None,
-        metadata: dict[str, Any] = None,
+        metadata: Optional[ChunkMetadata] = None,
     ) -> "Chunk":
         """Create a new Chunk instance with updated fields.
 

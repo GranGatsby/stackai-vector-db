@@ -24,6 +24,8 @@ class TestChunk:
     @pytest.fixture
     def sample_chunk(self, document_id: UUID, library_id: UUID) -> Chunk:
         """Create a sample chunk for testing."""
+        from app.domain import ChunkMetadata
+        
         return Chunk.create(
             document_id=document_id,
             library_id=library_id,
@@ -31,11 +33,13 @@ class TestChunk:
             embedding=[0.1, 0.2, 0.3],
             start_index=0,
             end_index=20,
-            metadata={"chunk_type": "paragraph"},
+            metadata=ChunkMetadata(chunk_type="paragraph"),
         )
 
     def test_chunk_create_success(self, document_id: UUID, library_id: UUID):
         """Test successful chunk creation."""
+        from app.domain import ChunkMetadata
+        
         chunk = Chunk.create(
             document_id=document_id,
             library_id=library_id,
@@ -43,7 +47,7 @@ class TestChunk:
             embedding=[1.0, 2.0, 3.0],
             start_index=10,
             end_index=25,
-            metadata={"key": "value"},
+            metadata=ChunkMetadata(tags=["test"]),
         )
 
         assert isinstance(chunk.id, UUID)
@@ -53,10 +57,12 @@ class TestChunk:
         assert chunk.embedding == [1.0, 2.0, 3.0]
         assert chunk.start_index == 10
         assert chunk.end_index == 25
-        assert chunk.metadata == {"key": "value"}
+        assert chunk.metadata == ChunkMetadata(tags=["test"])
 
     def test_chunk_create_minimal(self, document_id: UUID, library_id: UUID):
         """Test chunk creation with minimal required data."""
+        from app.domain import ChunkMetadata
+        
         chunk = Chunk.create(
             document_id=document_id,
             library_id=library_id,
@@ -70,7 +76,7 @@ class TestChunk:
         assert chunk.embedding == []
         assert chunk.start_index == 0
         assert chunk.end_index == len("Minimal chunk")
-        assert chunk.metadata == {}
+        assert chunk.metadata == ChunkMetadata()
 
     def test_chunk_requires_document_id_and_non_empty_text(self, library_id: UUID):
         """Test that chunk requires document_id and non-empty text."""
@@ -143,13 +149,15 @@ class TestChunk:
         assert chunk.embedding == []
 
     def test_chunk_metadata_default_empty_dict(self, document_id: UUID, library_id: UUID):
-        """Test that metadata defaults to empty dict."""
+        """Test that metadata defaults to empty ChunkMetadata."""
+        from app.domain import ChunkMetadata
+        
         chunk = Chunk.create(
             document_id=document_id,
             library_id=library_id,
             text="Test text",
         )
-        assert chunk.metadata == {}
+        assert chunk.metadata == ChunkMetadata()
 
     def test_chunk_has_embedding_property(self, document_id: UUID, library_id: UUID):
         """Test has_embedding property."""
@@ -191,12 +199,14 @@ class TestChunk:
 
     def test_chunk_update_success(self, sample_chunk: Chunk):
         """Test successful chunk update."""
+        from app.domain import ChunkMetadata
+        
         updated_chunk = sample_chunk.update(
             text="Updated text",
             embedding=[0.9, 0.8, 0.7],
             start_index=5,
             end_index=17,
-            metadata={"updated": True},
+            metadata=ChunkMetadata(tags=["updated"]),
         )
 
         # Original chunk unchanged
@@ -204,7 +214,7 @@ class TestChunk:
         assert sample_chunk.embedding == [0.1, 0.2, 0.3]
         assert sample_chunk.start_index == 0
         assert sample_chunk.end_index == 20
-        assert sample_chunk.metadata == {"chunk_type": "paragraph"}
+        assert sample_chunk.metadata == ChunkMetadata(chunk_type="paragraph")
 
         # New chunk has updated values
         assert updated_chunk.id == sample_chunk.id  # Same ID
@@ -214,7 +224,7 @@ class TestChunk:
         assert updated_chunk.embedding == [0.9, 0.8, 0.7]
         assert updated_chunk.start_index == 5
         assert updated_chunk.end_index == 17
-        assert updated_chunk.metadata == {"updated": True}
+        assert updated_chunk.metadata == ChunkMetadata(tags=["updated"])
 
     def test_chunk_update_partial(self, sample_chunk: Chunk):
         """Test partial chunk update."""
@@ -255,6 +265,8 @@ class TestChunk:
         """Test that Chunk.update() returns new instance and keeps old unchanged."""
         document_id = uuid.uuid4()
         library_id = uuid.uuid4()
+        from app.domain import ChunkMetadata
+        
         original_chunk = Chunk.create(
             document_id=document_id,
             library_id=library_id,
@@ -262,7 +274,7 @@ class TestChunk:
             embedding=[0.1, 0.2, 0.3],
             start_index=0,
             end_index=13,
-            metadata={"original": True},
+            metadata=ChunkMetadata(tags=["original"]),
         )
 
         updated_chunk = original_chunk.update(
@@ -270,7 +282,7 @@ class TestChunk:
             embedding=[0.9, 0.8, 0.7],
             start_index=5,
             end_index=17,
-            metadata={"updated": True},
+            metadata=ChunkMetadata(tags=["updated"]),
         )
 
         # Different instances
@@ -282,14 +294,14 @@ class TestChunk:
         assert original_chunk.embedding == [0.1, 0.2, 0.3]
         assert original_chunk.start_index == 0
         assert original_chunk.end_index == 13
-        assert original_chunk.metadata == {"original": True}
+        assert original_chunk.metadata == ChunkMetadata(tags=["original"])
 
         # Updated has new values
         assert updated_chunk.text == "Updated text"
         assert updated_chunk.embedding == [0.9, 0.8, 0.7]
         assert updated_chunk.start_index == 5
         assert updated_chunk.end_index == 17
-        assert updated_chunk.metadata == {"updated": True}
+        assert updated_chunk.metadata == ChunkMetadata(tags=["updated"])
 
         # Same ID, document_id, and library_id
         assert updated_chunk.id == original_chunk.id

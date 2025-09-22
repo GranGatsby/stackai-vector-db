@@ -19,30 +19,36 @@ class TestDocument:
     @pytest.fixture
     def sample_document(self, library_id: UUID) -> Document:
         """Create a sample document for testing."""
+        from app.domain import DocumentMetadata
+        
         return Document.create(
             library_id=library_id,
             title="Test Document",
             content="This is test content",
-            metadata={"author": "Test Author"},
+            metadata=DocumentMetadata(author="Test Author"),
         )
 
     def test_document_create_success(self, library_id: UUID):
         """Test successful document creation."""
+        from app.domain import DocumentMetadata
+        
         document = Document.create(
             library_id=library_id,
             title="Test Document",
             content="Test content",
-            metadata={"key": "value"},
+            metadata=DocumentMetadata(tags=["test"]),
         )
 
         assert isinstance(document.id, UUID)
         assert document.library_id == library_id
         assert document.title == "Test Document"
         assert document.content == "Test content"
-        assert document.metadata == {"key": "value"}
+        assert document.metadata == DocumentMetadata(tags=["test"])
 
     def test_document_create_minimal(self, library_id: UUID):
         """Test document creation with minimal required data."""
+        from app.domain import DocumentMetadata
+        
         document = Document.create(
             library_id=library_id,
             title="Minimal Document",
@@ -52,7 +58,7 @@ class TestDocument:
         assert document.library_id == library_id
         assert document.title == "Minimal Document"
         assert document.content == ""
-        assert document.metadata == {}
+        assert document.metadata == DocumentMetadata()
 
     def test_document_requires_library_id(self):
         """Test that document requires a valid library_id."""
@@ -97,32 +103,36 @@ class TestDocument:
         assert document.title == "Test Document"
 
     def test_document_metadata_default_empty_dict(self, library_id: UUID):
-        """Test that metadata defaults to empty dict."""
+        """Test that metadata defaults to empty DocumentMetadata."""
+        from app.domain import DocumentMetadata
+        
         document = Document.create(
             library_id=library_id,
             title="Test Document",
         )
-        assert document.metadata == {}
+        assert document.metadata == DocumentMetadata()
 
     def test_document_update_success(self, sample_document: Document):
         """Test successful document update."""
+        from app.domain import DocumentMetadata
+        
         updated_document = sample_document.update(
             title="Updated Title",
             content="Updated content",
-            metadata={"updated": True},
+            metadata=DocumentMetadata(tags=["updated"]),
         )
 
         # Original document unchanged
         assert sample_document.title == "Test Document"
         assert sample_document.content == "This is test content"
-        assert sample_document.metadata == {"author": "Test Author"}
+        assert sample_document.metadata == DocumentMetadata(author="Test Author")
 
         # New document has updated values
         assert updated_document.id == sample_document.id  # Same ID
         assert updated_document.library_id == sample_document.library_id  # Same library_id
         assert updated_document.title == "Updated Title"
         assert updated_document.content == "Updated content"
-        assert updated_document.metadata == {"updated": True}
+        assert updated_document.metadata == DocumentMetadata(tags=["updated"])
 
     def test_document_update_partial(self, sample_document: Document):
         """Test partial document update."""
@@ -159,17 +169,19 @@ class TestDocument:
     def test_document_update_returns_new_instance_and_keeps_old_unchanged(self):
         """Test that Document.update() returns new instance and keeps old unchanged."""
         library_id = uuid.uuid4()
+        from app.domain import DocumentMetadata
+        
         original_document = Document.create(
             library_id=library_id,
             title="Original Document",
             content="Original content",
-            metadata={"original": True},
+            metadata=DocumentMetadata(tags=["original"]),
         )
 
         updated_document = original_document.update(
             title="Updated Document",
             content="Updated content",
-            metadata={"updated": True},
+            metadata=DocumentMetadata(tags=["updated"]),
         )
 
         # Different instances
@@ -179,12 +191,12 @@ class TestDocument:
         # Original unchanged
         assert original_document.title == "Original Document"
         assert original_document.content == "Original content"
-        assert original_document.metadata == {"original": True}
+        assert original_document.metadata == DocumentMetadata(tags=["original"])
 
         # Updated has new values
         assert updated_document.title == "Updated Document"
         assert updated_document.content == "Updated content"
-        assert updated_document.metadata == {"updated": True}
+        assert updated_document.metadata == DocumentMetadata(tags=["updated"])
 
         # Same ID and library_id
         assert updated_document.id == original_document.id
