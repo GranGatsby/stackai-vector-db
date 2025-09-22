@@ -5,7 +5,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from app.domain import Library, LibraryAlreadyExistsError, LibraryNotFoundError
+from app.domain import Library, LibraryAlreadyExistsError, LibraryMetadata, LibraryNotFoundError
 from app.services import LibraryService
 
 
@@ -28,7 +28,7 @@ class TestLibraryService:
         return Library.create(
             name="Test Library",
             description="A test library",
-            metadata={"author": "Test Author"},
+            metadata=LibraryMetadata(author="Test Author"),
         )
 
     def test_list_libraries(self, service: LibraryService, mock_repository):
@@ -132,7 +132,7 @@ class TestLibraryService:
 
         # Call service
         result = service.create_library(
-            name="New Library", description="Description", metadata={"test": True}
+            name="New Library", description="Description", metadata=LibraryMetadata(test=True)
         )
 
         # Verify
@@ -143,7 +143,7 @@ class TestLibraryService:
         call_args = mock_repository.create.call_args[0][0]
         assert call_args.name == "New Library"
         assert call_args.description == "Description"
-        assert call_args.metadata == {"test": True}
+        assert call_args.metadata.test is True
 
     def test_create_library_minimal(self, service: LibraryService, mock_repository):
         """Test creating library with minimal data."""
@@ -162,7 +162,8 @@ class TestLibraryService:
         call_args = mock_repository.create.call_args[0][0]
         assert call_args.name == "Minimal Library"
         assert call_args.description == ""
-        assert call_args.metadata == {}
+        assert isinstance(call_args.metadata, LibraryMetadata)
+        assert call_args.metadata.author is None
 
     def test_create_library_already_exists(
         self, service: LibraryService, mock_repository

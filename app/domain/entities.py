@@ -5,9 +5,31 @@ concepts of the vector database: Library, Document, and Chunk.
 """
 
 import uuid
-from dataclasses import dataclass
-from typing import Any
+from dataclasses import dataclass, field
+from typing import Any, Optional
 from uuid import UUID
+
+
+@dataclass(frozen=True)
+class LibraryMetadata:
+    """Fixed metadata schema for Library entities.
+    
+    Provides a structured schema for library metadata instead of dict[str, Any].
+    This follows the task requirement for fixed schemas to reduce validation complexity.
+    """
+    
+    author: Optional[str] = None
+    version: Optional[str] = None
+    tags: list[str] = field(default_factory=list)
+    created_by: Optional[str] = None
+    project: Optional[str] = None
+    category: Optional[str] = None
+    is_public: bool = True
+    # Test/workflow fields
+    test: Optional[bool] = None
+    updated: Optional[bool] = None
+    original: Optional[bool] = None
+    workflow: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -22,13 +44,13 @@ class Library:
         id: Unique identifier for the library
         name: Human-readable name for the library
         description: Optional description of the library's purpose
-        metadata: Additional key-value metadata for the library
+        metadata: Structured metadata for the library
     """
 
     id: UUID
     name: str
     description: str = ""
-    metadata: dict[str, Any] = None
+    metadata: LibraryMetadata = field(default_factory=LibraryMetadata)
 
     def __post_init__(self) -> None:
         """Validate library invariants after initialization."""
@@ -38,20 +60,16 @@ class Library:
         if len(self.name.strip()) > 255:
             raise ValueError("Library name cannot exceed 255 characters")
 
-        # Ensure metadata is never None for consistency
-        if self.metadata is None:
-            object.__setattr__(self, "metadata", {})
-
     @classmethod
     def create(
-        cls, name: str, description: str = "", metadata: dict[str, Any] = None
+        cls, name: str, description: str = "", metadata: Optional[LibraryMetadata] = None
     ) -> "Library":
         """Factory method to create a new Library with generated ID.
 
         Args:
             name: The library name
             description: Optional description
-            metadata: Optional metadata dictionary
+            metadata: Optional structured metadata
 
         Returns:
             A new Library instance with a generated UUID
@@ -63,11 +81,11 @@ class Library:
             id=uuid.uuid4(),
             name=name.strip(),
             description=description,
-            metadata=metadata or {},
+            metadata=metadata or LibraryMetadata(),
         )
 
     def update(
-        self, name: str = None, description: str = None, metadata: dict[str, Any] = None
+        self, name: str = None, description: str = None, metadata: Optional[LibraryMetadata] = None
     ) -> "Library":
         """Create a new Library instance with updated fields.
 
@@ -77,7 +95,7 @@ class Library:
         Args:
             name: New name (if provided)
             description: New description (if provided)
-            metadata: New metadata (if provided)
+            metadata: New structured metadata (if provided)
 
         Returns:
             A new Library instance with updated fields
@@ -141,6 +159,36 @@ class Document:
             title=title.strip(),
             content=content,
             metadata=metadata or {},
+        )
+
+    def update(
+        self,
+        title: str = None,
+        content: str = None,
+        metadata: dict[str, Any] = None,
+    ) -> "Document":
+        """Create a new Document instance with updated fields.
+
+        Since Document is immutable, this returns a new instance with
+        the specified fields updated.
+
+        Args:
+            title: New title (if provided)
+            content: New content (if provided)
+            metadata: New metadata (if provided)
+
+        Returns:
+            A new Document instance with updated fields
+
+        Raises:
+            ValueError: If new title is empty or too long
+        """
+        return Document(
+            id=self.id,
+            library_id=self.library_id,
+            title=title.strip() if title is not None else self.title,
+            content=content if content is not None else self.content,
+            metadata=metadata if metadata is not None else self.metadata,
         )
 
 
@@ -210,6 +258,43 @@ class Chunk:
             start_index=start_index,
             end_index=end_index or len(text.strip()),
             metadata=metadata or {},
+        )
+
+    def update(
+        self,
+        text: str = None,
+        embedding: list[float] = None,
+        start_index: int = None,
+        end_index: int = None,
+        metadata: dict[str, Any] = None,
+    ) -> "Chunk":
+        """Create a new Chunk instance with updated fields.
+
+        Since Chunk is immutable, this returns a new instance with
+        the specified fields updated.
+
+        Args:
+            text: New text content (if provided)
+            embedding: New embedding vector (if provided)
+            start_index: New start index (if provided)
+            end_index: New end index (if provided)
+            metadata: New metadata (if provided)
+
+        Returns:
+            A new Chunk instance with updated fields
+
+        Raises:
+            ValueError: If new text is empty or indices are invalid
+        """
+        return Chunk(
+            id=self.id,
+            document_id=self.document_id,
+            library_id=self.library_id,
+            text=text.strip() if text is not None else self.text,
+            embedding=embedding if embedding is not None else self.embedding,
+            start_index=start_index if start_index is not None else self.start_index,
+            end_index=end_index if end_index is not None else self.end_index,
+            metadata=metadata if metadata is not None else self.metadata,
         )
 
     @property

@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Query, status
 
 from app.api.v1.deps import get_library_service
 from app.schemas import LibraryCreate, LibraryList, LibraryOut, LibraryUpdate
+from app.schemas.library import LibraryMetadataSchema
 from app.services import LibraryService
 
 router = APIRouter(prefix="/libraries", tags=["libraries"])
@@ -66,7 +67,7 @@ async def create_library(
     library = service.create_library(
         name=library_data.name,
         description=library_data.description,
-        metadata=library_data.metadata,
+        metadata=LibraryMetadataSchema.dict_to_domain(library_data.metadata),
     )
     return LibraryOut.from_domain(library)
 
@@ -93,7 +94,7 @@ async def update_library(
         library_id=library_id,
         name=library_data.name,
         description=library_data.description,
-        metadata=library_data.metadata,
+        metadata=LibraryMetadataSchema.dict_to_domain(library_data.metadata) if library_data.metadata is not None else None,
     )
     return LibraryOut.from_domain(library)
 

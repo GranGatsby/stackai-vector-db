@@ -5,10 +5,10 @@ for library management, providing a clean interface between the API layer
 and the domain/repository layers.
 """
 
-from typing import Any
+from typing import Optional
 from uuid import UUID
 
-from app.domain import Library, LibraryNotFoundError
+from app.domain import Library, LibraryMetadata, LibraryNotFoundError
 from app.repositories.ports import LibraryRepository
 
 
@@ -83,14 +83,14 @@ class LibraryService:
         return library
 
     def create_library(
-        self, name: str, description: str = "", metadata: dict[str, Any] = None
+        self, name: str, description: str = "", metadata: Optional[LibraryMetadata] = None
     ) -> Library:
         """Create a new library.
 
         Args:
             name: The library name
             description: Optional description of the library
-            metadata: Optional metadata dictionary
+            metadata: Optional structured metadata
 
         Returns:
             The created Library entity
@@ -110,7 +110,7 @@ class LibraryService:
         library_id: UUID,
         name: str = None,
         description: str = None,
-        metadata: dict[str, Any] = None,
+        metadata: Optional[LibraryMetadata] = None,
     ) -> Library:
         """Update an existing library.
 

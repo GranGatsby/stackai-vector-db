@@ -5,7 +5,7 @@ exceptions. It's framework-agnostic and represents the heart of the application'
 business rules.
 """
 
-from .entities import Chunk, Document, Library
+from .entities import Chunk, Document, Library, LibraryMetadata
 from .errors import (
     ChunkError,
     ChunkNotFoundError,
@@ -27,6 +27,7 @@ from .errors import (
 __all__ = [
     # Entities
     "Library",
+    "LibraryMetadata",
     "Document",
     "Chunk",
     # Errors

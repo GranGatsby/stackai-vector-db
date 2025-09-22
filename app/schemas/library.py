@@ -1,9 +1,96 @@
 """Library schemas for API requests and responses."""
 
-from typing import Any
+from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from app.domain import LibraryMetadata
+
+
+class LibraryMetadataSchema(BaseModel):
+    """Pydantic schema for LibraryMetadata."""
+    
+    model_config = ConfigDict(strict=True, extra="forbid", exclude_none=True)
+    
+    author: Optional[str] = Field(None, max_length=255, description="Library author")
+    version: Optional[str] = Field(None, max_length=50, description="Library version")
+    tags: Optional[list[str]] = Field(None, description="Library tags")
+    created_by: Optional[str] = Field(None, max_length=255, description="Creator name")
+    project: Optional[str] = Field(None, max_length=255, description="Project name")
+    category: Optional[str] = Field(None, max_length=100, description="Library category")
+    is_public: Optional[bool] = Field(None, description="Whether library is public")
+    # Test/workflow fields
+    test: Optional[bool] = Field(None, description="Test flag")
+    updated: Optional[bool] = Field(None, description="Updated flag")
+    original: Optional[bool] = Field(None, description="Original flag")
+    workflow: Optional[str] = Field(None, max_length=100, description="Workflow type")
+
+    def to_domain(self) -> LibraryMetadata:
+        """Convert to domain LibraryMetadata."""
+        return LibraryMetadata(
+            author=self.author,
+            version=self.version,
+            tags=self.tags or [],  # Default to empty list if None
+            created_by=self.created_by,
+            project=self.project,
+            category=self.category,
+            is_public=self.is_public if self.is_public is not None else True,  # Default to True
+            test=self.test,
+            updated=self.updated,
+            original=self.original,
+            workflow=self.workflow,
+        )
+
+    @classmethod
+    def dict_to_domain(cls, metadata_dict: dict) -> LibraryMetadata:
+        """Convert a dict to domain LibraryMetadata."""
+        return LibraryMetadata(
+            author=metadata_dict.get("author"),
+            version=metadata_dict.get("version"),
+            tags=metadata_dict.get("tags", []),
+            created_by=metadata_dict.get("created_by"),
+            project=metadata_dict.get("project"),
+            category=metadata_dict.get("category"),
+            is_public=metadata_dict.get("is_public", True),
+            test=metadata_dict.get("test"),
+            updated=metadata_dict.get("updated"),
+            original=metadata_dict.get("original"),
+            workflow=metadata_dict.get("workflow"),
+        )
+
+    @classmethod
+    def from_domain(cls, metadata: LibraryMetadata) -> dict:
+        """Create a dict from domain LibraryMetadata for API responses.
+        
+        This returns only fields that have non-default values to maintain
+        backward compatibility with existing API tests.
+        """
+        data = {}
+        if metadata.author is not None:
+            data["author"] = metadata.author
+        if metadata.version is not None:
+            data["version"] = metadata.version
+        if metadata.tags:  # Only if not empty list
+            data["tags"] = metadata.tags
+        if metadata.created_by is not None:
+            data["created_by"] = metadata.created_by
+        if metadata.project is not None:
+            data["project"] = metadata.project
+        if metadata.category is not None:
+            data["category"] = metadata.category
+        if metadata.is_public is not True:  # Only if not default
+            data["is_public"] = metadata.is_public
+        if metadata.test is not None:
+            data["test"] = metadata.test
+        if metadata.updated is not None:
+            data["updated"] = metadata.updated
+        if metadata.original is not None:
+            data["original"] = metadata.original
+        if metadata.workflow is not None:
+            data["workflow"] = metadata.workflow
+        
+        return data
 
 
 class LibraryBase(BaseModel):
@@ -15,8 +102,8 @@ class LibraryBase(BaseModel):
     description: str = Field(
         default="", max_length=1000, description="Library description"
     )
-    metadata: dict[str, Any] = Field(
-        default_factory=dict, description="Additional metadata"
+    metadata: dict = Field(
+        default_factory=dict, description="Structured metadata"
     )
 
     @field_validator("name")
@@ -49,7 +136,7 @@ class LibraryUpdate(BaseModel):
     description: str | None = Field(
         None, max_length=1000, description="Library description"
     )
-    metadata: dict[str, Any] | None = Field(None, description="Additional metadata")
+    metadata: Optional[dict] = Field(None, description="Structured metadata")
 
     @field_validator("name")
     @classmethod
@@ -79,7 +166,7 @@ class LibraryOut(LibraryBase):
             id=library.id,
             name=library.name,
             description=library.description,
-            metadata=library.metadata,
+            metadata=LibraryMetadataSchema.from_domain(library.metadata),
         )
 
 

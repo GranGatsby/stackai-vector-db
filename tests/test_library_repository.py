@@ -4,7 +4,7 @@ import uuid
 
 import pytest
 
-from app.domain import Library, LibraryAlreadyExistsError, LibraryNotFoundError
+from app.domain import Library, LibraryAlreadyExistsError, LibraryMetadata, LibraryNotFoundError
 from app.repositories.in_memory import InMemoryLibraryRepository
 
 
@@ -22,7 +22,7 @@ class TestInMemoryLibraryRepository:
         return Library.create(
             name="Test Library",
             description="A test library",
-            metadata={"author": "Test Author"},
+            metadata=LibraryMetadata(author="Test Author"),
         )
 
     def test_create_library_success(
@@ -119,7 +119,7 @@ class TestInMemoryLibraryRepository:
         repository.create(sample_library)
 
         updated_library = sample_library.update(
-            description="Updated description", metadata={"updated": True}
+            description="Updated description", metadata=LibraryMetadata(updated=True)
         )
 
         result = repository.update(updated_library)
