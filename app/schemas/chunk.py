@@ -1,6 +1,6 @@
 """Chunk schemas for API requests and responses."""
 
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -10,22 +10,32 @@ from app.domain import ChunkMetadata
 
 class ChunkMetadataSchema(BaseModel):
     """Pydantic schema for ChunkMetadata."""
-    
+
     model_config = ConfigDict(strict=True, extra="forbid", exclude_none=True)
-    
-    chunk_type: Optional[str] = Field(None, max_length=100, description="Chunk type (paragraph, heading, table, etc.)")
-    section: Optional[str] = Field(None, max_length=255, description="Section name")
-    page_number: Optional[int] = Field(None, ge=1, description="Page number")
-    confidence: Optional[float] = Field(None, ge=0.0, le=1.0, description="Extraction confidence")
-    language: Optional[str] = Field(None, max_length=50, description="Chunk language")
-    tags: Optional[list[str]] = Field(None, description="Chunk tags")
+
+    chunk_type: str | None = Field(
+        None, max_length=100, description="Chunk type (paragraph, heading, table, etc.)"
+    )
+    section: str | None = Field(None, max_length=255, description="Section name")
+    page_number: int | None = Field(None, ge=1, description="Page number")
+    confidence: float | None = Field(
+        None, ge=0.0, le=1.0, description="Extraction confidence"
+    )
+    language: str | None = Field(None, max_length=50, description="Chunk language")
+    tags: list[str] | None = Field(None, description="Chunk tags")
     # Embedding fields
-    embedding_model: Optional[str] = Field(None, max_length=100, description="Embedding model used")
-    embedding_dim: Optional[int] = Field(None, ge=1, description="Embedding dimension")
-    similarity_threshold: Optional[float] = Field(None, ge=0.0, le=1.0, description="Similarity threshold")
+    embedding_model: str | None = Field(
+        None, max_length=100, description="Embedding model used"
+    )
+    embedding_dim: int | None = Field(None, ge=1, description="Embedding dimension")
+    similarity_threshold: float | None = Field(
+        None, ge=0.0, le=1.0, description="Similarity threshold"
+    )
     # Processing fields
-    processed_at: Optional[str] = Field(None, description="Processing datetime (ISO string)")
-    is_indexed: Optional[bool] = Field(None, description="Whether chunk is indexed")
+    processed_at: str | None = Field(
+        None, description="Processing datetime (ISO string)"
+    )
+    is_indexed: bool | None = Field(None, description="Whether chunk is indexed")
 
     def to_domain(self) -> ChunkMetadata:
         """Convert to domain ChunkMetadata."""
@@ -63,7 +73,7 @@ class ChunkMetadataSchema(BaseModel):
     @classmethod
     def from_domain(cls, metadata: ChunkMetadata) -> dict:
         """Create a dict from domain ChunkMetadata for API responses.
-        
+
         This returns only fields that have non-default values to maintain
         backward compatibility with existing API tests.
         """
@@ -90,7 +100,7 @@ class ChunkMetadataSchema(BaseModel):
             data["processed_at"] = metadata.processed_at
         if metadata.is_indexed is not False:  # Only if not default
             data["is_indexed"] = metadata.is_indexed
-        
+
         return data
 
 
@@ -101,11 +111,11 @@ class ChunkBase(BaseModel):
 
     text: str = Field(..., min_length=1, description="Chunk text content")
     embedding: list[float] = Field(default_factory=list, description="Embedding vector")
-    start_index: int = Field(0, ge=0, description="Starting character index in document")
-    end_index: int = Field(0, ge=0, description="Ending character index in document")
-    metadata: dict[str, Any] = Field(
-        default_factory=dict, description="Chunk metadata"
+    start_index: int = Field(
+        0, ge=0, description="Starting character index in document"
     )
+    end_index: int = Field(0, ge=0, description="Ending character index in document")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Chunk metadata")
 
     @field_validator("text")
     @classmethod
@@ -119,8 +129,8 @@ class ChunkBase(BaseModel):
     @classmethod
     def validate_end_index(cls, v: int, info) -> int:
         """Validate end_index is >= start_index."""
-        if hasattr(info, 'data') and 'start_index' in info.data:
-            start_index = info.data['start_index']
+        if hasattr(info, "data") and "start_index" in info.data:
+            start_index = info.data["start_index"]
             if v < start_index:
                 raise ValueError("end_index must be >= start_index")
         return v
@@ -140,16 +150,16 @@ class ChunkCreate(ChunkBase):
 
 class ChunkCreateInDocument(ChunkBase):
     """Schema for creating a new chunk within a specific document.
-    
+
     This schema is used when the document_id is provided in the URL path,
     so it doesn't need to be included in the request body.
     """
-    
+
     library_id: UUID = Field(..., description="Library ID where chunk belongs")
     compute_embedding: bool = Field(
         False, description="Whether to compute embedding automatically"
     )
-    
+
     # All other fields inherited from ChunkBase (text, embedding, start_index, end_index, metadata)
     # No document_id field needed since it comes from URL path
 
@@ -183,8 +193,8 @@ class ChunkUpdate(BaseModel):
     @classmethod
     def validate_end_index(cls, v: int | None, info) -> int | None:
         """Validate end_index is >= start_index if both are provided."""
-        if v is not None and hasattr(info, 'data') and 'start_index' in info.data:
-            start_index = info.data.get('start_index')
+        if v is not None and hasattr(info, "data") and "start_index" in info.data:
+            start_index = info.data.get("start_index")
             if start_index is not None and v < start_index:
                 raise ValueError("end_index must be >= start_index")
         return v

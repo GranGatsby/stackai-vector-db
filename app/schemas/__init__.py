@@ -6,7 +6,13 @@ and its clients.
 """
 
 from .chunk import ChunkCreate, ChunkCreateInDocument, ChunkList, ChunkRead, ChunkUpdate
-from .document import DocumentCreate, DocumentCreateInLibrary, DocumentList, DocumentRead, DocumentUpdate
+from .document import (
+    DocumentCreate,
+    DocumentCreateInLibrary,
+    DocumentList,
+    DocumentRead,
+    DocumentUpdate,
+)
 from .errors import ErrorDetail, ErrorResponse
 from .health import HealthResponse
 from .library import LibraryBase, LibraryCreate, LibraryList, LibraryOut, LibraryUpdate

@@ -20,7 +20,7 @@ class TestDocument:
     def sample_document(self, library_id: UUID) -> Document:
         """Create a sample document for testing."""
         from app.domain import DocumentMetadata
-        
+
         return Document.create(
             library_id=library_id,
             title="Test Document",
@@ -31,7 +31,7 @@ class TestDocument:
     def test_document_create_success(self, library_id: UUID):
         """Test successful document creation."""
         from app.domain import DocumentMetadata
-        
+
         document = Document.create(
             library_id=library_id,
             title="Test Document",
@@ -48,7 +48,7 @@ class TestDocument:
     def test_document_create_minimal(self, library_id: UUID):
         """Test document creation with minimal required data."""
         from app.domain import DocumentMetadata
-        
+
         document = Document.create(
             library_id=library_id,
             title="Minimal Document",
@@ -88,7 +88,9 @@ class TestDocument:
     def test_document_title_validation_too_long(self, library_id: UUID):
         """Test that too long title raises ValueError."""
         long_title = "x" * 256
-        with pytest.raises(ValueError, match="Document title cannot exceed 255 characters"):
+        with pytest.raises(
+            ValueError, match="Document title cannot exceed 255 characters"
+        ):
             Document.create(
                 library_id=library_id,
                 title=long_title,
@@ -105,7 +107,7 @@ class TestDocument:
     def test_document_metadata_default_empty_dict(self, library_id: UUID):
         """Test that metadata defaults to empty DocumentMetadata."""
         from app.domain import DocumentMetadata
-        
+
         document = Document.create(
             library_id=library_id,
             title="Test Document",
@@ -115,7 +117,7 @@ class TestDocument:
     def test_document_update_success(self, sample_document: Document):
         """Test successful document update."""
         from app.domain import DocumentMetadata
-        
+
         updated_document = sample_document.update(
             title="Updated Title",
             content="Updated content",
@@ -129,7 +131,9 @@ class TestDocument:
 
         # New document has updated values
         assert updated_document.id == sample_document.id  # Same ID
-        assert updated_document.library_id == sample_document.library_id  # Same library_id
+        assert (
+            updated_document.library_id == sample_document.library_id
+        )  # Same library_id
         assert updated_document.title == "Updated Title"
         assert updated_document.content == "Updated content"
         assert updated_document.metadata == DocumentMetadata(tags=["updated"])
@@ -159,10 +163,12 @@ class TestDocument:
         with pytest.raises(AttributeError):
             sample_document.title = "Cannot change"
 
-    def test_document_validation_preserves_id_and_library_id(self, sample_document: Document):
+    def test_document_validation_preserves_id_and_library_id(
+        self, sample_document: Document
+    ):
         """Test that update preserves ID and library_id."""
         updated_document = sample_document.update(title="New Title")
-        
+
         assert updated_document.id == sample_document.id
         assert updated_document.library_id == sample_document.library_id
 
@@ -170,7 +176,7 @@ class TestDocument:
         """Test that Document.update() returns new instance and keeps old unchanged."""
         library_id = uuid.uuid4()
         from app.domain import DocumentMetadata
-        
+
         original_document = Document.create(
             library_id=library_id,
             title="Original Document",

@@ -5,7 +5,14 @@ exceptions. It's framework-agnostic and represents the heart of the application'
 business rules.
 """
 
-from .entities import Chunk, ChunkMetadata, Document, DocumentMetadata, Library, LibraryMetadata
+from .entities import (
+    Chunk,
+    ChunkMetadata,
+    Document,
+    DocumentMetadata,
+    Library,
+    LibraryMetadata,
+)
 from .errors import (
     ChunkError,
     ChunkNotFoundError,

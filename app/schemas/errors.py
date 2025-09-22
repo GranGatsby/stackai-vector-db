@@ -12,12 +12,8 @@ class ErrorDetail(BaseModel):
 
     code: str = Field(..., description="Error code")
     message: str = Field(..., description="Human-readable error message")
-    field: str | None = Field(
-        None, description="Field name if error is field-specific"
-    )
-    context: dict[str, Any] | None = Field(
-        None, description="Additional error context"
-    )
+    field: str | None = Field(None, description="Field name if error is field-specific")
+    context: dict[str, Any] | None = Field(None, description="Additional error context")
 
 
 class ErrorResponse(BaseModel):

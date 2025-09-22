@@ -5,11 +5,14 @@ for document management, providing a clean interface between the API layer
 and the domain/repository layers.
 """
 
-from typing import Any, Optional
 from uuid import UUID
 
 from app.domain import Document, DocumentMetadata, DocumentNotFoundError
-from app.repositories.ports import ChunkRepository, DocumentRepository, LibraryRepository
+from app.repositories.ports import (
+    ChunkRepository,
+    DocumentRepository,
+    LibraryRepository,
+)
 
 
 class DocumentService:
@@ -90,7 +93,7 @@ class DocumentService:
         library_id: UUID,
         title: str,
         content: str = "",
-        metadata: Optional[DocumentMetadata] = None,
+        metadata: DocumentMetadata | None = None,
     ) -> Document:
         """Create a new document.
 
@@ -126,7 +129,7 @@ class DocumentService:
         document_id: UUID,
         title: str = None,
         content: str = None,
-        metadata: Optional[DocumentMetadata] = None,
+        metadata: DocumentMetadata | None = None,
     ) -> Document:
         """Update an existing document with partial data.
 

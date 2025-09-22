@@ -12,10 +12,10 @@ from .health import router as health_router
 from .libraries import router as libraries_router
 
 __all__ = [
+    "chunks_document_router",
+    "chunks_router",
+    "documents_library_router",
+    "documents_router",
     "health_router",
     "libraries_router",
-    "documents_router",
-    "documents_library_router",
-    "chunks_router",
-    "chunks_document_router",
 ]

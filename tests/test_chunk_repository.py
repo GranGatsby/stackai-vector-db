@@ -124,13 +124,25 @@ class TestInMemoryChunkRepository:
 
         # Create chunks in different documents but same library
         chunk1 = Chunk.create(
-            document_id=doc1_id, library_id=library_id, text="Chunk 1", start_index=0, end_index=7
+            document_id=doc1_id,
+            library_id=library_id,
+            text="Chunk 1",
+            start_index=0,
+            end_index=7,
         )
         chunk2 = Chunk.create(
-            document_id=doc1_id, library_id=library_id, text="Chunk 2", start_index=10, end_index=17
+            document_id=doc1_id,
+            library_id=library_id,
+            text="Chunk 2",
+            start_index=10,
+            end_index=17,
         )
         chunk3 = Chunk.create(
-            document_id=doc2_id, library_id=library_id, text="Chunk 3", start_index=5, end_index=12
+            document_id=doc2_id,
+            library_id=library_id,
+            text="Chunk 3",
+            start_index=5,
+            end_index=12,
         )
 
         repository.create(chunk1)
@@ -162,15 +174,9 @@ class TestInMemoryChunkRepository:
         doc2_id = uuid.uuid4()
 
         # Create chunks in different documents
-        chunk1 = Chunk.create(
-            document_id=doc1_id, library_id=lib_id, text="Chunk 1"
-        )
-        chunk2 = Chunk.create(
-            document_id=doc1_id, library_id=lib_id, text="Chunk 2"
-        )
-        chunk3 = Chunk.create(
-            document_id=doc2_id, library_id=lib_id, text="Chunk 3"
-        )
+        chunk1 = Chunk.create(document_id=doc1_id, library_id=lib_id, text="Chunk 1")
+        chunk2 = Chunk.create(document_id=doc1_id, library_id=lib_id, text="Chunk 2")
+        chunk3 = Chunk.create(document_id=doc2_id, library_id=lib_id, text="Chunk 3")
 
         repository.create(chunk1)
         repository.create(chunk2)

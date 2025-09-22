@@ -63,15 +63,11 @@ class TestChunkSchemas:
 
         # Empty text
         with pytest.raises(ValidationError, match="at least 1 character"):
-            ChunkCreate(
-                document_id=document_id, library_id=library_id, text=""
-            )
+            ChunkCreate(document_id=document_id, library_id=library_id, text="")
 
         # Whitespace only text
         with pytest.raises(ValidationError, match="empty or whitespace"):
-            ChunkCreate(
-                document_id=document_id, library_id=library_id, text="   "
-            )
+            ChunkCreate(document_id=document_id, library_id=library_id, text="   ")
 
     def test_chunk_create_invalid_indices(self):
         """Test chunk creation with invalid indices."""
@@ -140,7 +136,7 @@ class TestChunkSchemas:
         document_id = uuid.uuid4()
         library_id = uuid.uuid4()
         from app.domain import ChunkMetadata
-        
+
         chunk = Chunk.create(
             document_id=document_id,
             library_id=library_id,

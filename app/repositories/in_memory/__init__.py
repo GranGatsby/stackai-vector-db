@@ -11,8 +11,8 @@ from .library_repository import InMemoryLibraryRepository
 from .rwlock import RWLock
 
 __all__ = [
-    "InMemoryLibraryRepository",
-    "InMemoryDocumentRepository", 
     "InMemoryChunkRepository",
+    "InMemoryDocumentRepository",
+    "InMemoryLibraryRepository",
     "RWLock",
 ]

@@ -10,7 +10,7 @@ from .document_service import DocumentService
 from .library_service import LibraryService
 
 __all__ = [
-    "LibraryService",
-    "DocumentService",
     "ChunkService",
+    "DocumentService",
+    "LibraryService",
 ]

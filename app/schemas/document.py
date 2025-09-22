@@ -1,6 +1,6 @@
 """Document schemas for API requests and responses."""
 
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -10,22 +10,32 @@ from app.domain import DocumentMetadata
 
 class DocumentMetadataSchema(BaseModel):
     """Pydantic schema for DocumentMetadata."""
-    
+
     model_config = ConfigDict(strict=True, extra="forbid", exclude_none=True)
-    
-    author: Optional[str] = Field(None, max_length=255, description="Document author")
-    source: Optional[str] = Field(None, max_length=500, description="Document source")
-    language: Optional[str] = Field(None, max_length=50, description="Document language")
-    format: Optional[str] = Field(None, max_length=50, description="Document format (pdf, txt, markdown, etc.)")
-    created_at: Optional[str] = Field(None, description="Creation datetime (ISO string)")
-    modified_at: Optional[str] = Field(None, description="Modification datetime (ISO string)")
-    tags: Optional[list[str]] = Field(None, description="Document tags")
-    category: Optional[str] = Field(None, max_length=100, description="Document category")
-    is_public: Optional[bool] = Field(None, description="Whether document is public")
+
+    author: str | None = Field(None, max_length=255, description="Document author")
+    source: str | None = Field(None, max_length=500, description="Document source")
+    language: str | None = Field(
+        None, max_length=50, description="Document language"
+    )
+    format: str | None = Field(
+        None, max_length=50, description="Document format (pdf, txt, markdown, etc.)"
+    )
+    created_at: str | None = Field(
+        None, description="Creation datetime (ISO string)"
+    )
+    modified_at: str | None = Field(
+        None, description="Modification datetime (ISO string)"
+    )
+    tags: list[str] | None = Field(None, description="Document tags")
+    category: str | None = Field(
+        None, max_length=100, description="Document category"
+    )
+    is_public: bool | None = Field(None, description="Whether document is public")
     # Processing fields
-    processed: Optional[bool] = Field(None, description="Processing flag")
-    chunk_count: Optional[int] = Field(None, ge=0, description="Number of chunks")
-    word_count: Optional[int] = Field(None, ge=0, description="Word count")
+    processed: bool | None = Field(None, description="Processing flag")
+    chunk_count: int | None = Field(None, ge=0, description="Number of chunks")
+    word_count: int | None = Field(None, ge=0, description="Word count")
 
     def to_domain(self) -> DocumentMetadata:
         """Convert to domain DocumentMetadata."""
@@ -65,7 +75,7 @@ class DocumentMetadataSchema(BaseModel):
     @classmethod
     def from_domain(cls, metadata: DocumentMetadata) -> dict:
         """Create a dict from domain DocumentMetadata for API responses.
-        
+
         This returns only fields that have non-default values to maintain
         backward compatibility with existing API tests.
         """
@@ -94,7 +104,7 @@ class DocumentMetadataSchema(BaseModel):
             data["chunk_count"] = metadata.chunk_count
         if metadata.word_count is not None:
             data["word_count"] = metadata.word_count
-        
+
         return data
 
 
@@ -121,18 +131,20 @@ class DocumentBase(BaseModel):
 class DocumentCreate(DocumentBase):
     """Schema for creating a new document."""
 
-    library_id: UUID = Field(..., description="Library ID where document will be created")
+    library_id: UUID = Field(
+        ..., description="Library ID where document will be created"
+    )
 
     # All other fields inherited from DocumentBase
 
 
 class DocumentCreateInLibrary(DocumentBase):
     """Schema for creating a new document within a specific library.
-    
+
     This schema is used when the library_id is provided in the URL path,
     so it doesn't need to be included in the request body.
     """
-    
+
     # All fields inherited from DocumentBase (title, content, metadata)
     # No library_id field needed since it comes from URL path
 

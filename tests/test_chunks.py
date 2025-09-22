@@ -25,7 +25,7 @@ class TestChunk:
     def sample_chunk(self, document_id: UUID, library_id: UUID) -> Chunk:
         """Create a sample chunk for testing."""
         from app.domain import ChunkMetadata
-        
+
         return Chunk.create(
             document_id=document_id,
             library_id=library_id,
@@ -39,7 +39,7 @@ class TestChunk:
     def test_chunk_create_success(self, document_id: UUID, library_id: UUID):
         """Test successful chunk creation."""
         from app.domain import ChunkMetadata
-        
+
         chunk = Chunk.create(
             document_id=document_id,
             library_id=library_id,
@@ -62,7 +62,7 @@ class TestChunk:
     def test_chunk_create_minimal(self, document_id: UUID, library_id: UUID):
         """Test chunk creation with minimal required data."""
         from app.domain import ChunkMetadata
-        
+
         chunk = Chunk.create(
             document_id=document_id,
             library_id=library_id,
@@ -81,7 +81,7 @@ class TestChunk:
     def test_chunk_requires_document_id_and_non_empty_text(self, library_id: UUID):
         """Test that chunk requires document_id and non-empty text."""
         document_id = uuid.uuid4()
-        
+
         # Should succeed with valid data
         chunk = Chunk.create(
             document_id=document_id,
@@ -139,7 +139,9 @@ class TestChunk:
                 end_index=5,
             )
 
-    def test_chunk_embedding_default_empty_list(self, document_id: UUID, library_id: UUID):
+    def test_chunk_embedding_default_empty_list(
+        self, document_id: UUID, library_id: UUID
+    ):
         """Test that embedding defaults to empty list."""
         chunk = Chunk.create(
             document_id=document_id,
@@ -148,10 +150,12 @@ class TestChunk:
         )
         assert chunk.embedding == []
 
-    def test_chunk_metadata_default_empty_dict(self, document_id: UUID, library_id: UUID):
+    def test_chunk_metadata_default_empty_dict(
+        self, document_id: UUID, library_id: UUID
+    ):
         """Test that metadata defaults to empty ChunkMetadata."""
         from app.domain import ChunkMetadata
-        
+
         chunk = Chunk.create(
             document_id=document_id,
             library_id=library_id,
@@ -200,7 +204,7 @@ class TestChunk:
     def test_chunk_update_success(self, sample_chunk: Chunk):
         """Test successful chunk update."""
         from app.domain import ChunkMetadata
-        
+
         updated_chunk = sample_chunk.update(
             text="Updated text",
             embedding=[0.9, 0.8, 0.7],
@@ -256,7 +260,7 @@ class TestChunk:
     def test_chunk_validation_preserves_ids(self, sample_chunk: Chunk):
         """Test that update preserves ID, document_id, and library_id."""
         updated_chunk = sample_chunk.update(text="New text")
-        
+
         assert updated_chunk.id == sample_chunk.id
         assert updated_chunk.document_id == sample_chunk.document_id
         assert updated_chunk.library_id == sample_chunk.library_id
@@ -266,7 +270,7 @@ class TestChunk:
         document_id = uuid.uuid4()
         library_id = uuid.uuid4()
         from app.domain import ChunkMetadata
-        
+
         original_chunk = Chunk.create(
             document_id=document_id,
             library_id=library_id,
@@ -350,7 +354,7 @@ class TestChunkIntegrationWithDocumentAndLibrary:
             library_id=library.id,
             title="Persistent Document",
         )
-        
+
         original_chunk = Chunk.create(
             document_id=document.id,
             library_id=library.id,
@@ -372,7 +376,7 @@ class TestChunkIntegrationWithDocumentAndLibrary:
         """Test that chunk indices are consistent with text content."""
         document_id = uuid.uuid4()
         library_id = uuid.uuid4()
-        
+
         full_text = "This is a sample document with multiple sentences for chunking."
         chunk_text = "sample document"
         start_idx = full_text.index(chunk_text)
@@ -395,14 +399,14 @@ class TestChunkIntegrationWithDocumentAndLibrary:
         """Test chunk embedding-related operations."""
         document_id = uuid.uuid4()
         library_id = uuid.uuid4()
-        
+
         # Test chunk without embedding
         chunk_no_embedding = Chunk.create(
             document_id=document_id,
             library_id=library_id,
             text="Text without embedding",
         )
-        
+
         assert not chunk_no_embedding.has_embedding
         assert chunk_no_embedding.embedding_dim == 0
         assert chunk_no_embedding.embedding == []
@@ -415,7 +419,7 @@ class TestChunkIntegrationWithDocumentAndLibrary:
             text="Text with embedding",
             embedding=embedding_vector,
         )
-        
+
         assert chunk_with_embedding.has_embedding
         assert chunk_with_embedding.embedding_dim == len(embedding_vector)
         assert chunk_with_embedding.embedding == embedding_vector
@@ -423,10 +427,10 @@ class TestChunkIntegrationWithDocumentAndLibrary:
         # Test updating embedding
         new_embedding = [0.9, 0.8, 0.7]
         updated_chunk = chunk_with_embedding.update(embedding=new_embedding)
-        
+
         assert updated_chunk.has_embedding
         assert updated_chunk.embedding_dim == len(new_embedding)
         assert updated_chunk.embedding == new_embedding
-        
+
         # Original unchanged
         assert chunk_with_embedding.embedding == embedding_vector

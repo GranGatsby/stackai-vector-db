@@ -5,7 +5,12 @@ from unittest.mock import Mock
 
 import pytest
 
-from app.domain import Library, LibraryAlreadyExistsError, LibraryMetadata, LibraryNotFoundError
+from app.domain import (
+    Library,
+    LibraryAlreadyExistsError,
+    LibraryMetadata,
+    LibraryNotFoundError,
+)
 from app.services import LibraryService
 
 
@@ -132,7 +137,9 @@ class TestLibraryService:
 
         # Call service
         result = service.create_library(
-            name="New Library", description="Description", metadata=LibraryMetadata(test=True)
+            name="New Library",
+            description="Description",
+            metadata=LibraryMetadata(test=True),
         )
 
         # Verify

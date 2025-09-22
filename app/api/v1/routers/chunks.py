@@ -5,9 +5,8 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, status
 
 from app.api.v1.deps import get_chunk_service
-from app.schemas import ChunkCreate, ChunkList, ChunkRead, ChunkUpdate
-from app.schemas.chunk import ChunkCreateInDocument
-from app.schemas.chunk import ChunkMetadataSchema
+from app.schemas import ChunkList, ChunkRead, ChunkUpdate
+from app.schemas.chunk import ChunkCreateInDocument, ChunkMetadataSchema
 from app.services import ChunkService
 
 router = APIRouter(prefix="/chunks", tags=["chunks"])
@@ -52,7 +51,11 @@ async def update_chunk(
         embedding=chunk_data.embedding,
         start_index=chunk_data.start_index,
         end_index=chunk_data.end_index,
-        metadata=ChunkMetadataSchema.dict_to_domain(chunk_data.metadata) if chunk_data.metadata is not None else None,
+        metadata=(
+            ChunkMetadataSchema.dict_to_domain(chunk_data.metadata)
+            if chunk_data.metadata is not None
+            else None
+        ),
         compute_embedding=chunk_data.compute_embedding,
     )
     return ChunkRead.from_domain(chunk)
@@ -100,9 +103,7 @@ async def list_chunks_by_document(
     chunks, total = service.list_chunks_by_document(
         document_id, limit=limit, offset=offset
     )
-    return ChunkList.from_domain_list(
-        chunks, total=total, limit=limit, offset=offset
-    )
+    return ChunkList.from_domain_list(chunks, total=total, limit=limit, offset=offset)
 
 
 @document_router.post(
@@ -112,7 +113,9 @@ async def list_chunks_by_document(
     summary="Create a chunk in a document",
     description="Create a new chunk in the specified document with optional embedding computation",
     responses={
-        422: {"description": "Validation error, document not found, or library mismatch"},
+        422: {
+            "description": "Validation error, document not found, or library mismatch"
+        },
     },
 )
 async def create_chunk_in_document(

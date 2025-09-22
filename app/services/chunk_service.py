@@ -5,11 +5,14 @@ for chunk management, providing a clean interface between the API layer
 and the domain/repository layers.
 """
 
-from typing import Any, Optional
 from uuid import UUID
 
 from app.domain import Chunk, ChunkMetadata, ChunkNotFoundError
-from app.repositories.ports import ChunkRepository, DocumentRepository, LibraryRepository
+from app.repositories.ports import (
+    ChunkRepository,
+    DocumentRepository,
+    LibraryRepository,
+)
 
 
 class ChunkService:
@@ -119,7 +122,7 @@ class ChunkService:
         embedding: list[float] = None,
         start_index: int = 0,
         end_index: int = 0,
-        metadata: Optional[ChunkMetadata] = None,
+        metadata: ChunkMetadata | None = None,
         compute_embedding: bool = False,
     ) -> Chunk:
         """Create a new chunk.
@@ -181,7 +184,7 @@ class ChunkService:
         embedding: list[float] = None,
         start_index: int = None,
         end_index: int = None,
-        metadata: Optional[ChunkMetadata] = None,
+        metadata: ChunkMetadata | None = None,
         compute_embedding: bool = False,
     ) -> Chunk:
         """Update an existing chunk with partial data.

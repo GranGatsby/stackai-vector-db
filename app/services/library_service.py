@@ -5,11 +5,14 @@ for library management, providing a clean interface between the API layer
 and the domain/repository layers.
 """
 
-from typing import Optional
 from uuid import UUID
 
 from app.domain import Library, LibraryMetadata, LibraryNotFoundError
-from app.repositories.ports import ChunkRepository, DocumentRepository, LibraryRepository
+from app.repositories.ports import (
+    ChunkRepository,
+    DocumentRepository,
+    LibraryRepository,
+)
 
 
 class LibraryService:
@@ -94,7 +97,10 @@ class LibraryService:
         return library
 
     def create_library(
-        self, name: str, description: str = "", metadata: Optional[LibraryMetadata] = None
+        self,
+        name: str,
+        description: str = "",
+        metadata: LibraryMetadata | None = None,
     ) -> Library:
         """Create a new library.
 
@@ -121,7 +127,7 @@ class LibraryService:
         library_id: UUID,
         name: str = None,
         description: str = None,
-        metadata: Optional[LibraryMetadata] = None,
+        metadata: LibraryMetadata | None = None,
     ) -> Library:
         """Update an existing library.
 
@@ -155,7 +161,7 @@ class LibraryService:
 
         This method performs cascading deletes in the correct order:
         1. Delete all chunks in the library
-        2. Delete all documents in the library  
+        2. Delete all documents in the library
         3. Delete the library itself
 
         Args:
@@ -171,7 +177,7 @@ class LibraryService:
         # Perform cascading deletes if repositories are available
         if self._chunk_repository:
             chunks_deleted = self._chunk_repository.delete_by_library(library_id)
-        
+
         if self._document_repository:
             docs_deleted = self._document_repository.delete_by_library(library_id)
 

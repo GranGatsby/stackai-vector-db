@@ -94,7 +94,11 @@ async def update_library(
         library_id=library_id,
         name=library_data.name,
         description=library_data.description,
-        metadata=LibraryMetadataSchema.dict_to_domain(library_data.metadata) if library_data.metadata is not None else None,
+        metadata=(
+            LibraryMetadataSchema.dict_to_domain(library_data.metadata)
+            if library_data.metadata is not None
+            else None
+        ),
     )
     return LibraryOut.from_domain(library)
 

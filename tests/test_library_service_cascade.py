@@ -2,7 +2,6 @@
 
 import pytest
 
-from app.domain import Library
 from app.repositories.in_memory import (
     InMemoryChunkRepository,
     InMemoryDocumentRepository,

@@ -4,7 +4,7 @@ import uuid
 
 import pytest
 
-from app.domain import Document, DocumentNotFoundError, Library
+from app.domain import DocumentNotFoundError, Library
 from app.repositories.in_memory import (
     InMemoryChunkRepository,
     InMemoryDocumentRepository,
@@ -44,7 +44,9 @@ class TestDocumentService:
         library_repo.create(library)
         return library
 
-    def test_create_document_success(self, service: DocumentService, sample_library: Library):
+    def test_create_document_success(
+        self, service: DocumentService, sample_library: Library
+    ):
         """Test successful document creation."""
         document = service.create_document(
             library_id=sample_library.id,
@@ -69,7 +71,9 @@ class TestDocumentService:
                 title="Test Document",
             )
 
-    def test_get_document_success(self, service: DocumentService, sample_library: Library):
+    def test_get_document_success(
+        self, service: DocumentService, sample_library: Library
+    ):
         """Test successful document retrieval."""
         created = service.create_document(
             library_id=sample_library.id, title="Test Document"
@@ -85,7 +89,9 @@ class TestDocumentService:
         with pytest.raises(DocumentNotFoundError):
             service.get_document(non_existent_id)
 
-    def test_update_document_success(self, service: DocumentService, sample_library: Library):
+    def test_update_document_success(
+        self, service: DocumentService, sample_library: Library
+    ):
         """Test successful document update."""
         document = service.create_document(
             library_id=sample_library.id, title="Original Title"
@@ -100,7 +106,9 @@ class TestDocumentService:
         assert updated.content == "New content"
         assert updated.library_id == sample_library.id
 
-    def test_delete_document_with_cascade(self, service: DocumentService, sample_library: Library):
+    def test_delete_document_with_cascade(
+        self, service: DocumentService, sample_library: Library
+    ):
         """Test document deletion with cascading chunk deletion."""
         from app.services import ChunkService
 

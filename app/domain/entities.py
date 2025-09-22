@@ -6,76 +6,75 @@ concepts of the vector database: Library, Document, and Chunk.
 
 import uuid
 from dataclasses import dataclass, field
-from typing import Any, Optional
 from uuid import UUID
 
 
 @dataclass(frozen=True)
 class DocumentMetadata:
     """Fixed metadata schema for Document entities.
-    
+
     Provides a structured schema for document metadata instead of dict[str, Any].
     This follows the task requirement for fixed schemas to reduce validation complexity.
     """
-    
-    author: Optional[str] = None
-    source: Optional[str] = None
-    language: Optional[str] = None
-    format: Optional[str] = None  # pdf, txt, markdown, etc.
-    created_at: Optional[str] = None  # ISO datetime string
-    modified_at: Optional[str] = None  # ISO datetime string
+
+    author: str | None = None
+    source: str | None = None
+    language: str | None = None
+    format: str | None = None  # pdf, txt, markdown, etc.
+    created_at: str | None = None  # ISO datetime string
+    modified_at: str | None = None  # ISO datetime string
     tags: list[str] = field(default_factory=list)
-    category: Optional[str] = None
+    category: str | None = None
     is_public: bool = True
     # Processing fields
-    processed: Optional[bool] = None
-    chunk_count: Optional[int] = None
-    word_count: Optional[int] = None
+    processed: bool | None = None
+    chunk_count: int | None = None
+    word_count: int | None = None
 
 
 @dataclass(frozen=True)
 class ChunkMetadata:
     """Fixed metadata schema for Chunk entities.
-    
+
     Provides a structured schema for chunk metadata instead of dict[str, Any].
     This follows the task requirement for fixed schemas to reduce validation complexity.
     """
-    
-    chunk_type: Optional[str] = None  # paragraph, heading, table, etc.
-    section: Optional[str] = None
-    page_number: Optional[int] = None
-    confidence: Optional[float] = None  # extraction confidence
-    language: Optional[str] = None
+
+    chunk_type: str | None = None  # paragraph, heading, table, etc.
+    section: str | None = None
+    page_number: int | None = None
+    confidence: float | None = None  # extraction confidence
+    language: str | None = None
     tags: list[str] = field(default_factory=list)
     # Embedding fields
-    embedding_model: Optional[str] = None
-    embedding_dim: Optional[int] = None
-    similarity_threshold: Optional[float] = None
+    embedding_model: str | None = None
+    embedding_dim: int | None = None
+    similarity_threshold: float | None = None
     # Processing fields
-    processed_at: Optional[str] = None  # ISO datetime string
+    processed_at: str | None = None  # ISO datetime string
     is_indexed: bool = False
 
 
 @dataclass(frozen=True)
 class LibraryMetadata:
     """Fixed metadata schema for Library entities.
-    
+
     Provides a structured schema for library metadata instead of dict[str, Any].
     This follows the task requirement for fixed schemas to reduce validation complexity.
     """
-    
-    author: Optional[str] = None
-    version: Optional[str] = None
+
+    author: str | None = None
+    version: str | None = None
     tags: list[str] = field(default_factory=list)
-    created_by: Optional[str] = None
-    project: Optional[str] = None
-    category: Optional[str] = None
+    created_by: str | None = None
+    project: str | None = None
+    category: str | None = None
     is_public: bool = True
     # Test/workflow fields
-    test: Optional[bool] = None
-    updated: Optional[bool] = None
-    original: Optional[bool] = None
-    workflow: Optional[str] = None
+    test: bool | None = None
+    updated: bool | None = None
+    original: bool | None = None
+    workflow: str | None = None
 
 
 @dataclass(frozen=True)
@@ -108,7 +107,10 @@ class Library:
 
     @classmethod
     def create(
-        cls, name: str, description: str = "", metadata: Optional[LibraryMetadata] = None
+        cls,
+        name: str,
+        description: str = "",
+        metadata: LibraryMetadata | None = None,
     ) -> "Library":
         """Factory method to create a new Library with generated ID.
 
@@ -131,7 +133,10 @@ class Library:
         )
 
     def update(
-        self, name: str = None, description: str = None, metadata: Optional[LibraryMetadata] = None
+        self,
+        name: str = None,
+        description: str = None,
+        metadata: LibraryMetadata | None = None,
     ) -> "Library":
         """Create a new Library instance with updated fields.
 
@@ -195,7 +200,7 @@ class Document:
         library_id: UUID,
         title: str,
         content: str = "",
-        metadata: Optional[DocumentMetadata] = None,
+        metadata: DocumentMetadata | None = None,
     ) -> "Document":
         """Factory method to create a new Document with generated ID."""
         return cls(
@@ -210,7 +215,7 @@ class Document:
         self,
         title: str = None,
         content: str = None,
-        metadata: Optional[DocumentMetadata] = None,
+        metadata: DocumentMetadata | None = None,
     ) -> "Document":
         """Create a new Document instance with updated fields.
 
@@ -290,7 +295,7 @@ class Chunk:
         embedding: list[float] = None,
         start_index: int = 0,
         end_index: int = 0,
-        metadata: Optional[ChunkMetadata] = None,
+        metadata: ChunkMetadata | None = None,
     ) -> "Chunk":
         """Factory method to create a new Chunk with generated ID."""
         return cls(
@@ -310,7 +315,7 @@ class Chunk:
         embedding: list[float] = None,
         start_index: int = None,
         end_index: int = None,
-        metadata: Optional[ChunkMetadata] = None,
+        metadata: ChunkMetadata | None = None,
     ) -> "Chunk":
         """Create a new Chunk instance with updated fields.
 

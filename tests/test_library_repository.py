@@ -4,7 +4,12 @@ import uuid
 
 import pytest
 
-from app.domain import Library, LibraryAlreadyExistsError, LibraryMetadata, LibraryNotFoundError
+from app.domain import (
+    Library,
+    LibraryAlreadyExistsError,
+    LibraryMetadata,
+    LibraryNotFoundError,
+)
 from app.repositories.in_memory import InMemoryLibraryRepository
 
 

@@ -4,7 +4,7 @@ import uuid
 
 import pytest
 
-from app.domain import Chunk, ChunkNotFoundError, Document, Library
+from app.domain import ChunkNotFoundError, Document, Library
 from app.repositories.in_memory import (
     InMemoryChunkRepository,
     InMemoryDocumentRepository,
@@ -46,9 +46,7 @@ class TestChunkService:
     @pytest.fixture
     def sample_document(self, document_repo, sample_library):
         """Create a sample document."""
-        document = Document.create(
-            library_id=sample_library.id, title="Test Document"
-        )
+        document = Document.create(library_id=sample_library.id, title="Test Document")
         document_repo.create(document)
         return document
 
@@ -91,7 +89,9 @@ class TestChunkService:
         expected_dim = min(768, max(1, len("Test chunk for embedding") // 10))
         assert len(chunk.embedding) == expected_dim
 
-    def test_create_chunk_invalid_document(self, service: ChunkService, sample_library: Library):
+    def test_create_chunk_invalid_document(
+        self, service: ChunkService, sample_library: Library
+    ):
         """Test chunk creation with invalid document_id."""
         invalid_document_id = uuid.uuid4()
 
@@ -102,7 +102,9 @@ class TestChunkService:
                 text="Test chunk",
             )
 
-    def test_create_chunk_invalid_library(self, service: ChunkService, sample_document: Document):
+    def test_create_chunk_invalid_library(
+        self, service: ChunkService, sample_document: Document
+    ):
         """Test chunk creation with invalid library_id."""
         invalid_library_id = uuid.uuid4()
 

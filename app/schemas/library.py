@@ -1,6 +1,5 @@
 """Library schemas for API requests and responses."""
 
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -10,21 +9,23 @@ from app.domain import LibraryMetadata
 
 class LibraryMetadataSchema(BaseModel):
     """Pydantic schema for LibraryMetadata."""
-    
+
     model_config = ConfigDict(strict=True, extra="forbid", exclude_none=True)
-    
-    author: Optional[str] = Field(None, max_length=255, description="Library author")
-    version: Optional[str] = Field(None, max_length=50, description="Library version")
-    tags: Optional[list[str]] = Field(None, description="Library tags")
-    created_by: Optional[str] = Field(None, max_length=255, description="Creator name")
-    project: Optional[str] = Field(None, max_length=255, description="Project name")
-    category: Optional[str] = Field(None, max_length=100, description="Library category")
-    is_public: Optional[bool] = Field(None, description="Whether library is public")
+
+    author: str | None = Field(None, max_length=255, description="Library author")
+    version: str | None = Field(None, max_length=50, description="Library version")
+    tags: list[str] | None = Field(None, description="Library tags")
+    created_by: str | None = Field(None, max_length=255, description="Creator name")
+    project: str | None = Field(None, max_length=255, description="Project name")
+    category: str | None = Field(
+        None, max_length=100, description="Library category"
+    )
+    is_public: bool | None = Field(None, description="Whether library is public")
     # Test/workflow fields
-    test: Optional[bool] = Field(None, description="Test flag")
-    updated: Optional[bool] = Field(None, description="Updated flag")
-    original: Optional[bool] = Field(None, description="Original flag")
-    workflow: Optional[str] = Field(None, max_length=100, description="Workflow type")
+    test: bool | None = Field(None, description="Test flag")
+    updated: bool | None = Field(None, description="Updated flag")
+    original: bool | None = Field(None, description="Original flag")
+    workflow: str | None = Field(None, max_length=100, description="Workflow type")
 
     def to_domain(self) -> LibraryMetadata:
         """Convert to domain LibraryMetadata."""
@@ -35,7 +36,9 @@ class LibraryMetadataSchema(BaseModel):
             created_by=self.created_by,
             project=self.project,
             category=self.category,
-            is_public=self.is_public if self.is_public is not None else True,  # Default to True
+            is_public=(
+                self.is_public if self.is_public is not None else True
+            ),  # Default to True
             test=self.test,
             updated=self.updated,
             original=self.original,
@@ -62,7 +65,7 @@ class LibraryMetadataSchema(BaseModel):
     @classmethod
     def from_domain(cls, metadata: LibraryMetadata) -> dict:
         """Create a dict from domain LibraryMetadata for API responses.
-        
+
         This returns only fields that have non-default values to maintain
         backward compatibility with existing API tests.
         """
@@ -89,7 +92,7 @@ class LibraryMetadataSchema(BaseModel):
             data["original"] = metadata.original
         if metadata.workflow is not None:
             data["workflow"] = metadata.workflow
-        
+
         return data
 
 
@@ -102,9 +105,7 @@ class LibraryBase(BaseModel):
     description: str = Field(
         default="", max_length=1000, description="Library description"
     )
-    metadata: dict = Field(
-        default_factory=dict, description="Structured metadata"
-    )
+    metadata: dict = Field(default_factory=dict, description="Structured metadata")
 
     @field_validator("name")
     @classmethod
@@ -136,7 +137,7 @@ class LibraryUpdate(BaseModel):
     description: str | None = Field(
         None, max_length=1000, description="Library description"
     )
-    metadata: Optional[dict] = Field(None, description="Structured metadata")
+    metadata: dict | None = Field(None, description="Structured metadata")
 
     @field_validator("name")
     @classmethod

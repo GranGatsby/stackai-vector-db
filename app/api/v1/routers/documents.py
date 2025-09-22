@@ -6,8 +6,7 @@ from fastapi import APIRouter, Depends, Query, status
 
 from app.api.v1.deps import get_document_service
 from app.schemas import DocumentCreate, DocumentList, DocumentRead, DocumentUpdate
-from app.schemas.document import DocumentCreateInLibrary
-from app.schemas.document import DocumentMetadataSchema
+from app.schemas.document import DocumentCreateInLibrary, DocumentMetadataSchema
 from app.services import DocumentService
 
 router = APIRouter(prefix="/documents", tags=["documents"])
@@ -74,7 +73,11 @@ async def update_document(
         document_id=document_id,
         title=document_data.title,
         content=document_data.content,
-        metadata=DocumentMetadataSchema.dict_to_domain(document_data.metadata) if document_data.metadata is not None else None,
+        metadata=(
+            DocumentMetadataSchema.dict_to_domain(document_data.metadata)
+            if document_data.metadata is not None
+            else None
+        ),
     )
     return DocumentRead.from_domain(document)
 

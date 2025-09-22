@@ -40,17 +40,17 @@ class InMemoryDocumentRepository(DocumentRepository):
         with self._lock.read_lock():
             # Get document IDs for this library
             document_ids = list(self._library_index.get(library_id, set()))
-            
+
             # Sort by title for consistent ordering
             documents = [self._documents[doc_id] for doc_id in document_ids]
             documents.sort(key=lambda d: d.title.lower())
-            
+
             # Apply pagination
             if offset > 0:
                 documents = documents[offset:]
             if limit is not None:
                 documents = documents[:limit]
-                
+
             return documents
 
     def count_by_library(self, library_id: UUID) -> int:
@@ -69,13 +69,13 @@ class InMemoryDocumentRepository(DocumentRepository):
             # Check if document already exists
             if document.id in self._documents:
                 raise ValueError(f"Document with ID {document.id} already exists")
-            
+
             # Store the document
             self._documents[document.id] = document
-            
+
             # Update secondary index
             self._library_index[document.library_id].add(document.id)
-            
+
             return document
 
     def update(self, document: Document) -> Document:
@@ -85,15 +85,15 @@ class InMemoryDocumentRepository(DocumentRepository):
             existing = self._documents.get(document.id)
             if existing is None:
                 raise DocumentNotFoundError(f"Document with ID {document.id} not found")
-            
+
             # Update secondary index if library_id changed
             if existing.library_id != document.library_id:
                 self._library_index[existing.library_id].discard(document.id)
                 self._library_index[document.library_id].add(document.id)
-            
+
             # Store updated document
             self._documents[document.id] = document
-            
+
             return document
 
     def delete(self, document_id: UUID) -> bool:
@@ -102,31 +102,31 @@ class InMemoryDocumentRepository(DocumentRepository):
             document = self._documents.get(document_id)
             if document is None:
                 return False
-            
+
             # Remove from primary storage
             del self._documents[document_id]
-            
+
             # Update secondary index
             self._library_index[document.library_id].discard(document_id)
-            
+
             return True
 
     def delete_by_library(self, library_id: UUID) -> int:
         """Delete all documents in a library."""
         with self._lock.write_lock():
             document_ids = list(self._library_index.get(library_id, set()))
-            
+
             # Delete each document (avoiding reentrancy issues)
             deleted_count = 0
             for document_id in document_ids:
                 if document_id in self._documents:
                     del self._documents[document_id]
                     deleted_count += 1
-            
+
             # Clear the library index
             if library_id in self._library_index:
                 self._library_index[library_id].clear()
-            
+
             return deleted_count
 
     def exists(self, document_id: UUID) -> bool:

@@ -114,7 +114,7 @@ class LibraryRepository(Protocol):
 
 class DocumentRepository(Protocol):
     """Repository interface for Document entities.
-    
+
     Defines the contract for document storage operations, enabling
     different implementations while maintaining consistent behavior.
     """
@@ -123,12 +123,12 @@ class DocumentRepository(Protocol):
         self, library_id: UUID, limit: int = None, offset: int = 0
     ) -> list[Document]:
         """Retrieve documents in a library with optional pagination.
-        
+
         Args:
             library_id: The library ID to filter by
             limit: Maximum number of documents to return (None for all)
             offset: Number of documents to skip
-            
+
         Returns:
             List of Document entities, may be empty
         """
@@ -136,10 +136,10 @@ class DocumentRepository(Protocol):
 
     def count_by_library(self, library_id: UUID) -> int:
         """Get the total count of documents in a library.
-        
+
         Args:
             library_id: The library ID to count documents for
-            
+
         Returns:
             Total number of documents in the library
         """
@@ -147,10 +147,10 @@ class DocumentRepository(Protocol):
 
     def get_by_id(self, document_id: UUID) -> Document | None:
         """Retrieve a document by its ID.
-        
+
         Args:
             document_id: The unique identifier of the document
-            
+
         Returns:
             The Document entity if found, None otherwise
         """
@@ -158,13 +158,13 @@ class DocumentRepository(Protocol):
 
     def create(self, document: Document) -> Document:
         """Create a new document.
-        
+
         Args:
             document: The Document entity to create
-            
+
         Returns:
             The created Document entity
-            
+
         Raises:
             DocumentAlreadyExistsError: If a document with the same ID exists
         """
@@ -172,13 +172,13 @@ class DocumentRepository(Protocol):
 
     def update(self, document: Document) -> Document:
         """Update an existing document.
-        
+
         Args:
             document: The Document entity with updated data
-            
+
         Returns:
             The updated Document entity
-            
+
         Raises:
             DocumentNotFoundError: If the document doesn't exist
         """
@@ -186,10 +186,10 @@ class DocumentRepository(Protocol):
 
     def delete(self, document_id: UUID) -> bool:
         """Delete a document by its ID.
-        
+
         Args:
             document_id: The unique identifier of the document to delete
-            
+
         Returns:
             True if the document was deleted, False if it didn't exist
         """
@@ -197,10 +197,10 @@ class DocumentRepository(Protocol):
 
     def delete_by_library(self, library_id: UUID) -> int:
         """Delete all documents in a library.
-        
+
         Args:
             library_id: The library ID to delete documents from
-            
+
         Returns:
             Number of documents deleted
         """
@@ -208,10 +208,10 @@ class DocumentRepository(Protocol):
 
     def exists(self, document_id: UUID) -> bool:
         """Check if a document exists.
-        
+
         Args:
             document_id: The unique identifier to check
-            
+
         Returns:
             True if the document exists, False otherwise
         """
@@ -220,7 +220,7 @@ class DocumentRepository(Protocol):
 
 class ChunkRepository(Protocol):
     """Repository interface for Chunk entities.
-    
+
     Defines the contract for chunk storage operations, enabling
     different implementations while maintaining consistent behavior.
     """
@@ -229,12 +229,12 @@ class ChunkRepository(Protocol):
         self, library_id: UUID, limit: int = None, offset: int = 0
     ) -> list[Chunk]:
         """Retrieve chunks in a library with optional pagination.
-        
+
         Args:
             library_id: The library ID to filter by
             limit: Maximum number of chunks to return (None for all)
             offset: Number of chunks to skip
-            
+
         Returns:
             List of Chunk entities, may be empty
         """
@@ -244,12 +244,12 @@ class ChunkRepository(Protocol):
         self, document_id: UUID, limit: int = None, offset: int = 0
     ) -> list[Chunk]:
         """Retrieve chunks in a document with optional pagination.
-        
+
         Args:
             document_id: The document ID to filter by
             limit: Maximum number of chunks to return (None for all)
             offset: Number of chunks to skip
-            
+
         Returns:
             List of Chunk entities, may be empty
         """
@@ -257,10 +257,10 @@ class ChunkRepository(Protocol):
 
     def count_by_library(self, library_id: UUID) -> int:
         """Get the total count of chunks in a library.
-        
+
         Args:
             library_id: The library ID to count chunks for
-            
+
         Returns:
             Total number of chunks in the library
         """
@@ -268,10 +268,10 @@ class ChunkRepository(Protocol):
 
     def count_by_document(self, document_id: UUID) -> int:
         """Get the total count of chunks in a document.
-        
+
         Args:
             document_id: The document ID to count chunks for
-            
+
         Returns:
             Total number of chunks in the document
         """
@@ -279,10 +279,10 @@ class ChunkRepository(Protocol):
 
     def get_by_id(self, chunk_id: UUID) -> Chunk | None:
         """Retrieve a chunk by its ID.
-        
+
         Args:
             chunk_id: The unique identifier of the chunk
-            
+
         Returns:
             The Chunk entity if found, None otherwise
         """
@@ -290,13 +290,13 @@ class ChunkRepository(Protocol):
 
     def create(self, chunk: Chunk) -> Chunk:
         """Create a new chunk.
-        
+
         Args:
             chunk: The Chunk entity to create
-            
+
         Returns:
             The created Chunk entity
-            
+
         Raises:
             ChunkAlreadyExistsError: If a chunk with the same ID exists
         """
@@ -304,13 +304,13 @@ class ChunkRepository(Protocol):
 
     def update(self, chunk: Chunk) -> Chunk:
         """Update an existing chunk.
-        
+
         Args:
             chunk: The Chunk entity with updated data
-            
+
         Returns:
             The updated Chunk entity
-            
+
         Raises:
             ChunkNotFoundError: If the chunk doesn't exist
         """
@@ -318,10 +318,10 @@ class ChunkRepository(Protocol):
 
     def delete(self, chunk_id: UUID) -> bool:
         """Delete a chunk by its ID.
-        
+
         Args:
             chunk_id: The unique identifier of the chunk to delete
-            
+
         Returns:
             True if the chunk was deleted, False if it didn't exist
         """
@@ -329,10 +329,10 @@ class ChunkRepository(Protocol):
 
     def delete_by_document(self, document_id: UUID) -> int:
         """Delete all chunks in a document.
-        
+
         Args:
             document_id: The document ID to delete chunks from
-            
+
         Returns:
             Number of chunks deleted
         """
@@ -340,10 +340,10 @@ class ChunkRepository(Protocol):
 
     def delete_by_library(self, library_id: UUID) -> int:
         """Delete all chunks in a library.
-        
+
         Args:
             library_id: The library ID to delete chunks from
-            
+
         Returns:
             Number of chunks deleted
         """
@@ -351,10 +351,10 @@ class ChunkRepository(Protocol):
 
     def exists(self, chunk_id: UUID) -> bool:
         """Check if a chunk exists.
-        
+
         Args:
             chunk_id: The unique identifier to check
-            
+
         Returns:
             True if the chunk exists, False otherwise
         """

@@ -92,7 +92,7 @@ class TestDocumentSchemas:
 
         library_id = uuid.uuid4()
         from app.domain import DocumentMetadata
-        
+
         document = Document.create(
             library_id=library_id,
             title="Test Document",
