@@ -10,7 +10,7 @@ from uuid import UUID
 from app.domain import Library, LibraryAlreadyExistsError, LibraryNotFoundError
 from app.repositories.ports import LibraryRepository
 
-from .rwlock import RWLock
+from app.utils import RWLock
 
 
 class InMemoryLibraryRepository(LibraryRepository):

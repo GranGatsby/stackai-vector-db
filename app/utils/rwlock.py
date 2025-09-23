@@ -2,7 +2,7 @@
 
 This module provides a thread-safe reader-writer lock that allows multiple
 concurrent readers or a single exclusive writer, preventing data races in
-the in-memory repository implementations.
+shared data structures. This is a consolidated version used across the application.
 """
 
 import threading
@@ -21,6 +21,9 @@ class RWLock:
     - Only one writer can hold the lock at a time
     - Writers block all readers and other writers
     - Writers have priority over new readers to prevent starvation
+    
+    This implementation provides both context manager and direct acquisition
+    methods for maximum compatibility with different usage patterns.
     """
 
     def __init__(self) -> None:
@@ -60,8 +63,32 @@ class RWLock:
         finally:
             self._release_write()
 
+    def acquire_read(self) -> None:
+        """Acquire a read lock (direct method for compatibility).
+        
+        Note: When using this method, you must call release_read() manually.
+        Consider using the read_lock() context manager instead.
+        """
+        self._acquire_read()
+
+    def release_read(self) -> None:
+        """Release a read lock (direct method for compatibility)."""
+        self._release_read()
+
+    def acquire_write(self) -> None:
+        """Acquire a write lock (direct method for compatibility).
+        
+        Note: When using this method, you must call release_write() manually.
+        Consider using the write_lock() context manager instead.
+        """
+        self._acquire_write()
+
+    def release_write(self) -> None:
+        """Release a write lock (direct method for compatibility)."""
+        self._release_write()
+
     def _acquire_read(self) -> None:
-        """Acquire a read lock."""
+        """Internal method to acquire a read lock."""
         with self._read_ready:
             # Wait while there's an active writer or writers waiting
             while self._writer_active or self._writers_waiting > 0:
@@ -69,7 +96,7 @@ class RWLock:
             self._readers += 1
 
     def _release_read(self) -> None:
-        """Release a read lock."""
+        """Internal method to release a read lock."""
         with self._read_ready:
             self._readers -= 1
             if self._readers == 0:
@@ -77,7 +104,7 @@ class RWLock:
                 self._read_ready.notify_all()
 
     def _acquire_write(self) -> None:
-        """Acquire a write lock."""
+        """Internal method to acquire a write lock."""
         with self._read_ready:
             self._writers_waiting += 1
             try:
@@ -89,7 +116,7 @@ class RWLock:
                 self._writers_waiting -= 1
 
     def _release_write(self) -> None:
-        """Release a write lock."""
+        """Internal method to release a write lock."""
         with self._read_ready:
             self._writer_active = False
             # Notify all waiting readers and writers

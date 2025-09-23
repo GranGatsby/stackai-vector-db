@@ -11,7 +11,7 @@ from uuid import UUID
 from app.domain import Chunk, ChunkNotFoundError
 from app.repositories.ports import ChunkRepository
 
-from .rwlock import RWLock
+from app.utils import RWLock
 
 
 class InMemoryChunkRepository(ChunkRepository):

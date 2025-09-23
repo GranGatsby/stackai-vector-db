@@ -188,14 +188,68 @@ Ver `env.example` para todas las opciones disponibles.
 
 ### Implementados
 
-1. **Linear Scan**: O(N) búsqueda, O(N) espacio
-2. **KD-Tree**: ~O(N log N) construcción, eficiente en bajas dimensiones
-3. **IVF-like**: Cuantización gruesa con listas invertidas
+#### 1. LinearScanIndex (Baseline)
+- **Complejidad Temporal**: 
+  - Build: O(N) - Almacena vectores en memoria
+  - Query: O(N × D) - Escaneo exhaustivo
+  - Add/Remove: O(1) - Operaciones directas en lista
+- **Complejidad Espacial**: O(N × D)
+- **Características**:
+  - Resultados exactos (sin aproximación)
+  - Sin preprocesamiento requerido
+  - Excelente para datasets pequeños (<1K vectores)
+  - Baseline confiable para comparación
+
+#### 2. KDTreeIndex (Eficiente en Bajas Dimensiones)
+- **Complejidad Temporal**:
+  - Build: O(N log N) - Particionado recursivo con búsqueda de mediana
+  - Query: O(log N) promedio, O(N) peor caso
+  - Add/Remove: O(log N) - Puede requerir rebalanceo
+- **Complejidad Espacial**: O(N) - Estructura de árbol
+- **Características**:
+  - Excelente para dimensiones bajas (D ≤ 20)
+  - Performance se degrada en altas dimensiones (maldición de dimensionalidad)
+  - Resultados exactos
+  - Estructura de memoria eficiente
+
+#### 3. IVFIndex (Inverted File - Escalable)
+- **Complejidad Temporal**:
+  - Build: O(N × C × I) - N vectores, C clusters, I iteraciones k-means
+  - Query: O(P × M + k) - P sondeos, M vectores promedio por cluster
+  - Add: O(C) - Encontrar cluster más cercano
+  - Remove: O(M) - Buscar en lista invertida
+- **Complejidad Espacial**: O(N + C × D) - Vectores + centroides
+- **Características**:
+  - Excelente escalabilidad para datasets grandes (>10K vectores)
+  - Resultados aproximados (ajustable vía parámetro nprobe)
+  - Buen rendimiento en altas dimensiones
+  - Actualizaciones incrementales eficientes
+
+### Selección Automática de Algoritmo
+
+El sistema selecciona automáticamente el algoritmo óptimo basado en:
+
+- **Datasets pequeños** (<1K vectores): LinearScan
+- **Dimensiones bajas** (D ≤ 20, <50K vectores): KDTree  
+- **Datasets grandes** (≥10K vectores) o **altas dimensiones** (D > 50): IVF
+- **Prioridad de precisión**: KDTree para dim bajas, LinearScan para dim altas
+- **Prioridad de velocidad**: IVF para la mayoría de casos
+
+### Justificación de Selección
+
+**¿Por qué estos 3 algoritmos?**
+
+1. **LinearScan**: Baseline esencial que garantiza resultados exactos y sirve como referencia de correctitud
+2. **KDTree**: Algoritmo clásico que demuestra técnicas de particionado espacial, excelente para casos de uso específicos
+3. **IVF**: Algoritmo moderno usado en sistemas de producción (similar a FAISS), escalable y práctico
+
+Esta combinación cubre el espectro completo: exactitud vs velocidad, datasets pequeños vs grandes, y dimensiones bajas vs altas.
 
 ### Consideraciones de Concurrencia
 
 - **Single-writer principle**: Operaciones de escritura protegidas con locks
-- **Read/Write locks**: Lecturas concurrentes permitidas
+- **Read/Write locks**: Múltiples lectores concurrentes permitidos
+- **Thread-safe wrapper**: Envoltorio automático para operaciones concurrentes
 - **Copy-on-write**: Lecturas desde snapshots inmutables durante reconstrucción
 
 ## 🐛 Troubleshooting
@@ -217,13 +271,11 @@ Ver `env.example` para todas las opciones disponibles.
 ## 📝 TODO
 
 ### Próximas Funcionalidades
-- [ ] Implementar modelos de dominio (Library, Document, Chunk)
-- [ ] Desarrollar algoritmos de indexación (Linear, KD-Tree, IVF)
-- [ ] Crear servicios de aplicación (CRUD, búsqueda k-NN)
-- [ ] Implementar cliente Cohere para embeddings
-- [ ] Agregar endpoints REST completos
+- [ ] Crear servicios de aplicación para búsqueda k-NN
+- [ ] Implementar endpoints REST para búsqueda vectorial
+- [ ] Integrar indexación automática en LibraryService
 
-### Mejoras Futuras
+### Mejoras Futuras (Extras)
 - [ ] Implementar persistencia en disco
 - [ ] Agregar filtros de metadata
 - [ ] Implementar arquitectura leader-follower
@@ -238,6 +290,12 @@ Ver `env.example` para todas las opciones disponibles.
 - [x] Suite de tests completa para componentes base
 - [x] Containerización con Docker
 - [x] Health check endpoint funcional
+- [x] **Modelos de dominio completos** (Library, Document, Chunk)
+- [x] **Algoritmos de indexación implementados** (Linear, KD-Tree, IVF)
+- [x] **Cliente Cohere para embeddings** con fallback a FakeClient
+- [x] **Endpoints REST CRUD completos** para todas las entidades
+- [x] **Sistema de embeddings integrado** con dependency injection
+- [x] **Thread-safety y concurrencia** en algoritmos de indexación
 
 ## 🤝 Contribución
 
