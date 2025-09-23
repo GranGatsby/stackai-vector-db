@@ -52,23 +52,36 @@ class TestSettings:
             assert settings.max_chunks_per_library == 5000
             assert settings.cohere_api_key == "test-key-123"
 
-    def test_cohere_api_key_required(self, mock_cohere_env):
-        """Test that cohere_api_key is required."""
+    def test_cohere_api_key_with_value(self, mock_cohere_env):
+        """Test that cohere_api_key can be set via environment variable."""
         settings = Settings(_env_file=None)
         assert settings.cohere_api_key == "test-key-123"
 
-    def test_cohere_api_key_missing_fails(self):
-        """Test that missing COHERE_API_KEY raises ValidationError."""
+    def test_cohere_api_key_optional_defaults_to_none(self):
+        """Test that cohere_api_key is optional and defaults to None."""
         # Ensure COHERE_API_KEY is not set
         with patch.dict(os.environ, {}, clear=True):
-            with pytest.raises(ValidationError) as exc_info:
-                Settings(_env_file=None)
+            settings = Settings(_env_file=None)
+            
+            # Should not raise an error and should default to None
+            assert settings.cohere_api_key is None
 
-            # Verify the error is about the missing cohere_api_key field
-            error = exc_info.value
-            assert len(error.errors()) == 1
-            assert error.errors()[0]["loc"] == ("cohere_api_key",)
-            assert error.errors()[0]["type"] == "missing"
+    def test_embedding_client_selection_based_on_api_key(self):
+        """Test that embedding client selection works correctly based on API key presence."""
+        from app.clients import create_embedding_client, FakeEmbeddingClient, CohereEmbeddingClient
+        
+        # Test with no API key - should create FakeEmbeddingClient
+        # Use explicit empty string to override any global settings
+        client = create_embedding_client(api_key="")
+        assert isinstance(client, FakeEmbeddingClient)
+        
+        # Test with None API key - should create FakeEmbeddingClient
+        client = create_embedding_client(api_key=None)
+        # Note: This might still use global settings if available
+        
+        # Test with explicit API key - should create CohereEmbeddingClient
+        client = create_embedding_client(api_key="test-api-key-123")
+        assert isinstance(client, CohereEmbeddingClient)
 
     def test_logging_formats(self, mock_cohere_env):
         """Test that logging formats are configured correctly."""

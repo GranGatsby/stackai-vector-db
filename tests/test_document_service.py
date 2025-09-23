@@ -118,10 +118,13 @@ class TestDocumentService:
         )
 
         # Create chunks for the document using ChunkService
+        from app.clients.embedding import FakeEmbeddingClient
+        embedding_client = FakeEmbeddingClient(embedding_dim=10)
         chunk_service = ChunkService(
             service._chunk_repository,
             service._document_repository,
             service._library_repository,
+            embedding_client,
         )
 
         chunk1 = chunk_service.create_chunk(

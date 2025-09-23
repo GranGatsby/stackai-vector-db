@@ -35,7 +35,9 @@ class Settings(BaseSettings):
     cors_allow_headers: list[str] = Field(default_factory=lambda: ["*"])
 
     # Cohere API Configuration
-    cohere_api_key: str = Field(..., description="Cohere API key for embeddings")
+    cohere_api_key: str | None = Field(
+        default=None, description="Cohere API key for embeddings (optional - uses fake client if not provided)"
+    )
     cohere_model: str = "embed-english-v3.0"
     cohere_input_type: str = "search_document"
 

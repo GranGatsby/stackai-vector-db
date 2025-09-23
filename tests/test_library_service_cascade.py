@@ -39,9 +39,15 @@ class TestLibraryServiceCascade:
         return DocumentService(document_repo, library_repo, chunk_repo)
 
     @pytest.fixture
-    def chunk_service(self, chunk_repo, document_repo, library_repo):
+    def embedding_client(self):
+        """Create a fake embedding client."""
+        from app.clients.embedding import FakeEmbeddingClient
+        return FakeEmbeddingClient(embedding_dim=10)
+
+    @pytest.fixture
+    def chunk_service(self, chunk_repo, document_repo, library_repo, embedding_client):
         """Create a chunk service."""
-        return ChunkService(chunk_repo, document_repo, library_repo)
+        return ChunkService(chunk_repo, document_repo, library_repo, embedding_client)
 
     def test_delete_library_cascades_to_documents_and_chunks(
         self, library_service, document_service, chunk_service

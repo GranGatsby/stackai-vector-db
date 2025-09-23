@@ -7,6 +7,7 @@ and the domain/repository layers.
 
 from uuid import UUID
 
+from app.clients import EmbeddingClient, EmbeddingError
 from app.domain import Chunk, ChunkMetadata, ChunkNotFoundError
 from app.repositories.ports import (
     ChunkRepository,
@@ -26,6 +27,7 @@ class ChunkService:
         _chunk_repository: The chunk repository implementation
         _document_repository: The document repository for cross-validation
         _library_repository: The library repository for cross-validation
+        _embedding_client: The embedding client for computing embeddings
     """
 
     def __init__(
@@ -33,6 +35,7 @@ class ChunkService:
         chunk_repository: ChunkRepository,
         document_repository: DocumentRepository,
         library_repository: LibraryRepository,
+        embedding_client: EmbeddingClient,
     ) -> None:
         """Initialize the chunk service.
 
@@ -40,10 +43,12 @@ class ChunkService:
             chunk_repository: The chunk repository implementation
             document_repository: The document repository for validation
             library_repository: The library repository for validation
+            embedding_client: The embedding client for computing embeddings
         """
         self._chunk_repository = chunk_repository
         self._document_repository = document_repository
         self._library_repository = library_repository
+        self._embedding_client = embedding_client
 
     def list_chunks_by_document(
         self, document_id: UUID, limit: int = None, offset: int = 0
@@ -307,22 +312,18 @@ class ChunkService:
         return self._chunk_repository.count_by_library(library_id)
 
     def _compute_embedding(self, text: str) -> list[float]:
-        """Compute embedding for the given text (placeholder implementation).
-
-        This is a placeholder method that will be replaced with actual
-        embedding computation using external services (e.g., Cohere API)
-        in the embedding implementation phase.
+        """Compute embedding for the given text using the embedding client.
 
         Args:
             text: The text to compute embedding for
 
         Returns:
-            A placeholder embedding vector
+            The embedding vector computed by the embedding client
 
-        Note:
-            This currently returns a dummy embedding. In the real implementation,
-            this would call an embedding service and return the actual vector.
+        Raises:
+            ValueError: If embedding computation fails
         """
-        # Placeholder: return a dummy embedding based on text length
-        # This will be replaced with actual embedding computation
-        return [0.1] * min(768, max(1, len(text) // 10))  # Dummy 768-dim vector
+        try:
+            return self._embedding_client.embed_text(text)
+        except EmbeddingError as e:
+            raise ValueError(f"Failed to compute embedding: {e}") from e

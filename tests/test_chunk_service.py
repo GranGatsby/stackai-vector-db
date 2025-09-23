@@ -4,6 +4,7 @@ import uuid
 
 import pytest
 
+from app.clients.embedding import FakeEmbeddingClient
 from app.domain import ChunkNotFoundError, Document, Library
 from app.repositories.in_memory import (
     InMemoryChunkRepository,
@@ -32,9 +33,14 @@ class TestChunkService:
         return InMemoryChunkRepository()
 
     @pytest.fixture
-    def service(self, chunk_repo, document_repo, library_repo):
+    def embedding_client(self):
+        """Create a fake embedding client."""
+        return FakeEmbeddingClient(embedding_dim=10)
+
+    @pytest.fixture
+    def service(self, chunk_repo, document_repo, library_repo, embedding_client):
         """Create a chunk service."""
-        return ChunkService(chunk_repo, document_repo, library_repo)
+        return ChunkService(chunk_repo, document_repo, library_repo, embedding_client)
 
     @pytest.fixture
     def sample_library(self, library_repo):
@@ -82,12 +88,11 @@ class TestChunkService:
             compute_embedding=True,
         )
 
-        # Should have computed a placeholder embedding
+        # Should have computed an embedding using FakeEmbeddingClient
         assert chunk.has_embedding
         assert len(chunk.embedding) > 0
-        # Placeholder embedding should be based on text length
-        expected_dim = min(768, max(1, len("Test chunk for embedding") // 10))
-        assert len(chunk.embedding) == expected_dim
+        # FakeEmbeddingClient uses fixed dimension of 10
+        assert len(chunk.embedding) == 10
 
     def test_create_chunk_invalid_document(
         self, service: ChunkService, sample_library: Library
@@ -168,9 +173,8 @@ class TestChunkService:
 
         assert updated.text == "Updated text content"
         assert updated.has_embedding
-        # Should have recomputed embedding for new text
-        expected_dim = min(768, max(1, len("Updated text content") // 10))
-        assert len(updated.embedding) == expected_dim
+        # Should have recomputed embedding using FakeEmbeddingClient
+        assert len(updated.embedding) == 10
 
     def test_list_chunks_by_document_with_validation(
         self, service: ChunkService, sample_document: Document, sample_library: Library

@@ -7,6 +7,7 @@ pattern to decouple the API layer from concrete implementations.
 
 from functools import lru_cache
 
+from app.clients import EmbeddingClient, create_embedding_client
 from app.repositories.in_memory import (
     InMemoryChunkRepository,
     InMemoryDocumentRepository,
@@ -83,11 +84,25 @@ def get_document_service() -> DocumentService:
 
 
 @lru_cache
+def get_embedding_client() -> EmbeddingClient:
+    """Get the embedding client instance.
+
+    This function provides a singleton instance of the embedding client.
+    It automatically selects between Cohere API client (if API key is available)
+    or fake client (for testing/development).
+
+    Returns:
+        The embedding client instance
+    """
+    return create_embedding_client()
+
+
+@lru_cache
 def get_chunk_service() -> ChunkService:
     """Get the chunk service instance.
 
     This function provides a singleton instance of the chunk service
-    with its required dependencies injected.
+    with its required dependencies injected, including the embedding client.
 
     Returns:
         The chunk service instance
@@ -95,4 +110,5 @@ def get_chunk_service() -> ChunkService:
     chunk_repo = get_chunk_repository()
     document_repo = get_document_repository()
     library_repo = get_library_repository()
-    return ChunkService(chunk_repo, document_repo, library_repo)
+    embedding_client = get_embedding_client()
+    return ChunkService(chunk_repo, document_repo, library_repo, embedding_client)
