@@ -21,10 +21,8 @@ Architecture:
 
 import logging
 import time
-from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
 from uuid import UUID
 
 from app.clients import EmbeddingClient, create_embedding_client
@@ -108,9 +106,9 @@ class IndexState:
     is_dirty: bool = True
     dirty_count: int = 0
     total_chunks: int = 0
-    current_snapshot: Optional[IndexSnapshot] = None
+    current_snapshot: IndexSnapshot | None = None
     lock: RWLock = field(default_factory=RWLock)
-    embedding_dim: Optional[int] = None
+    embedding_dim: int | None = None
 
     @property
     def is_built(self) -> bool:
@@ -123,7 +121,7 @@ class IndexState:
         return self.current_snapshot.version if self.current_snapshot else 0
 
     @property
-    def built_at(self) -> Optional[float]:
+    def built_at(self) -> float | None:
         """Get the timestamp when this index was last built."""
         return self.current_snapshot.built_at if self.current_snapshot else None
 
@@ -175,8 +173,8 @@ class IndexStatus:
     is_built: bool
     is_dirty: bool
     size: int
-    embedding_dim: Optional[int]
-    built_at: Optional[float]
+    embedding_dim: int | None
+    built_at: float | None
     version: int
     dirty_count: int
 
@@ -217,8 +215,8 @@ class IndexService:
         self,
         library_repository: LibraryRepository,
         chunk_repository: ChunkRepository,
-        embedding_client: Optional[EmbeddingClient] = None,
-        rebuild_threshold: Optional[float] = None,
+        embedding_client: EmbeddingClient | None = None,
+        rebuild_threshold: float | None = None,
     ) -> None:
         """Initialize the IndexService.
 
@@ -310,7 +308,7 @@ class IndexService:
         )
 
     def build(
-        self, library_id: UUID, algorithm: Optional[IndexAlgo | str] = None
+        self, library_id: UUID, algorithm: IndexAlgo | str | None = None
     ) -> IndexStatus:
         """Build or rebuild the vector index for a library.
 
@@ -628,7 +626,7 @@ class IndexService:
 
             # Update chunks with new embeddings
             updated_chunks = []
-            for chunk, embedding in zip(chunks_needing_embeddings, embeddings):
+            for chunk, embedding in zip(chunks_needing_embeddings, embeddings, strict=False):
                 updated_chunk = chunk.update(embedding=embedding)
                 # Update in repository
                 self._chunk_repo.update(updated_chunk)

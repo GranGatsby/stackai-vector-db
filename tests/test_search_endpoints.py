@@ -2,14 +2,11 @@
 
 import uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from time import sleep
-from uuid import UUID
 
 import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
-from app.domain import Chunk, Document, Library
 from app.main import app
 
 

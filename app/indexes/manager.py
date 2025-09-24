@@ -6,8 +6,7 @@ characteristics.
 """
 
 import logging
-import threading
-from typing import Optional, Sequence, Type
+from collections.abc import Sequence
 
 from app.core.config import settings
 from app.utils import RWLock
@@ -219,7 +218,7 @@ class IndexManager:
         self._dimension = dimension
         self._thread_safe = thread_safe
         self._index_kwargs = index_kwargs
-        self._index: Optional[VectorIndex] = None
+        self._index: VectorIndex | None = None
 
         logger.debug(
             f"Initialized IndexManager with type={index_type}, thread_safe={thread_safe}"

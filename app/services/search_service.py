@@ -21,11 +21,9 @@ Architecture:
 
 import logging
 from dataclasses import dataclass
-from typing import Optional
 from uuid import UUID
 
 from app.clients import EmbeddingClient, EmbeddingError, create_embedding_client
-from app.core.config import settings
 from app.domain import (
     Chunk,
     EmbeddingDimensionMismatchError,
@@ -35,7 +33,7 @@ from app.domain import (
     LibraryNotFoundError,
 )
 from app.repositories.ports import ChunkRepository, LibraryRepository
-from app.services.index_service import IndexService, IndexAlgo
+from app.services.index_service import IndexAlgo, IndexService
 
 logger = logging.getLogger(__name__)
 
@@ -120,7 +118,7 @@ class SearchService:
         index_service: IndexService,
         library_repository: LibraryRepository,
         chunk_repository: ChunkRepository,
-        embedding_client: Optional[EmbeddingClient] = None,
+        embedding_client: EmbeddingClient | None = None,
     ) -> None:
         """Initialize the SearchService.
 

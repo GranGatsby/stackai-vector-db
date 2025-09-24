@@ -9,9 +9,6 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.core.config import settings
-
-
 # Type alias for supported index algorithms
 IndexAlgo = Literal["linear", "kdtree", "ivf"]
 

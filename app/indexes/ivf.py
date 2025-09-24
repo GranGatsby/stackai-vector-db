@@ -6,7 +6,7 @@ approximate nearest neighbor search. This approach scales well to large datasets
 """
 
 import logging
-from typing import Optional, Sequence
+from collections.abc import Sequence
 
 import numpy as np
 
@@ -68,7 +68,7 @@ class IVFIndex(BaseVectorIndex):
         self._max_kmeans_iter = max_kmeans_iter
 
         # Will be initialized during build
-        self._centroids: Optional[np.ndarray] = None
+        self._centroids: np.ndarray | None = None
         self._inverted_lists: list[list[tuple[int, np.ndarray]]] = []
 
         logger.debug(
@@ -121,7 +121,7 @@ class IVFIndex(BaseVectorIndex):
         self._inverted_lists = [[] for _ in range(n_clusters)]
 
         # Assign vectors to clusters
-        for original_idx, vector in zip(indices, vectors):
+        for original_idx, vector in zip(indices, vectors, strict=False):
             cluster_id = self._find_nearest_cluster(vector)
             self._inverted_lists[cluster_id].append((original_idx, vector))
 
@@ -173,7 +173,7 @@ class IVFIndex(BaseVectorIndex):
             centroid_shift = np.mean(
                 [
                     self.euclidean_distance(old, new)
-                    for old, new in zip(centroids, new_centroids)
+                    for old, new in zip(centroids, new_centroids, strict=False)
                 ]
             )
 

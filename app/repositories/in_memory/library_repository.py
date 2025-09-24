@@ -9,7 +9,6 @@ from uuid import UUID
 
 from app.domain import Library, LibraryAlreadyExistsError, LibraryNotFoundError
 from app.repositories.ports import LibraryRepository
-
 from app.utils import RWLock
 
 

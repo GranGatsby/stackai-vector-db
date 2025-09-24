@@ -7,7 +7,8 @@ curse of dimensionality.
 """
 
 import logging
-from typing import Optional, Sequence
+from collections.abc import Sequence
+from typing import Optional
 
 import numpy as np
 
@@ -84,7 +85,7 @@ class KDTreeIndex(BaseVectorIndex):
         """
         super().__init__(dimension)
         self._leaf_size = max(1, leaf_size)
-        self._root: Optional[KDNode] = None
+        self._root: KDNode | None = None
 
         logger.debug(f"Initialized KDTreeIndex with leaf_size={self._leaf_size}")
 
@@ -110,7 +111,7 @@ class KDTreeIndex(BaseVectorIndex):
 
     def _build_tree(
         self, points: list[tuple[np.ndarray, int]], depth: int
-    ) -> Optional[KDNode]:
+    ) -> KDNode | None:
         """Recursively build the KD-Tree.
 
         Args:
@@ -179,7 +180,7 @@ class KDTreeIndex(BaseVectorIndex):
             if len(best_candidates) > k:
                 best_candidates.pop()  # Remove worst candidate
 
-        def search_tree(node: Optional[KDNode]) -> None:
+        def search_tree(node: KDNode | None) -> None:
             """Recursively search the KD-Tree."""
             if node is None:
                 return
@@ -263,7 +264,7 @@ class KDTreeIndex(BaseVectorIndex):
             Maximum depth of the tree, or 0 if tree is empty
         """
 
-        def get_depth(node: Optional[KDNode]) -> int:
+        def get_depth(node: KDNode | None) -> int:
             if node is None:
                 return 0
             left_depth = get_depth(node.left)

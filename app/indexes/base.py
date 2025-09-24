@@ -6,7 +6,8 @@ must follow, along with base classes and utilities for index management.
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Protocol, Sequence, runtime_checkable
+from collections.abc import Sequence
+from typing import Protocol, runtime_checkable
 
 import numpy as np
 

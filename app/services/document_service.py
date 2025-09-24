@@ -5,6 +5,8 @@ for document management, providing a clean interface between the API layer
 and the domain/repository layers.
 """
 
+# Import for type hints only - will be injected as dependency
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from app.domain import Document, DocumentMetadata, DocumentNotFoundError
@@ -13,9 +15,6 @@ from app.repositories.ports import (
     DocumentRepository,
     LibraryRepository,
 )
-
-# Import for type hints only - will be injected as dependency
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.services.index_service import IndexService

@@ -10,7 +10,6 @@ from uuid import UUID
 
 from app.domain import Chunk, ChunkNotFoundError
 from app.repositories.ports import ChunkRepository
-
 from app.utils import RWLock
 
 

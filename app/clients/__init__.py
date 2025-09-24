@@ -13,9 +13,9 @@ from .embedding import (
 )
 
 __all__ = [
+    "CohereEmbeddingClient",
     "EmbeddingClient",
     "EmbeddingError",
     "FakeEmbeddingClient",
-    "CohereEmbeddingClient",
     "create_embedding_client",
 ]

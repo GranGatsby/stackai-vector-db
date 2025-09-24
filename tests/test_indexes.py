@@ -9,8 +9,8 @@ import pytest
 
 from app.indexes import (
     DimensionMismatchError,
-    IVFIndex,
     IndexNotBuiltError,
+    IVFIndex,
     KDTreeIndex,
     LinearScanIndex,
     create_index,

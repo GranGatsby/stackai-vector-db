@@ -10,7 +10,6 @@ from uuid import UUID
 
 from app.domain import Document, DocumentNotFoundError
 from app.repositories.ports import DocumentRepository
-
 from app.utils import RWLock
 
 

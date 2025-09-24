@@ -5,10 +5,11 @@ interfaces. These implementations use reader-writer locks to ensure data
 consistency during concurrent operations.
 """
 
+from app.utils import RWLock
+
 from .chunk_repository import InMemoryChunkRepository
 from .document_repository import InMemoryDocumentRepository
 from .library_repository import InMemoryLibraryRepository
-from app.utils import RWLock
 
 __all__ = [
     "InMemoryChunkRepository",
