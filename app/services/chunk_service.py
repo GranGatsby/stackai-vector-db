@@ -190,7 +190,7 @@ class ChunkService:
 
         # Store the chunk
         created_chunk = self._chunk_repository.create(chunk)
-        
+
         # Mark index as dirty after chunk creation
         if self._index_service:
             try:
@@ -198,7 +198,7 @@ class ChunkService:
             except Exception:
                 # Don't fail chunk creation if index marking fails
                 pass
-        
+
         return created_chunk
 
     def update_chunk(
@@ -249,7 +249,7 @@ class ChunkService:
 
         # Store the updated chunk
         updated_result = self._chunk_repository.update(updated_chunk)
-        
+
         # Mark index as dirty after chunk update
         if self._index_service:
             try:
@@ -257,7 +257,7 @@ class ChunkService:
             except Exception:
                 # Don't fail chunk update if index marking fails
                 pass
-        
+
         return updated_result
 
     def delete_chunk(self, chunk_id: UUID) -> bool:
@@ -272,7 +272,7 @@ class ChunkService:
         # Get chunk before deletion for library_id
         chunk = self._chunk_repository.get_by_id(chunk_id)
         deleted = self._chunk_repository.delete(chunk_id)
-        
+
         # Mark index as dirty after chunk deletion
         if deleted and chunk and self._index_service:
             try:
@@ -280,7 +280,7 @@ class ChunkService:
             except Exception:
                 # Don't fail chunk deletion if index marking fails
                 pass
-        
+
         return deleted
 
     def delete_chunks_by_document(self, document_id: UUID) -> int:

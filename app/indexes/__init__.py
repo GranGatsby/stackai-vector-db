@@ -27,7 +27,7 @@ __all__ = [
     "BaseVectorIndex",
     # Exceptions
     "IndexError",
-    "IndexNotBuiltError", 
+    "IndexNotBuiltError",
     "DimensionMismatchError",
     # Concrete implementations
     "LinearScanIndex",

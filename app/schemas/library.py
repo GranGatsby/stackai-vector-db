@@ -17,9 +17,7 @@ class LibraryMetadataSchema(BaseModel):
     tags: list[str] | None = Field(None, description="Library tags")
     created_by: str | None = Field(None, max_length=255, description="Creator name")
     project: str | None = Field(None, max_length=255, description="Project name")
-    category: str | None = Field(
-        None, max_length=100, description="Library category"
-    )
+    category: str | None = Field(None, max_length=100, description="Library category")
     is_public: bool | None = Field(None, description="Whether library is public")
     # Test/workflow fields
     test: bool | None = Field(None, description="Test flag")

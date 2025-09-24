@@ -132,7 +132,7 @@ class DocumentService:
 
         # Store the document
         created_document = self._document_repository.create(document)
-        
+
         # Mark index as dirty after document creation
         if self._index_service:
             try:
@@ -140,7 +140,7 @@ class DocumentService:
             except Exception:
                 # Don't fail document creation if index marking fails
                 pass
-        
+
         return created_document
 
     def update_document(
@@ -174,7 +174,7 @@ class DocumentService:
 
         # Store the updated document
         updated_result = self._document_repository.update(updated_document)
-        
+
         # Mark index as dirty after document update
         if self._index_service:
             try:
@@ -182,7 +182,7 @@ class DocumentService:
             except Exception:
                 # Don't fail document update if index marking fails
                 pass
-        
+
         return updated_result
 
     def delete_document(self, document_id: UUID) -> bool:
@@ -209,7 +209,7 @@ class DocumentService:
 
         # Delete the document itself
         deleted = self._document_repository.delete(document_id)
-        
+
         # Mark index as dirty after document deletion
         if deleted and self._index_service:
             try:
@@ -217,7 +217,7 @@ class DocumentService:
             except Exception:
                 # Don't fail document deletion if index marking fails
                 pass
-        
+
         return deleted
 
     def delete_documents_by_library(self, library_id: UUID) -> int:

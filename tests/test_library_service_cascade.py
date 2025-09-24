@@ -42,6 +42,7 @@ class TestLibraryServiceCascade:
     def embedding_client(self):
         """Create a fake embedding client."""
         from app.clients.embedding import FakeEmbeddingClient
+
         return FakeEmbeddingClient(embedding_dim=10)
 
     @pytest.fixture

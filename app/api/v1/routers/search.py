@@ -41,10 +41,10 @@ async def build_index(
     algorithm_enum = None
     if request.algorithm is not None:
         algorithm_enum = IndexAlgo(request.algorithm)
-    
+
     # Build the index with optional algorithm specification
     index_status = index_service.build(library_id, algorithm_enum)
-    
+
     # Convert domain result to response schema
     return BuildIndexResponse.from_index_status(index_status)
 
@@ -69,7 +69,7 @@ async def search_by_text(
     """Search for similar chunks using text query."""
     # Execute text-based search
     search_result = search_service.query_text(library_id, request.text, request.k)
-    
+
     # Convert domain result to response schema
     hits = [
         SearchHit(
@@ -79,7 +79,7 @@ async def search_by_text(
         )
         for chunk, distance in search_result.matches
     ]
-    
+
     return SearchResult(
         hits=hits,
         total=search_result.total_results,
@@ -100,7 +100,9 @@ async def search_by_text(
     responses={
         404: {"description": "Library not found"},
         409: {"description": "Index not built or dirty"},
-        422: {"description": "Invalid query parameters, dimension mismatch, or validation error"},
+        422: {
+            "description": "Invalid query parameters, dimension mismatch, or validation error"
+        },
     },
 )
 async def search_by_vector(
@@ -110,8 +112,10 @@ async def search_by_vector(
 ) -> SearchResult:
     """Search for similar chunks using embedding vector."""
     # Execute embedding-based search
-    search_result = search_service.query_embedding(library_id, request.embedding, request.k)
-    
+    search_result = search_service.query_embedding(
+        library_id, request.embedding, request.k
+    )
+
     # Convert domain result to response schema
     hits = [
         SearchHit(
@@ -121,7 +125,7 @@ async def search_by_vector(
         )
         for chunk, distance in search_result.matches
     ]
-    
+
     return SearchResult(
         hits=hits,
         total=search_result.total_results,

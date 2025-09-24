@@ -21,7 +21,7 @@ class RWLock:
     - Only one writer can hold the lock at a time
     - Writers block all readers and other writers
     - Writers have priority over new readers to prevent starvation
-    
+
     This implementation provides both context manager and direct acquisition
     methods for maximum compatibility with different usage patterns.
     """
@@ -65,7 +65,7 @@ class RWLock:
 
     def acquire_read(self) -> None:
         """Acquire a read lock (direct method for compatibility).
-        
+
         Note: When using this method, you must call release_read() manually.
         Consider using the read_lock() context manager instead.
         """
@@ -77,7 +77,7 @@ class RWLock:
 
     def acquire_write(self) -> None:
         """Acquire a write lock (direct method for compatibility).
-        
+
         Note: When using this method, you must call release_write() manually.
         Consider using the write_lock() context manager instead.
         """

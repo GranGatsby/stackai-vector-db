@@ -15,22 +15,16 @@ class DocumentMetadataSchema(BaseModel):
 
     author: str | None = Field(None, max_length=255, description="Document author")
     source: str | None = Field(None, max_length=500, description="Document source")
-    language: str | None = Field(
-        None, max_length=50, description="Document language"
-    )
+    language: str | None = Field(None, max_length=50, description="Document language")
     format: str | None = Field(
         None, max_length=50, description="Document format (pdf, txt, markdown, etc.)"
     )
-    created_at: str | None = Field(
-        None, description="Creation datetime (ISO string)"
-    )
+    created_at: str | None = Field(None, description="Creation datetime (ISO string)")
     modified_at: str | None = Field(
         None, description="Modification datetime (ISO string)"
     )
     tags: list[str] | None = Field(None, description="Document tags")
-    category: str | None = Field(
-        None, max_length=100, description="Document category"
-    )
+    category: str | None = Field(None, max_length=100, description="Document category")
     is_public: bool | None = Field(None, description="Whether document is public")
     # Processing fields
     processed: bool | None = Field(None, description="Processing flag")
@@ -126,7 +120,6 @@ class DocumentBase(BaseModel):
         if not v.strip():
             raise ValueError("Document title cannot be empty or whitespace only")
         return v.strip()
-
 
 
 class DocumentCreateInLibrary(DocumentBase):

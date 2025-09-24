@@ -119,6 +119,7 @@ class TestDocumentService:
 
         # Create chunks for the document using ChunkService
         from app.clients.embedding import FakeEmbeddingClient
+
         embedding_client = FakeEmbeddingClient(embedding_dim=10)
         chunk_service = ChunkService(
             service._chunk_repository,

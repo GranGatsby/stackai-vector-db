@@ -62,23 +62,27 @@ class TestSettings:
         # Ensure COHERE_API_KEY is not set
         with patch.dict(os.environ, {}, clear=True):
             settings = Settings(_env_file=None)
-            
+
             # Should not raise an error and should default to None
             assert settings.cohere_api_key is None
 
     def test_embedding_client_selection_based_on_api_key(self):
         """Test that embedding client selection works correctly based on API key presence."""
-        from app.clients import create_embedding_client, FakeEmbeddingClient, CohereEmbeddingClient
-        
+        from app.clients import (
+            create_embedding_client,
+            FakeEmbeddingClient,
+            CohereEmbeddingClient,
+        )
+
         # Test with no API key - should create FakeEmbeddingClient
         # Use explicit empty string to override any global settings
         client = create_embedding_client(api_key="")
         assert isinstance(client, FakeEmbeddingClient)
-        
+
         # Test with None API key - should create FakeEmbeddingClient
         client = create_embedding_client(api_key=None)
         # Note: This might still use global settings if available
-        
+
         # Test with explicit API key - should create CohereEmbeddingClient
         client = create_embedding_client(api_key="test-api-key-123")
         assert isinstance(client, CohereEmbeddingClient)

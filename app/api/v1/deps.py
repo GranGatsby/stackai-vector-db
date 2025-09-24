@@ -13,7 +13,13 @@ from app.repositories.in_memory import (
     InMemoryDocumentRepository,
     InMemoryLibraryRepository,
 )
-from app.services import ChunkService, DocumentService, IndexService, LibraryService, SearchService
+from app.services import (
+    ChunkService,
+    DocumentService,
+    IndexService,
+    LibraryService,
+    SearchService,
+)
 
 
 @lru_cache
@@ -113,7 +119,9 @@ def get_chunk_service() -> ChunkService:
     library_repo = get_library_repository()
     embedding_client = get_embedding_client()
     index_service = get_index_service()
-    return ChunkService(chunk_repo, document_repo, library_repo, embedding_client, index_service)
+    return ChunkService(
+        chunk_repo, document_repo, library_repo, embedding_client, index_service
+    )
 
 
 @lru_cache

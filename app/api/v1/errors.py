@@ -213,9 +213,7 @@ async def invalid_search_parameter_error_handler(
     )
 
 
-async def search_error_handler(
-    request: Request, exc: SearchError
-) -> JSONResponse:
+async def search_error_handler(request: Request, exc: SearchError) -> JSONResponse:
     """Handle generic SearchError exceptions."""
     return _create_error_response(
         status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,

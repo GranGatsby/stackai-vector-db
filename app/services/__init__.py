@@ -14,7 +14,7 @@ from .search_service import SearchService
 __all__ = [
     "ChunkService",
     "DocumentService",
-    "IndexService", 
+    "IndexService",
     "LibraryService",
     "SearchService",
 ]
