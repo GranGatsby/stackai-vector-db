@@ -14,6 +14,12 @@ from app.repositories.ports import (
     LibraryRepository,
 )
 
+# Import for type hints only - will be injected as dependency
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.services.index_service import IndexService
+
 
 class DocumentService:
     """Service class for document-related business operations.
@@ -33,6 +39,7 @@ class DocumentService:
         document_repository: DocumentRepository,
         library_repository: LibraryRepository,
         chunk_repository: ChunkRepository = None,
+        index_service: "IndexService" = None,
     ) -> None:
         """Initialize the document service.
 
@@ -40,10 +47,12 @@ class DocumentService:
             document_repository: The document repository implementation
             library_repository: The library repository for validation
             chunk_repository: The chunk repository for cascade operations (optional)
+            index_service: The index service for marking dirty (optional)
         """
         self._document_repository = document_repository
         self._library_repository = library_repository
         self._chunk_repository = chunk_repository
+        self._index_service = index_service
 
     def list_documents_by_library(
         self, library_id: UUID, limit: int = None, offset: int = 0
@@ -122,7 +131,17 @@ class DocumentService:
         )
 
         # Store the document
-        return self._document_repository.create(document)
+        created_document = self._document_repository.create(document)
+        
+        # Mark index as dirty after document creation
+        if self._index_service:
+            try:
+                self._index_service.mark_dirty(library_id)
+            except Exception:
+                # Don't fail document creation if index marking fails
+                pass
+        
+        return created_document
 
     def update_document(
         self,
@@ -154,7 +173,17 @@ class DocumentService:
         )
 
         # Store the updated document
-        return self._document_repository.update(updated_document)
+        updated_result = self._document_repository.update(updated_document)
+        
+        # Mark index as dirty after document update
+        if self._index_service:
+            try:
+                self._index_service.mark_dirty(updated_result.library_id)
+            except Exception:
+                # Don't fail document update if index marking fails
+                pass
+        
+        return updated_result
 
     def delete_document(self, document_id: UUID) -> bool:
         """Delete a document by its ID with cascading deletes.
@@ -169,16 +198,27 @@ class DocumentService:
         Returns:
             True if the document was deleted, False if it didn't exist
         """
-        # Check if document exists
-        if not self._document_repository.exists(document_id):
+        # Check if document exists and get library_id for dirty marking
+        document = self._document_repository.get_by_id(document_id)
+        if document is None:
             return False
 
         # Perform cascading delete of chunks if repository is available
         if self._chunk_repository:
             chunks_deleted = self._chunk_repository.delete_by_document(document_id)
 
-        # Finally, delete the document itself
-        return self._document_repository.delete(document_id)
+        # Delete the document itself
+        deleted = self._document_repository.delete(document_id)
+        
+        # Mark index as dirty after document deletion
+        if deleted and self._index_service:
+            try:
+                self._index_service.mark_dirty(document.library_id)
+            except Exception:
+                # Don't fail document deletion if index marking fails
+                pass
+        
+        return deleted
 
     def delete_documents_by_library(self, library_id: UUID) -> int:
         """Delete all documents in a library (cascade operation).

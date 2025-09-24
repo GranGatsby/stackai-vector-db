@@ -13,7 +13,7 @@ from app.repositories.in_memory import (
     InMemoryDocumentRepository,
     InMemoryLibraryRepository,
 )
-from app.services import ChunkService, DocumentService, LibraryService
+from app.services import ChunkService, DocumentService, IndexService, LibraryService, SearchService
 
 
 @lru_cache
@@ -80,7 +80,8 @@ def get_document_service() -> DocumentService:
     document_repo = get_document_repository()
     library_repo = get_library_repository()
     chunk_repo = get_chunk_repository()
-    return DocumentService(document_repo, library_repo, chunk_repo)
+    index_service = get_index_service()
+    return DocumentService(document_repo, library_repo, chunk_repo, index_service)
 
 
 @lru_cache
@@ -111,4 +112,38 @@ def get_chunk_service() -> ChunkService:
     document_repo = get_document_repository()
     library_repo = get_library_repository()
     embedding_client = get_embedding_client()
-    return ChunkService(chunk_repo, document_repo, library_repo, embedding_client)
+    index_service = get_index_service()
+    return ChunkService(chunk_repo, document_repo, library_repo, embedding_client, index_service)
+
+
+@lru_cache
+def get_index_service() -> IndexService:
+    """Get the index service instance.
+
+    This function provides a singleton instance of the index service
+    with its required dependencies injected.
+
+    Returns:
+        The index service instance
+    """
+    library_repo = get_library_repository()
+    chunk_repo = get_chunk_repository()
+    embedding_client = get_embedding_client()
+    return IndexService(library_repo, chunk_repo, embedding_client)
+
+
+@lru_cache
+def get_search_service() -> SearchService:
+    """Get the search service instance.
+
+    This function provides a singleton instance of the search service
+    with its required dependencies injected.
+
+    Returns:
+        The search service instance
+    """
+    index_service = get_index_service()
+    library_repo = get_library_repository()
+    chunk_repo = get_chunk_repository()
+    embedding_client = get_embedding_client()
+    return SearchService(index_service, library_repo, chunk_repo, embedding_client)

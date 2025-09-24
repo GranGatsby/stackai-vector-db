@@ -144,3 +144,7 @@ Thumbs.db
 data/
 logs/
 .ruff_cache/
+
+#Cursor
+.cursorrules
+.cursorignore

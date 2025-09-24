@@ -131,3 +131,29 @@ class ValidationError(DomainError):
     """Raised when domain entity validation fails."""
 
     pass
+
+
+class SearchError(DomainError):
+    """Base class for search-related errors."""
+
+    pass
+
+
+class InvalidSearchParameterError(SearchError):
+    """Raised when search parameters are invalid."""
+
+    def __init__(self, parameter: str, value: any, reason: str) -> None:
+        message = f"Invalid search parameter '{parameter}' = {value}: {reason}"
+        super().__init__(message, "INVALID_SEARCH_PARAMETER")
+        self.parameter = parameter
+        self.value = value
+        self.reason = reason
+
+
+class EmptyLibraryError(SearchError):
+    """Raised when attempting to search in an empty library."""
+
+    def __init__(self, library_id: str) -> None:
+        message = f"Cannot search in empty library '{library_id}'"
+        super().__init__(message, "EMPTY_LIBRARY")
+        self.library_id = library_id

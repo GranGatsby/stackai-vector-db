@@ -14,7 +14,9 @@ from .document import (
 )
 from .errors import ErrorDetail, ErrorResponse
 from .health import HealthResponse
+from .index import BuildIndexRequest, BuildIndexResponse, IndexAlgo, IndexStatus
 from .library import LibraryBase, LibraryCreate, LibraryList, LibraryOut, LibraryUpdate
+from .search import SearchByTextRequest, SearchByVectorRequest, SearchHit, SearchResult
 
 __all__ = [
     # Health
@@ -36,6 +38,16 @@ __all__ = [
     "ChunkUpdate",
     "ChunkRead",
     "ChunkList",
+    # Index
+    "IndexAlgo",
+    "IndexStatus",
+    "BuildIndexRequest",
+    "BuildIndexResponse",
+    # Search
+    "SearchByTextRequest",
+    "SearchByVectorRequest",
+    "SearchHit",
+    "SearchResult",
     # Errors
     "ErrorDetail",
     "ErrorResponse",

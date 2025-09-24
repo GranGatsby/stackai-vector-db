@@ -22,12 +22,15 @@ from .errors import (
     DomainError,
     EmbeddingDimensionMismatchError,
     EmbeddingError,
+    EmptyLibraryError,
     IndexBuildError,
     IndexError,
     IndexNotBuiltError,
+    InvalidSearchParameterError,
     LibraryAlreadyExistsError,
     LibraryError,
     LibraryNotFoundError,
+    SearchError,
     ValidationError,
 )
 
@@ -54,5 +57,8 @@ __all__ = [
     "IndexBuildError",
     "EmbeddingError",
     "EmbeddingDimensionMismatchError",
+    "SearchError",
+    "InvalidSearchParameterError",
+    "EmptyLibraryError",
     "ValidationError",
 ]

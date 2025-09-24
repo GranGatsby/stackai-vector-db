@@ -14,10 +14,13 @@ from app.domain import (
     DocumentNotFoundError,
     DomainError,
     EmbeddingDimensionMismatchError,
+    EmptyLibraryError,
     IndexBuildError,
     IndexNotBuiltError,
+    InvalidSearchParameterError,
     LibraryAlreadyExistsError,
     LibraryNotFoundError,
+    SearchError,
 )
 from app.domain import (
     ValidationError as DomainValidationError,
@@ -186,6 +189,41 @@ async def value_error_handler(request: Request, exc: ValueError) -> JSONResponse
     return _create_validation_response(str(exc))
 
 
+async def empty_library_error_handler(
+    request: Request, exc: EmptyLibraryError
+) -> JSONResponse:
+    """Handle EmptyLibraryError exceptions."""
+    return _create_error_response(
+        status_code=status.HTTP_409_CONFLICT,
+        error_code="EMPTY_LIBRARY",
+        message=f"Library '{exc.library_id}' is empty and cannot be searched",
+    )
+
+
+async def invalid_search_parameter_error_handler(
+    request: Request, exc: InvalidSearchParameterError
+) -> JSONResponse:
+    """Handle InvalidSearchParameterError exceptions."""
+    return _create_error_response(
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+        error_code="INVALID_SEARCH_PARAMETER",
+        message=f"Invalid search parameter '{exc.parameter}': {exc.reason}",
+        field=exc.parameter,
+        context={"value": str(exc.value)},
+    )
+
+
+async def search_error_handler(
+    request: Request, exc: SearchError
+) -> JSONResponse:
+    """Handle generic SearchError exceptions."""
+    return _create_error_response(
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+        error_code="SEARCH_ERROR",
+        message=str(exc),
+    )
+
+
 async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Handle unexpected exceptions."""
     return _create_error_response(
@@ -205,6 +243,9 @@ ERROR_HANDLERS = {
     IndexNotBuiltError: index_not_built_handler,
     IndexBuildError: index_build_error_handler,
     EmbeddingDimensionMismatchError: embedding_dimension_mismatch_handler,
+    EmptyLibraryError: empty_library_error_handler,
+    InvalidSearchParameterError: invalid_search_parameter_error_handler,
+    SearchError: search_error_handler,
     DomainValidationError: domain_validation_error_handler,
     RequestValidationError: pydantic_validation_error_handler,
     DomainError: generic_domain_error_handler,

@@ -15,6 +15,12 @@ from app.repositories.ports import (
     LibraryRepository,
 )
 
+# Import for type hints only - will be injected as dependency
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.services.index_service import IndexService
+
 
 class ChunkService:
     """Service class for chunk-related business operations.
@@ -36,6 +42,7 @@ class ChunkService:
         document_repository: DocumentRepository,
         library_repository: LibraryRepository,
         embedding_client: EmbeddingClient,
+        index_service: "IndexService" = None,
     ) -> None:
         """Initialize the chunk service.
 
@@ -44,11 +51,13 @@ class ChunkService:
             document_repository: The document repository for validation
             library_repository: The library repository for validation
             embedding_client: The embedding client for computing embeddings
+            index_service: The index service for marking dirty (optional)
         """
         self._chunk_repository = chunk_repository
         self._document_repository = document_repository
         self._library_repository = library_repository
         self._embedding_client = embedding_client
+        self._index_service = index_service
 
     def list_chunks_by_document(
         self, document_id: UUID, limit: int = None, offset: int = 0
@@ -180,7 +189,17 @@ class ChunkService:
         )
 
         # Store the chunk
-        return self._chunk_repository.create(chunk)
+        created_chunk = self._chunk_repository.create(chunk)
+        
+        # Mark index as dirty after chunk creation
+        if self._index_service:
+            try:
+                self._index_service.mark_dirty(library_id)
+            except Exception:
+                # Don't fail chunk creation if index marking fails
+                pass
+        
+        return created_chunk
 
     def update_chunk(
         self,
@@ -229,7 +248,17 @@ class ChunkService:
         )
 
         # Store the updated chunk
-        return self._chunk_repository.update(updated_chunk)
+        updated_result = self._chunk_repository.update(updated_chunk)
+        
+        # Mark index as dirty after chunk update
+        if self._index_service:
+            try:
+                self._index_service.mark_dirty(updated_result.library_id)
+            except Exception:
+                # Don't fail chunk update if index marking fails
+                pass
+        
+        return updated_result
 
     def delete_chunk(self, chunk_id: UUID) -> bool:
         """Delete a chunk by its ID.
@@ -240,7 +269,19 @@ class ChunkService:
         Returns:
             True if the chunk was deleted, False if it didn't exist
         """
-        return self._chunk_repository.delete(chunk_id)
+        # Get chunk before deletion for library_id
+        chunk = self._chunk_repository.get_by_id(chunk_id)
+        deleted = self._chunk_repository.delete(chunk_id)
+        
+        # Mark index as dirty after chunk deletion
+        if deleted and chunk and self._index_service:
+            try:
+                self._index_service.mark_dirty(chunk.library_id)
+            except Exception:
+                # Don't fail chunk deletion if index marking fails
+                pass
+        
+        return deleted
 
     def delete_chunks_by_document(self, document_id: UUID) -> int:
         """Delete all chunks in a document (cascade operation).

@@ -18,6 +18,7 @@ from app.api.v1.routers import (
     health_router,
     libraries_router,
 )
+from app.api.v1.routers.search import router as search_router
 from app.core.config import settings
 from app.core.logging import log_request_info, setup_logging
 
@@ -87,6 +88,7 @@ def create_app() -> FastAPI:
     app.include_router(documents_library_router, prefix=settings.api_prefix)
     app.include_router(chunks_router, prefix=settings.api_prefix)
     app.include_router(chunks_document_router, prefix=settings.api_prefix)
+    app.include_router(search_router, prefix=settings.api_prefix)
 
     return app
 
