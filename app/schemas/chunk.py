@@ -29,13 +29,24 @@ class ChunkMetadataSchema(BaseModel):
     )
     embedding_dim: int | None = Field(None, ge=1, description="Embedding dimension")
     similarity_threshold: float | None = Field(
-        None, ge=0.0, le=1.0, description="Similarity threshold"
+        None, ge=0.0, description="Maximum distance threshold for search results (lower = more similar)"
     )
     # Processing fields
     processed_at: str | None = Field(
         None, description="Processing datetime (ISO string)"
     )
     is_indexed: bool | None = Field(None, description="Whether chunk is indexed")
+
+    @field_validator("similarity_threshold")
+    @classmethod
+    def validate_similarity_threshold(cls, v: float | None) -> float | None:
+        """Validate similarity threshold is reasonable for distance-based search."""
+        if v is not None:
+            if v < 0:
+                raise ValueError("similarity_threshold must be non-negative")
+            if v > 10:  # Very generous upper bound for distance-based similarity
+                raise ValueError("similarity_threshold must be <= 10 (distances are typically 0-2)")
+        return v
 
     def to_domain(self) -> ChunkMetadata:
         """Convert to domain ChunkMetadata."""

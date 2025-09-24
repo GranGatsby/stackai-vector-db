@@ -166,6 +166,7 @@ class IndexStatus:
         built_at: Timestamp when index was last built (None if not built)
         version: Version number of the current index
         dirty_count: Number of changes since last build
+        build_duration: Duration of last build in seconds (None if not available)
     """
 
     library_id: UUID
@@ -177,6 +178,7 @@ class IndexStatus:
     built_at: float | None
     version: int
     dirty_count: int
+    build_duration: float | None = None
 
 
 class IndexService:
@@ -299,13 +301,28 @@ class IndexService:
 
         # Use write lock for state modification
         with state.lock.write_lock():
+            was_dirty = state.is_dirty
             state.is_dirty = True
             state.dirty_count += 1
+            
+            # Calculate dirty ratio for rebuild decision
+            dirty_ratio = (
+                state.dirty_count / max(state.total_chunks, 1) 
+                if state.total_chunks > 0 else 0
+            )
+            should_rebuild = state.should_rebuild(self._rebuild_threshold)
 
-        logger.debug(
-            f"Marked index for library {library_id} as dirty "
-            f"(dirty_count={state.dirty_count})"
-        )
+        if not was_dirty:
+            logger.info(
+                f"Index for library {library_id} marked as dirty "
+                f"(dirty_count={state.dirty_count}, total_chunks={state.total_chunks}, "
+                f"dirty_ratio={dirty_ratio:.2%}, should_rebuild={should_rebuild})"
+            )
+        else:
+            logger.debug(
+                f"Index for library {library_id} dirty count incremented "
+                f"(dirty_count={state.dirty_count}, dirty_ratio={dirty_ratio:.2%})"
+            )
 
     def build(
         self, library_id: UUID, algorithm: IndexAlgo | str | None = None
@@ -362,6 +379,10 @@ class IndexService:
 
                 # Load vectors and chunk IDs
                 vectors, chunk_ids = self._load_vectors_and_ids(library_id, state)
+                
+                # Track build duration
+                build_start_time = time.time()
+                build_duration = None
 
                 if not vectors:
                     logger.info(
@@ -377,6 +398,7 @@ class IndexService:
                         index_type=state.algorithm.value, dimension=state.embedding_dim
                     )
 
+                    build_duration = time.time() - build_start_time
                     new_snapshot = IndexSnapshot(
                         index=empty_index,
                         chunk_ids=[],
@@ -386,8 +408,6 @@ class IndexService:
                     )
                 else:
                     # Build index with vectors
-                    start_time = time.time()
-
                     index = create_index(
                         index_type=state.algorithm.value, dimension=state.embedding_dim
                     )
@@ -395,10 +415,10 @@ class IndexService:
                     # Build the index
                     index.build(vectors)
 
-                    build_time = time.time() - start_time
+                    build_duration = time.time() - build_start_time
                     logger.info(
                         f"Built {state.algorithm.value} index for library {library_id} "
-                        f"with {len(vectors)} vectors in {build_time:.2f}s"
+                        f"with {len(vectors)} vectors in {build_duration:.3f}s"
                     )
 
                     # Create new immutable snapshot
@@ -418,10 +438,10 @@ class IndexService:
 
                 logger.info(
                     f"Successfully built index for library {library_id} "
-                    f"(version={new_snapshot.version}, size={new_snapshot.size})"
+                    f"(version={new_snapshot.version}, size={new_snapshot.size}, duration={build_duration:.3f}s)"
                 )
 
-                # Return status
+                # Return status with build duration
                 return IndexStatus(
                     library_id=library_id,
                     algorithm=state.algorithm,
@@ -432,6 +452,7 @@ class IndexService:
                     built_at=new_snapshot.built_at,
                     version=new_snapshot.version,
                     dirty_count=0,
+                    build_duration=build_duration,
                 )
 
             except Exception as e:
@@ -473,16 +494,30 @@ class IndexService:
             # Get current snapshot
             snapshot = state.current_snapshot
             if snapshot is None or not snapshot.is_built:
+                logger.warning(f"Query failed for library {library_id}: index not built")
                 raise IndexNotBuiltError(str(library_id))
 
             # Validate embedding dimension
             if len(query_vector) != snapshot.embedding_dim:
+                logger.error(
+                    f"Query failed for library {library_id}: dimension mismatch "
+                    f"(expected {snapshot.embedding_dim}, got {len(query_vector)})"
+                )
                 raise EmbeddingDimensionMismatchError(
                     snapshot.embedding_dim, len(query_vector)
                 )
 
+            # Log query details
+            logger.debug(
+                f"Executing query on library {library_id}: "
+                f"algorithm={state.algorithm.value}, k={k}, "
+                f"index_size={snapshot.size}, embedding_dim={snapshot.embedding_dim}"
+            )
+
             # Execute k-NN query on the index
+            query_start_time = time.time()
             query_results = snapshot.index.query(query_vector, k)
+            query_duration = time.time() - query_start_time
 
             # Convert vector indices to chunk IDs
             chunk_results = []
@@ -490,6 +525,12 @@ class IndexService:
                 if vector_index < len(snapshot.chunk_ids):
                     chunk_id = snapshot.chunk_ids[vector_index]
                     chunk_results.append((chunk_id, distance))
+
+            logger.info(
+                f"Query completed for library {library_id}: "
+                f"found {len(chunk_results)} results in {query_duration*1000:.2f}ms "
+                f"using {state.algorithm.value} algorithm"
+            )
 
             return chunk_results
 

@@ -1,14 +1,18 @@
 """Search and indexing endpoints."""
 
 import dataclasses
+from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
 
 from app.api.v1.deps import get_index_service, get_search_service
+from app.core.config import settings
+from app.domain import Chunk
 from app.schemas import (
     BuildIndexRequest,
     BuildIndexResponse,
+    IndexStatus,
     SearchByTextRequest,
     SearchByVectorRequest,
     SearchHit,
@@ -18,6 +22,35 @@ from app.services import IndexService, SearchService
 from app.services.index_service import IndexAlgo
 
 router = APIRouter(prefix="/libraries", tags=["search"])
+
+
+def _enrich_chunk_metadata_for_search(
+    chunk: Chunk, algorithm: str, embedding_dim: int
+) -> dict[str, Any] | None:
+    """Enrich chunk metadata with current indexing information for search responses.
+    
+    Args:
+        chunk: The chunk entity
+        algorithm: The algorithm used for the search
+        embedding_dim: The dimension of embeddings in the index
+        
+    Returns:
+        Enriched metadata dictionary or None if no metadata
+    """
+    if chunk.metadata is None:
+        return None
+    
+    # Start with the base metadata
+    metadata = dataclasses.asdict(chunk.metadata)
+    
+    # Enrich with current embedding and indexing information
+    metadata.update({
+        "embedding_model": settings.cohere_model if chunk.has_embedding else None,
+        "embedding_dim": embedding_dim if chunk.has_embedding else None,
+        "is_indexed": True,  # If we're getting this from search, it must be indexed
+    })
+    
+    return metadata
 
 
 @router.post(
@@ -46,7 +79,39 @@ async def build_index(
     index_status = index_service.build(library_id, algorithm_enum)
 
     # Convert domain result to response schema
-    return BuildIndexResponse.from_index_status(index_status)
+    return BuildIndexResponse.from_index_status(index_status, index_status.build_duration)
+
+
+@router.get(
+    "/{library_id}/index/status",
+    response_model=IndexStatus,
+    status_code=status.HTTP_200_OK,
+    summary="Get library index status",
+    description="Get detailed information about the current state of a library's vector index, including build status and dirty flags.",
+    responses={
+        404: {"description": "Library not found"},
+    },
+)
+async def get_index_status(
+    library_id: UUID,
+    index_service: IndexService = Depends(get_index_service),
+) -> IndexStatus:
+    """Get the current status of a library's vector index."""
+    # Get index status from service
+    index_status = index_service.get_status(library_id)
+    
+    # Convert to schema (IndexStatus from service matches IndexStatus schema)
+    return IndexStatus(
+        library_id=index_status.library_id,
+        algorithm=index_status.algorithm.value,
+        is_built=index_status.is_built,
+        is_dirty=index_status.is_dirty,
+        size=index_status.size,
+        embedding_dim=index_status.embedding_dim,
+        built_at=index_status.built_at,
+        version=index_status.version,
+        dirty_count=index_status.dirty_count,
+    )
 
 
 @router.post(
@@ -54,7 +119,7 @@ async def build_index(
     response_model=SearchResult,
     status_code=status.HTTP_200_OK,
     summary="Search by text query",
-    description="Perform similarity search using text query. Generates embedding automatically.",
+    description="Perform similarity search using text query. Generates embedding automatically. Results are filtered by each chunk's similarity_threshold if configured.",
     responses={
         404: {"description": "Library not found"},
         409: {"description": "Index not built or dirty"},
@@ -70,12 +135,14 @@ async def search_by_text(
     # Execute text-based search
     search_result = search_service.query_text(library_id, request.text, request.k)
 
-    # Convert domain result to response schema
+    # Convert domain result to response schema with enriched metadata
     hits = [
         SearchHit(
             chunk_id=chunk.id,
             score=distance,
-            metadata=dataclasses.asdict(chunk.metadata) if chunk.metadata else None,
+            metadata=_enrich_chunk_metadata_for_search(
+                chunk, search_result.algorithm.value, search_result.embedding_dim
+            ),
         )
         for chunk, distance in search_result.matches
     ]
@@ -96,7 +163,7 @@ async def search_by_text(
     response_model=SearchResult,
     status_code=status.HTTP_200_OK,
     summary="Search by embedding vector",
-    description="Perform similarity search using pre-computed embedding vector.",
+    description="Perform similarity search using pre-computed embedding vector. Results are filtered by each chunk's similarity_threshold if configured.",
     responses={
         404: {"description": "Library not found"},
         409: {"description": "Index not built or dirty"},
@@ -116,12 +183,14 @@ async def search_by_vector(
         library_id, request.embedding, request.k
     )
 
-    # Convert domain result to response schema
+    # Convert domain result to response schema with enriched metadata
     hits = [
         SearchHit(
             chunk_id=chunk.id,
             score=distance,
-            metadata=dataclasses.asdict(chunk.metadata) if chunk.metadata else None,
+            metadata=_enrich_chunk_metadata_for_search(
+                chunk, search_result.algorithm.value, search_result.embedding_dim
+            ),
         )
         for chunk, distance in search_result.matches
     ]

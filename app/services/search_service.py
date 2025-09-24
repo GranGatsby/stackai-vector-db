@@ -237,7 +237,11 @@ class SearchService:
 
         # Trigger lazy build if needed
         if not index_status.is_built or index_status.is_dirty:
-            logger.info(f"Triggering lazy index build for library {library_id}")
+            logger.info(
+                f"Triggering lazy index build for library {library_id}: "
+                f"is_built={index_status.is_built}, is_dirty={index_status.is_dirty}, "
+                f"algorithm={index_status.algorithm.value}, size={index_status.size}"
+            )
             index_status = self._index_service.build(library_id)
 
         # Check if library is empty after potential build
@@ -266,8 +270,10 @@ class SearchService:
             # This shouldn't happen since we built the index above, but handle it
             raise IndexNotBuiltError(str(library_id))
 
-        # Convert index results to chunk entities
+        # Convert index results to chunk entities and apply similarity threshold filtering
         matches = []
+        filtered_count = 0
+        
         for chunk_id, distance in query_results:
             # Retrieve chunk entity
             chunk = self._chunk_repo.get_by_id(chunk_id)
@@ -275,7 +281,28 @@ class SearchService:
                 logger.warning(f"Chunk {chunk_id} not found in repository")
                 continue
 
+            # Apply similarity threshold filtering if configured
+            if chunk.metadata and chunk.metadata.similarity_threshold is not None:
+                if distance > chunk.metadata.similarity_threshold:
+                    logger.debug(
+                        f"Chunk {chunk_id} filtered out by similarity_threshold: "
+                        f"score={distance:.4f} > threshold={chunk.metadata.similarity_threshold}"
+                    )
+                    filtered_count += 1
+                    continue
+                else:
+                    logger.debug(
+                        f"Chunk {chunk_id} passed similarity_threshold: "
+                        f"score={distance:.4f} <= threshold={chunk.metadata.similarity_threshold}"
+                    )
+
             matches.append((chunk, distance))
+        
+        if filtered_count > 0:
+            logger.info(
+                f"Filtered out {filtered_count} chunks by similarity_threshold "
+                f"(kept {len(matches)} out of {len(query_results)} total results)"
+            )
 
         # Create search result
         result = SearchResult(
