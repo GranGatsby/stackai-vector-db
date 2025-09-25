@@ -60,8 +60,8 @@ def _enrich_chunk_metadata_for_search(
     summary="Build or rebuild library index",
     description="Build or rebuild the vector index for a library. This operation may take time for large libraries.",
     responses={
-        404: {"description": "Library not found"},
-        422: {"description": "Index build failed or validation error"},
+        status.HTTP_404_NOT_FOUND: {"description": "Library not found"},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Index build failed or validation error"},
     },
 )
 async def build_index(
@@ -89,7 +89,7 @@ async def build_index(
     summary="Get library index status",
     description="Get detailed information about the current state of a library's vector index, including build status and dirty flags.",
     responses={
-        404: {"description": "Library not found"},
+        status.HTTP_404_NOT_FOUND: {"description": "Library not found"},
     },
 )
 async def get_index_status(
@@ -121,9 +121,9 @@ async def get_index_status(
     summary="Search by text query",
     description="Perform similarity search using text query. Generates embedding automatically. Results are filtered by each chunk's similarity_threshold if configured.",
     responses={
-        404: {"description": "Library not found"},
-        409: {"description": "Index not built or dirty"},
-        422: {"description": "Invalid query parameters or validation error"},
+        status.HTTP_404_NOT_FOUND: {"description": "Library not found"},
+        status.HTTP_409_CONFLICT: {"description": "Index not built or dirty"},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Invalid query parameters or validation error"},
     },
 )
 async def search_by_text(
@@ -165,9 +165,9 @@ async def search_by_text(
     summary="Search by embedding vector",
     description="Perform similarity search using pre-computed embedding vector. Results are filtered by each chunk's similarity_threshold if configured.",
     responses={
-        404: {"description": "Library not found"},
-        409: {"description": "Index not built or dirty"},
-        422: {
+        status.HTTP_404_NOT_FOUND: {"description": "Library not found"},
+        status.HTTP_409_CONFLICT: {"description": "Index not built or dirty"},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {
             "description": "Invalid query parameters, dimension mismatch, or validation error"
         },
     },

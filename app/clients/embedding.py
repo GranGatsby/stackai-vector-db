@@ -7,6 +7,7 @@ providers based on configuration.
 """
 
 import logging
+from http import HTTPStatus
 from typing import Protocol, runtime_checkable
 
 import httpx
@@ -256,7 +257,7 @@ class CohereEmbeddingClient:
                 )
 
             # Handle HTTP errors
-            if response.status_code != 200:
+            if response.status_code != HTTPStatus.OK:
                 error_msg = f"Cohere API error {response.status_code}: {response.text}"
                 logger.error(error_msg)
                 raise EmbeddingError(error_msg)

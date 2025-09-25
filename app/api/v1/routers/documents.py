@@ -18,7 +18,7 @@ router = APIRouter(prefix="/documents", tags=["documents"])
     status_code=status.HTTP_200_OK,
     summary="Get a document by ID",
     description="Retrieve a specific document by its unique identifier",
-    responses={404: {"description": "Document not found"}},
+    responses={status.HTTP_404_NOT_FOUND: {"description": "Document not found"}},
 )
 async def get_document(
     document_id: UUID, service: DocumentService = Depends(get_document_service)
@@ -35,8 +35,8 @@ async def get_document(
     summary="Update a document",
     description="Update an existing document with new information",
     responses={
-        404: {"description": "Document not found"},
-        422: {"description": "Validation error"},
+        status.HTTP_404_NOT_FOUND: {"description": "Document not found"},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Validation error"},
     },
 )
 async def update_document(
@@ -63,7 +63,7 @@ async def update_document(
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a document",
     description="Delete a document by its unique identifier (cascades to chunks)",
-    responses={404: {"description": "Document not found"}},
+    responses={status.HTTP_404_NOT_FOUND: {"description": "Document not found"}},
 )
 async def delete_document(
     document_id: UUID, service: DocumentService = Depends(get_document_service)
@@ -86,7 +86,7 @@ library_router = APIRouter(prefix="/libraries", tags=["documents"])
     status_code=status.HTTP_200_OK,
     summary="List documents in a library",
     description="Retrieve a paginated list of documents in the specified library",
-    responses={422: {"description": "Library not found"}},
+    responses={status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Library not found"}},
 )
 async def list_documents_by_library(
     library_id: UUID,
@@ -112,7 +112,7 @@ async def list_documents_by_library(
     summary="Create a document in a library",
     description="Create a new document in the specified library",
     responses={
-        422: {"description": "Validation error or library not found"},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Validation error or library not found"},
     },
 )
 async def create_document_in_library(

@@ -39,7 +39,7 @@ async def list_libraries(
     status_code=status.HTTP_200_OK,
     summary="Get a library by ID",
     description="Retrieve a specific library by its unique identifier",
-    responses={404: {"description": "Library not found"}},
+    responses={status.HTTP_404_NOT_FOUND: {"description": "Library not found"}},
 )
 async def get_library(
     library_id: UUID, service: LibraryService = Depends(get_library_service)
@@ -56,8 +56,8 @@ async def get_library(
     summary="Create a new library",
     description="Create a new library with the provided information",
     responses={
-        409: {"description": "Library with the same name already exists"},
-        422: {"description": "Validation error"},
+        status.HTTP_409_CONFLICT: {"description": "Library with the same name already exists"},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Validation error"},
     },
 )
 async def create_library(
@@ -79,9 +79,9 @@ async def create_library(
     summary="Update a library",
     description="Update an existing library with new information",
     responses={
-        404: {"description": "Library not found"},
-        409: {"description": "Library name conflicts with existing library"},
-        422: {"description": "Validation error"},
+        status.HTTP_404_NOT_FOUND: {"description": "Library not found"},
+        status.HTTP_409_CONFLICT: {"description": "Library name conflicts with existing library"},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Validation error"},
     },
 )
 async def update_library(
@@ -108,7 +108,7 @@ async def update_library(
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a library",
     description="Delete a library by its unique identifier",
-    responses={404: {"description": "Library not found"}},
+    responses={status.HTTP_404_NOT_FOUND: {"description": "Library not found"}},
 )
 async def delete_library(
     library_id: UUID, service: LibraryService = Depends(get_library_service)

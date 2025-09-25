@@ -1,6 +1,7 @@
 """Tests for logging configuration."""
 
 import logging
+from http import HTTPStatus
 
 from app.core.logging import get_logger, log_request_info, setup_logging
 from tests.conftest import capture_logger
@@ -41,7 +42,7 @@ class TestLogging:
             log_request_info(
                 method="GET",
                 path="/api/v1/health",
-                status_code=200,
+                status_code=HTTPStatus.OK,
                 duration_ms=1.23,
                 request_id="test-uuid-123",
             )
@@ -58,7 +59,7 @@ class TestLogging:
         # Verify extra fields are present
         assert record.method == "GET"
         assert record.path == "/api/v1/health"
-        assert record.status_code == 200
+        assert record.status_code == HTTPStatus.OK
         assert record.duration_ms == 1.23
         assert record.request_id == "test-uuid-123"
 
@@ -69,7 +70,7 @@ class TestLogging:
             log_request_info(
                 method="POST",
                 path="/api/v1/test",
-                status_code=201,
+                status_code=HTTPStatus.CREATED,
                 duration_ms=5.67,
                 request_id="test-uuid-456",
                 user_id="user123",
@@ -83,7 +84,7 @@ class TestLogging:
         # Verify base fields are present
         assert record.method == "POST"
         assert record.path == "/api/v1/test"
-        assert record.status_code == 201
+        assert record.status_code == HTTPStatus.CREATED
         assert record.duration_ms == 5.67
         assert record.request_id == "test-uuid-456"
 

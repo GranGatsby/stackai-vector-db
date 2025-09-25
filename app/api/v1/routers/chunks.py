@@ -18,7 +18,7 @@ router = APIRouter(prefix="/chunks", tags=["chunks"])
     status_code=status.HTTP_200_OK,
     summary="Get a chunk by ID",
     description="Retrieve a specific chunk by its unique identifier",
-    responses={404: {"description": "Chunk not found"}},
+    responses={status.HTTP_404_NOT_FOUND: {"description": "Chunk not found"}},
 )
 async def get_chunk(
     chunk_id: UUID, service: ChunkService = Depends(get_chunk_service)
@@ -35,8 +35,8 @@ async def get_chunk(
     summary="Update a chunk",
     description="Update an existing chunk with new information",
     responses={
-        404: {"description": "Chunk not found"},
-        422: {"description": "Validation error"},
+        status.HTTP_404_NOT_FOUND: {"description": "Chunk not found"},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Validation error"},
     },
 )
 async def update_chunk(
@@ -66,7 +66,7 @@ async def update_chunk(
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a chunk",
     description="Delete a chunk by its unique identifier",
-    responses={404: {"description": "Chunk not found"}},
+    responses={status.HTTP_404_NOT_FOUND: {"description": "Chunk not found"}},
 )
 async def delete_chunk(
     chunk_id: UUID, service: ChunkService = Depends(get_chunk_service)
@@ -89,7 +89,7 @@ document_router = APIRouter(prefix="/documents", tags=["chunks"])
     status_code=status.HTTP_200_OK,
     summary="List chunks in a document",
     description="Retrieve a paginated list of chunks in the specified document",
-    responses={422: {"description": "Document not found"}},
+    responses={status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Document not found"}},
 )
 async def list_chunks_by_document(
     document_id: UUID,
@@ -113,7 +113,7 @@ async def list_chunks_by_document(
     summary="Create a chunk in a document",
     description="Create a new chunk in the specified document with optional embedding computation",
     responses={
-        422: {
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {
             "description": "Validation error or document not found"
         },
     },
