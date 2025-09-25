@@ -147,32 +147,14 @@ class ChunkBase(BaseModel):
         return v
 
 
-class ChunkCreate(ChunkBase):
-    """Schema for creating a new chunk."""
-
-    document_id: UUID = Field(..., description="Document ID where chunk belongs")
-    library_id: UUID = Field(..., description="Library ID where chunk belongs")
-    compute_embedding: bool = Field(
-        False, description="Whether to compute embedding automatically"
-    )
-
-    # All other fields inherited from ChunkBase
-
-
 class ChunkCreateInDocument(ChunkBase):
-    """Schema for creating a new chunk within a specific document.
+    """Schema for creating a new chunk in a document."""
 
-    This schema is used when the document_id is provided in the URL path,
-    so it doesn't need to be included in the request body.
-    """
-
-    library_id: UUID = Field(..., description="Library ID where chunk belongs")
     compute_embedding: bool = Field(
         False, description="Whether to compute embedding automatically"
     )
 
     # All other fields inherited from ChunkBase (text, embedding, start_index, end_index, metadata)
-    # No document_id field needed since it comes from URL path
 
 
 class ChunkUpdate(BaseModel):

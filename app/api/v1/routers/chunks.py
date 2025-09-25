@@ -114,7 +114,7 @@ async def list_chunks_by_document(
     description="Create a new chunk in the specified document with optional embedding computation",
     responses={
         422: {
-            "description": "Validation error, document not found, or library mismatch"
+            "description": "Validation error or document not found"
         },
     },
 )
@@ -124,10 +124,8 @@ async def create_chunk_in_document(
     service: ChunkService = Depends(get_chunk_service),
 ) -> ChunkRead:
     """Create a new chunk in a document."""
-    # Override document_id from URL path
     chunk = service.create_chunk(
         document_id=document_id,
-        library_id=chunk_data.library_id,
         text=chunk_data.text,
         embedding=chunk_data.embedding,
         start_index=chunk_data.start_index,

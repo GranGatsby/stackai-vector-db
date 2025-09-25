@@ -62,7 +62,6 @@ class TestChunkService:
         """Test successful chunk creation."""
         chunk = service.create_chunk(
             document_id=sample_document.id,
-            library_id=sample_library.id,
             text="Test chunk content",
             start_index=0,
             end_index=18,
@@ -83,7 +82,6 @@ class TestChunkService:
         """Test chunk creation with embedding computation."""
         chunk = service.create_chunk(
             document_id=sample_document.id,
-            library_id=sample_library.id,
             text="Test chunk for embedding",
             compute_embedding=True,
         )
@@ -103,35 +101,6 @@ class TestChunkService:
         with pytest.raises(ValueError, match="Document .* does not exist"):
             service.create_chunk(
                 document_id=invalid_document_id,
-                library_id=sample_library.id,
-                text="Test chunk",
-            )
-
-    def test_create_chunk_invalid_library(
-        self, service: ChunkService, sample_document: Document
-    ):
-        """Test chunk creation with invalid library_id."""
-        invalid_library_id = uuid.uuid4()
-
-        with pytest.raises(ValueError, match="Library .* does not exist"):
-            service.create_chunk(
-                document_id=sample_document.id,
-                library_id=invalid_library_id,
-                text="Test chunk",
-            )
-
-    def test_create_chunk_document_library_mismatch(
-        self, service: ChunkService, sample_document: Document, library_repo
-    ):
-        """Test chunk creation when document doesn't belong to specified library."""
-        # Create another library
-        other_library = Library.create(name="Other Library")
-        library_repo.create(other_library)
-
-        with pytest.raises(ValueError, match="does not belong to library"):
-            service.create_chunk(
-                document_id=sample_document.id,
-                library_id=other_library.id,  # Wrong library!
                 text="Test chunk",
             )
 
@@ -141,7 +110,6 @@ class TestChunkService:
         """Test successful chunk retrieval."""
         created = service.create_chunk(
             document_id=sample_document.id,
-            library_id=sample_library.id,
             text="Test chunk",
         )
 
@@ -161,7 +129,6 @@ class TestChunkService:
         """Test chunk update with embedding recomputation."""
         chunk = service.create_chunk(
             document_id=sample_document.id,
-            library_id=sample_library.id,
             text="Original text",
         )
 
@@ -183,12 +150,10 @@ class TestChunkService:
         # Create chunks
         chunk1 = service.create_chunk(
             document_id=sample_document.id,
-            library_id=sample_library.id,
             text="Chunk 1",
         )
         chunk2 = service.create_chunk(
             document_id=sample_document.id,
-            library_id=sample_library.id,
             text="Chunk 2",
         )
 
@@ -209,12 +174,10 @@ class TestChunkService:
         # Create chunks
         service.create_chunk(
             document_id=sample_document.id,
-            library_id=sample_library.id,
             text="Chunk 1",
         )
         service.create_chunk(
             document_id=sample_document.id,
-            library_id=sample_library.id,
             text="Chunk 2",
         )
 
@@ -239,12 +202,10 @@ class TestChunkService:
         # Create chunks
         service.create_chunk(
             document_id=sample_document.id,
-            library_id=sample_library.id,
             text="Chunk 1",
         )
         service.create_chunk(
             document_id=sample_document.id,
-            library_id=sample_library.id,
             text="Chunk 2",
         )
 

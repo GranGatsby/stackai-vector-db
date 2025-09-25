@@ -130,7 +130,6 @@ class ChunkService:
     def create_chunk(
         self,
         document_id: UUID,
-        library_id: UUID,
         text: str,
         embedding: list[float] = None,
         start_index: int = 0,
@@ -142,34 +141,25 @@ class ChunkService:
 
         Args:
             document_id: The document ID where the chunk belongs
-            library_id: The library ID where the chunk belongs
             text: The chunk text content
             embedding: Pre-computed embedding vector (optional)
             start_index: Starting character index in the source document
             end_index: Ending character index in the source document
             metadata: Additional chunk metadata
-            compute_embedding: Whether to compute embedding automatically (placeholder)
+            compute_embedding: Whether to compute embedding automatically
 
         Returns:
             The created Chunk entity
 
         Raises:
-            ValueError: If document_id or library_id don't exist, or text is invalid
+            ValueError: If document_id doesn't exist or text is invalid
         """
-        # Validate document exists
-        if not self._document_repository.exists(document_id):
+        # Validate and get document
+        document = self._document_repository.get_by_id(document_id)
+        if document is None:
             raise ValueError(f"Document with ID {document_id} does not exist")
 
-        # Validate library exists
-        if not self._library_repository.exists(library_id):
-            raise ValueError(f"Library with ID {library_id} does not exist")
-
-        # Cross-validate that document belongs to library
-        document = self._document_repository.get_by_id(document_id)
-        if document and document.library_id != library_id:
-            raise ValueError(
-                f"Document {document_id} does not belong to library {library_id}"
-            )
+        library_id = document.library_id
 
         # Compute embedding if requested (placeholder implementation)
         final_embedding = embedding

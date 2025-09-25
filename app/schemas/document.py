@@ -123,14 +123,9 @@ class DocumentBase(BaseModel):
 
 
 class DocumentCreateInLibrary(DocumentBase):
-    """Schema for creating a new document within a specific library.
-
-    This schema is used when the library_id is provided in the URL path,
-    so it doesn't need to be included in the request body.
-    """
+    """Schema for creating a new document within a specific library."""
 
     # All fields inherited from DocumentBase (title, content, metadata)
-    # No library_id field needed since it comes from URL path
 
 
 class DocumentUpdate(BaseModel):

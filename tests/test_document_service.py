@@ -130,14 +130,12 @@ class TestDocumentService:
 
         chunk1 = chunk_service.create_chunk(
             document_id=document.id,
-            library_id=sample_library.id,
             text="Chunk 1",
             start_index=0,
             end_index=7,
         )
         chunk2 = chunk_service.create_chunk(
             document_id=document.id,
-            library_id=sample_library.id,
             text="Chunk 2",
             start_index=8,
             end_index=15,

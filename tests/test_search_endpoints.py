@@ -57,7 +57,6 @@ class TestSearchEndpoints:
 
         for i, text in enumerate(chunk_texts):
             chunk_data = {
-                "library_id": sample_library["id"],
                 "text": text,
                 "start_index": i * 50,
                 "end_index": i * 50 + len(text),
@@ -259,7 +258,6 @@ class TestSearchEndpoints:
 
         # Add a new chunk (should mark dirty)
         new_chunk_data = {
-            "library_id": library_id,
             "text": "This is a new chunk that should mark index dirty",
             "compute_embedding": True,
         }

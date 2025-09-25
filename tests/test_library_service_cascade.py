@@ -68,21 +68,18 @@ class TestLibraryServiceCascade:
         # Create chunks
         chunk1 = chunk_service.create_chunk(
             document_id=doc1.id,
-            library_id=library.id,
             text="Chunk 1",
             start_index=0,
             end_index=7,
         )
         chunk2 = chunk_service.create_chunk(
             document_id=doc1.id,
-            library_id=library.id,
             text="Chunk 2",
             start_index=8,
             end_index=15,
         )
         chunk3 = chunk_service.create_chunk(
             document_id=doc2.id,
-            library_id=library.id,
             text="Chunk 3",
             start_index=0,
             end_index=7,

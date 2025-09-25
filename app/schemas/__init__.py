@@ -5,7 +5,7 @@ and serialization. These schemas serve as the contract between the API
 and its clients.
 """
 
-from .chunk import ChunkCreate, ChunkCreateInDocument, ChunkList, ChunkRead, ChunkUpdate
+from .chunk import ChunkCreateInDocument, ChunkList, ChunkRead, ChunkUpdate
 from .document import (
     DocumentCreateInLibrary,
     DocumentList,
@@ -33,7 +33,6 @@ __all__ = [
     "DocumentRead",
     "DocumentList",
     # Chunk
-    "ChunkCreate",
     "ChunkCreateInDocument",
     "ChunkUpdate",
     "ChunkRead",

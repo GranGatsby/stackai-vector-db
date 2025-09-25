@@ -5,7 +5,7 @@ import uuid
 import pytest
 from pydantic import ValidationError
 
-from app.schemas import ChunkCreate, ChunkRead, ChunkUpdate
+from app.schemas import ChunkRead, ChunkUpdate, ChunkCreateInDocument
 
 
 class TestChunkSchemas:
@@ -13,11 +13,7 @@ class TestChunkSchemas:
 
     def test_chunk_create_valid(self):
         """Test valid chunk creation schema."""
-        document_id = uuid.uuid4()
-        library_id = uuid.uuid4()
         data = {
-            "document_id": document_id,
-            "library_id": library_id,
             "text": "Test chunk content",
             "embedding": [0.1, 0.2, 0.3],
             "start_index": 0,
@@ -26,9 +22,7 @@ class TestChunkSchemas:
             "compute_embedding": True,
         }
 
-        schema = ChunkCreate(**data)
-        assert schema.document_id == document_id
-        assert schema.library_id == library_id
+        schema = ChunkCreateInDocument(**data)
         assert schema.text == "Test chunk content"
         assert schema.embedding == [0.1, 0.2, 0.3]
         assert schema.start_index == 0
@@ -38,17 +32,11 @@ class TestChunkSchemas:
 
     def test_chunk_create_minimal(self):
         """Test chunk creation with minimal required fields."""
-        document_id = uuid.uuid4()
-        library_id = uuid.uuid4()
         data = {
-            "document_id": document_id,
-            "library_id": library_id,
             "text": "Minimal chunk",
         }
 
-        schema = ChunkCreate(**data)
-        assert schema.document_id == document_id
-        assert schema.library_id == library_id
+        schema = ChunkCreateInDocument(**data)
         assert schema.text == "Minimal chunk"
         assert schema.embedding == []  # Default
         assert schema.start_index == 0  # Default
@@ -58,27 +46,21 @@ class TestChunkSchemas:
 
     def test_chunk_create_invalid_text(self):
         """Test chunk creation with invalid text."""
-        document_id = uuid.uuid4()
-        library_id = uuid.uuid4()
 
         # Empty text
         with pytest.raises(ValidationError, match="at least 1 character"):
-            ChunkCreate(document_id=document_id, library_id=library_id, text="")
+            ChunkCreateInDocument(text="")
 
         # Whitespace only text
         with pytest.raises(ValidationError, match="empty or whitespace"):
-            ChunkCreate(document_id=document_id, library_id=library_id, text="   ")
+            ChunkCreateInDocument(text="   ")
 
     def test_chunk_create_invalid_indices(self):
         """Test chunk creation with invalid indices."""
-        document_id = uuid.uuid4()
-        library_id = uuid.uuid4()
 
         # end_index < start_index
         with pytest.raises(ValidationError, match="end_index must be >= start_index"):
-            ChunkCreate(
-                document_id=document_id,
-                library_id=library_id,
+            ChunkCreateInDocument(
                 text="Test",
                 start_index=10,
                 end_index=5,
@@ -86,9 +68,7 @@ class TestChunkSchemas:
 
         # Negative start_index
         with pytest.raises(ValidationError, match="greater than or equal to 0"):
-            ChunkCreate(
-                document_id=document_id,
-                library_id=library_id,
+            ChunkCreateInDocument(
                 text="Test",
                 start_index=-1,
             )
