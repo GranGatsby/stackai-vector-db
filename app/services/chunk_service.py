@@ -127,32 +127,24 @@ class ChunkService:
             raise ChunkNotFoundError(f"Chunk with ID {chunk_id} not found")
         return chunk
 
-    def create_chunk(
+    def create_chunks(
         self,
         document_id: UUID,
-        text: str,
-        embedding: list[float] = None,
-        start_index: int = 0,
-        end_index: int = 0,
-        metadata: ChunkMetadata | None = None,
+        chunks_data: list[dict],
         compute_embedding: bool = False,
-    ) -> Chunk:
-        """Create a new chunk.
+    ) -> list[Chunk]:
+        """Create multiple chunks in a document.
 
         Args:
-            document_id: The document ID where the chunk belongs
-            text: The chunk text content
-            embedding: Pre-computed embedding vector (optional)
-            start_index: Starting character index in the source document
-            end_index: Ending character index in the source document
-            metadata: Additional chunk metadata
-            compute_embedding: Whether to compute embedding automatically
+            document_id: The document ID where the chunks belong
+            chunks_data: List of chunk data dictionaries containing text, embedding, etc.
+            compute_embedding: Whether to compute embedding automatically for all chunks
 
         Returns:
-            The created Chunk entity
+            List of created Chunk entities
 
         Raises:
-            ValueError: If document_id doesn't exist or text is invalid
+            ValueError: If document_id doesn't exist or chunk data is invalid
         """
         # Validate and get document
         document = self._document_repository.get_by_id(document_id)
@@ -160,35 +152,45 @@ class ChunkService:
             raise ValueError(f"Document with ID {document_id} does not exist")
 
         library_id = document.library_id
+        created_chunks = []
 
-        # Compute embedding if requested (placeholder implementation)
-        final_embedding = embedding
-        if compute_embedding and not embedding:
-            final_embedding = self._compute_embedding(text)
+        # Process each chunk
+        for chunk_data in chunks_data:
+            text = chunk_data.get("text", "")
+            embedding = chunk_data.get("embedding")
+            start_index = chunk_data.get("start_index", 0)
+            end_index = chunk_data.get("end_index", 0)
+            metadata = chunk_data.get("metadata")
 
-        # Create the chunk using domain factory
-        chunk = Chunk.create(
-            document_id=document_id,
-            library_id=library_id,
-            text=text,
-            embedding=final_embedding,
-            start_index=start_index,
-            end_index=end_index or (start_index + len(text.strip())),
-            metadata=metadata,
-        )
+            # Compute embedding if requested
+            final_embedding = embedding
+            if compute_embedding and not embedding:
+                final_embedding = self._compute_embedding(text)
 
-        # Store the chunk
-        created_chunk = self._chunk_repository.create(chunk)
+            # Create the chunk using domain factory
+            chunk = Chunk.create(
+                document_id=document_id,
+                library_id=library_id,
+                text=text,
+                embedding=final_embedding,
+                start_index=start_index,
+                end_index=end_index or (start_index + len(text.strip())),
+                metadata=metadata,
+            )
 
-        # Mark index as dirty after chunk creation
-        if self._index_service:
+            # Store the chunk
+            created_chunk = self._chunk_repository.create(chunk)
+            created_chunks.append(created_chunk)
+
+        # Mark index as dirty after chunk creation (once for all chunks)
+        if self._index_service and created_chunks:
             try:
                 self._index_service.mark_dirty(library_id)
             except Exception:
                 # Don't fail chunk creation if index marking fails
                 pass
 
-        return created_chunk
+        return created_chunks
 
     def update_chunk(
         self,

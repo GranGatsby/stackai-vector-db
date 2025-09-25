@@ -128,18 +128,15 @@ class TestDocumentService:
             embedding_client,
         )
 
-        chunk1 = chunk_service.create_chunk(
+        chunks_data = [
+            {"text": "Chunk 1", "start_index": 0, "end_index": 7},
+            {"text": "Chunk 2", "start_index": 8, "end_index": 15},
+        ]
+        created_chunks = chunk_service.create_chunks(
             document_id=document.id,
-            text="Chunk 1",
-            start_index=0,
-            end_index=7,
+            chunks_data=chunks_data,
         )
-        chunk2 = chunk_service.create_chunk(
-            document_id=document.id,
-            text="Chunk 2",
-            start_index=8,
-            end_index=15,
-        )
+        chunk1, chunk2 = created_chunks
 
         # Verify chunks exist
         assert chunk_service.chunk_exists(chunk1.id)

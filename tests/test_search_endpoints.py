@@ -55,18 +55,26 @@ class TestSearchEndpoints:
             "This is the third chunk about deep learning",
         ]
 
+        # Create all chunks in a single request
+        chunks_data = []
         for i, text in enumerate(chunk_texts):
             chunk_data = {
                 "text": text,
                 "start_index": i * 50,
                 "end_index": i * 50 + len(text),
-                "compute_embedding": True,
             }
-            response = client.post(
-                f"/api/v1/documents/{sample_document['id']}/chunks", json=chunk_data
-            )
-            assert response.status_code == status.HTTP_201_CREATED
-            chunks.append(response.json())
+            chunks_data.append(chunk_data)
+        
+        batch_request = {
+            "chunks": chunks_data,
+            "compute_embedding": True,
+        }
+        response = client.post(
+            f"/api/v1/documents/{sample_document['id']}/chunks", json=batch_request
+        )
+        assert response.status_code == status.HTTP_201_CREATED
+        batch_response = response.json()
+        chunks = batch_response["chunks"]
 
         return chunks
 
@@ -257,12 +265,14 @@ class TestSearchEndpoints:
         assert response.status_code == status.HTTP_200_OK
 
         # Add a new chunk (should mark dirty)
-        new_chunk_data = {
-            "text": "This is a new chunk that should mark index dirty",
+        new_chunk_batch = {
+            "chunks": [{
+                "text": "This is a new chunk that should mark index dirty",
+            }],
             "compute_embedding": True,
         }
         response = client.post(
-            f"/api/v1/documents/{sample_document['id']}/chunks", json=new_chunk_data
+            f"/api/v1/documents/{sample_document['id']}/chunks", json=new_chunk_batch
         )
         assert response.status_code == status.HTTP_201_CREATED
 

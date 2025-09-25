@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, status
 
 from app.api.v1.deps import get_chunk_service
-from app.schemas import ChunkList, ChunkRead, ChunkUpdate
+from app.schemas import ChunkCreateResponse, ChunkList, ChunkRead, ChunkUpdate
 from app.schemas.chunk import ChunkCreateInDocument, ChunkMetadataSchema
 from app.services import ChunkService
 
@@ -108,10 +108,10 @@ async def list_chunks_by_document(
 
 @document_router.post(
     "/{document_id}/chunks",
-    response_model=ChunkRead,
+    response_model=ChunkCreateResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="Create a chunk in a document",
-    description="Create a new chunk in the specified document with optional embedding computation",
+    summary="Create chunks in a document",
+    description="Create one or more chunks in the specified document with optional embedding computation (1-100 chunks)",
     responses={
         status.HTTP_422_UNPROCESSABLE_CONTENT: {
             "description": "Validation error or document not found"
@@ -122,19 +122,25 @@ async def create_chunk_in_document(
     document_id: UUID,
     chunk_data: ChunkCreateInDocument,
     service: ChunkService = Depends(get_chunk_service),
-) -> ChunkRead:
-    """Create a new chunk in a document."""
-    chunk = service.create_chunk(
+) -> ChunkCreateResponse:
+    """Create one or more chunks in a document."""
+    # Prepare chunks data for the service
+    chunks_data = []
+    for chunk in chunk_data.chunks:
+        chunk_dict = {
+            "text": chunk.text,
+            "embedding": chunk.embedding,
+            "start_index": chunk.start_index,
+            "end_index": chunk.end_index,
+            "metadata": chunk.metadata.to_domain() if chunk.metadata is not None else None,
+        }
+        chunks_data.append(chunk_dict)
+    
+    # Create chunks using the service
+    created_chunks = service.create_chunks(
         document_id=document_id,
-        text=chunk_data.text,
-        embedding=chunk_data.embedding,
-        start_index=chunk_data.start_index,
-        end_index=chunk_data.end_index,
-        metadata=(
-            chunk_data.metadata.to_domain()
-            if chunk_data.metadata is not None
-            else None
-        ),
+        chunks_data=chunks_data,
         compute_embedding=chunk_data.compute_embedding,
     )
-    return ChunkRead.from_domain(chunk)
+    
+    return ChunkCreateResponse.from_domain_list(created_chunks)

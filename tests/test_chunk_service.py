@@ -56,18 +56,23 @@ class TestChunkService:
         document_repo.create(document)
         return document
 
-    def test_create_chunk_success(
+    def test_create_chunks_success(
         self, service: ChunkService, sample_document: Document, sample_library: Library
     ):
         """Test successful chunk creation."""
-        chunk = service.create_chunk(
+        chunks_data = [{
+            "text": "Test chunk content",
+            "start_index": 0,
+            "end_index": 18,
+            "metadata": ChunkMetadata(chunk_type="paragraph"),
+        }]
+        chunks = service.create_chunks(
             document_id=sample_document.id,
-            text="Test chunk content",
-            start_index=0,
-            end_index=18,
-            metadata=ChunkMetadata(chunk_type="paragraph"),
+            chunks_data=chunks_data,
         )
 
+        assert len(chunks) == 1
+        chunk = chunks[0]
         assert chunk.document_id == sample_document.id
         assert chunk.library_id == sample_library.id
         assert chunk.text == "Test chunk content"
@@ -76,42 +81,50 @@ class TestChunkService:
         assert chunk.metadata.chunk_type == "paragraph"
         assert service.chunk_exists(chunk.id)
 
-    def test_create_chunk_with_embedding_placeholder(
+    def test_create_chunks_with_embedding_computation(
         self, service: ChunkService, sample_document: Document, sample_library: Library
     ):
         """Test chunk creation with embedding computation."""
-        chunk = service.create_chunk(
+        chunks_data = [{
+            "text": "Test chunk for embedding",
+        }]
+        chunks = service.create_chunks(
             document_id=sample_document.id,
-            text="Test chunk for embedding",
+            chunks_data=chunks_data,
             compute_embedding=True,
         )
 
         # Should have computed an embedding using FakeEmbeddingClient
+        assert len(chunks) == 1
+        chunk = chunks[0]
         assert chunk.has_embedding
         assert len(chunk.embedding) > 0
         # FakeEmbeddingClient uses fixed dimension of 10
         assert len(chunk.embedding) == 10
 
-    def test_create_chunk_invalid_document(
+    def test_create_chunks_invalid_document(
         self, service: ChunkService, sample_library: Library
     ):
         """Test chunk creation with invalid document_id."""
         invalid_document_id = uuid.uuid4()
+        chunks_data = [{"text": "Test chunk"}]
 
         with pytest.raises(ValueError, match="Document .* does not exist"):
-            service.create_chunk(
+            service.create_chunks(
                 document_id=invalid_document_id,
-                text="Test chunk",
+                chunks_data=chunks_data,
             )
 
     def test_get_chunk_success(
         self, service: ChunkService, sample_document: Document, sample_library: Library
     ):
         """Test successful chunk retrieval."""
-        created = service.create_chunk(
+        chunks_data = [{"text": "Test chunk"}]
+        created_chunks = service.create_chunks(
             document_id=sample_document.id,
-            text="Test chunk",
+            chunks_data=chunks_data,
         )
+        created = created_chunks[0]
 
         retrieved = service.get_chunk(created.id)
         assert retrieved == created
@@ -127,10 +140,12 @@ class TestChunkService:
         self, service: ChunkService, sample_document: Document, sample_library: Library
     ):
         """Test chunk update with embedding recomputation."""
-        chunk = service.create_chunk(
+        chunks_data = [{"text": "Original text"}]
+        created_chunks = service.create_chunks(
             document_id=sample_document.id,
-            text="Original text",
+            chunks_data=chunks_data,
         )
+        chunk = created_chunks[0]
 
         updated = service.update_chunk(
             chunk.id,
@@ -148,13 +163,10 @@ class TestChunkService:
     ):
         """Test listing chunks by document with validation."""
         # Create chunks
-        chunk1 = service.create_chunk(
+        chunks_data = [{"text": "Chunk 1"}, {"text": "Chunk 2"}]
+        created_chunks = service.create_chunks(
             document_id=sample_document.id,
-            text="Chunk 1",
-        )
-        chunk2 = service.create_chunk(
-            document_id=sample_document.id,
-            text="Chunk 2",
+            chunks_data=chunks_data,
         )
 
         # List chunks
@@ -172,13 +184,10 @@ class TestChunkService:
     ):
         """Test listing chunks by library with validation."""
         # Create chunks
-        service.create_chunk(
+        chunks_data = [{"text": "Chunk 1"}, {"text": "Chunk 2"}]
+        service.create_chunks(
             document_id=sample_document.id,
-            text="Chunk 1",
-        )
-        service.create_chunk(
-            document_id=sample_document.id,
-            text="Chunk 2",
+            chunks_data=chunks_data,
         )
 
         # List chunks
@@ -200,13 +209,10 @@ class TestChunkService:
         assert service.count_chunks_by_library(sample_library.id) == 0
 
         # Create chunks
-        service.create_chunk(
+        chunks_data = [{"text": "Chunk 1"}, {"text": "Chunk 2"}]
+        service.create_chunks(
             document_id=sample_document.id,
-            text="Chunk 1",
-        )
-        service.create_chunk(
-            document_id=sample_document.id,
-            text="Chunk 2",
+            chunks_data=chunks_data,
         )
 
         # Counts should be updated
@@ -222,3 +228,27 @@ class TestChunkService:
 
         with pytest.raises(ValueError, match="Library .* does not exist"):
             service.count_chunks_by_library(invalid_library_id)
+
+    def test_create_multiple_chunks_batch(
+        self, service: ChunkService, sample_document: Document, sample_library: Library
+    ):
+        """Test creating multiple chunks in a single batch."""
+        chunks_data = [
+            {"text": "First chunk", "start_index": 0, "end_index": 11},
+            {"text": "Second chunk", "start_index": 12, "end_index": 24},
+            {"text": "Third chunk", "start_index": 25, "end_index": 36},
+        ]
+        
+        chunks = service.create_chunks(
+            document_id=sample_document.id,
+            chunks_data=chunks_data,
+            compute_embedding=True,
+        )
+
+        assert len(chunks) == 3
+        for i, chunk in enumerate(chunks):
+            assert chunk.text == chunks_data[i]["text"]
+            assert chunk.start_index == chunks_data[i]["start_index"]
+            assert chunk.end_index == chunks_data[i]["end_index"]
+            assert chunk.has_embedding  # Should have embeddings computed
+            assert len(chunk.embedding) == 10  # FakeEmbeddingClient dimension

@@ -66,24 +66,24 @@ class TestLibraryServiceCascade:
         )
 
         # Create chunks
-        chunk1 = chunk_service.create_chunk(
+        chunks_doc1_data = [
+            {"text": "Chunk 1", "start_index": 0, "end_index": 7},
+            {"text": "Chunk 2", "start_index": 8, "end_index": 15},
+        ]
+        created_chunks_doc1 = chunk_service.create_chunks(
             document_id=doc1.id,
-            text="Chunk 1",
-            start_index=0,
-            end_index=7,
+            chunks_data=chunks_doc1_data,
         )
-        chunk2 = chunk_service.create_chunk(
-            document_id=doc1.id,
-            text="Chunk 2",
-            start_index=8,
-            end_index=15,
-        )
-        chunk3 = chunk_service.create_chunk(
+        chunk1, chunk2 = created_chunks_doc1
+
+        chunks_doc2_data = [
+            {"text": "Chunk 3", "start_index": 0, "end_index": 7},
+        ]
+        created_chunks_doc2 = chunk_service.create_chunks(
             document_id=doc2.id,
-            text="Chunk 3",
-            start_index=0,
-            end_index=7,
+            chunks_data=chunks_doc2_data,
         )
+        chunk3 = created_chunks_doc2[0]
 
         # Verify everything exists
         assert library_service.library_exists(library.id)

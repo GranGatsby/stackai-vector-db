@@ -147,14 +147,30 @@ class ChunkBase(BaseModel):
         return v
 
 
-class ChunkCreateInDocument(ChunkBase):
-    """Schema for creating a new chunk in a document."""
+class ChunkCreateInDocument(BaseModel):
+    """Schema for creating one or more chunks in a document."""
 
+    model_config = ConfigDict(strict=False, extra="forbid")
+
+    chunks: list[ChunkBase] = Field(
+        ..., 
+        min_length=1, 
+        max_length=100,
+        description="List of chunks to create (1-100 chunks)"
+    )
     compute_embedding: bool = Field(
-        False, description="Whether to compute embedding automatically"
+        False, description="Whether to compute embedding automatically for all chunks"
     )
 
-    # All other fields inherited from ChunkBase (text, embedding, start_index, end_index, metadata)
+    @field_validator("chunks")
+    @classmethod
+    def validate_chunks_count(cls, v: list[ChunkBase]) -> list[ChunkBase]:
+        """Validate that we have between 1 and 100 chunks."""
+        if not v:
+            raise ValueError("At least one chunk must be provided")
+        if len(v) > 100:
+            raise ValueError("Cannot create more than 100 chunks at once")
+        return v
 
 
 class ChunkUpdate(BaseModel):
@@ -252,4 +268,28 @@ class ChunkList(BaseModel):
             total=total,
             limit=limit,
             offset=offset,
+        )
+
+
+class ChunkCreateResponse(BaseModel):
+    """Schema for chunk creation response."""
+
+    model_config = ConfigDict(strict=False, extra="forbid")
+
+    chunks: list[ChunkRead] = Field(..., description="List of created chunks")
+    total_created: int = Field(..., ge=1, description="Total number of chunks created")
+
+    @classmethod
+    def from_domain_list(cls, chunks) -> "ChunkCreateResponse":
+        """Create a ChunkCreateResponse from a list of domain Chunk entities.
+
+        Args:
+            chunks: List of created domain Chunk entities
+
+        Returns:
+            A ChunkCreateResponse schema instance
+        """
+        return cls(
+            chunks=[ChunkRead.from_domain(chunk) for chunk in chunks],
+            total_created=len(chunks),
         )
