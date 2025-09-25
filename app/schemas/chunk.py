@@ -126,7 +126,7 @@ class ChunkBase(BaseModel):
         0, ge=0, description="Starting character index in document"
     )
     end_index: int = Field(0, ge=0, description="Ending character index in document")
-    metadata: dict[str, Any] = Field(default_factory=dict, description="Chunk metadata")
+    metadata: ChunkMetadataSchema = Field(default_factory=ChunkMetadataSchema, description="Chunk metadata")
 
     @field_validator("text")
     @classmethod
@@ -169,7 +169,7 @@ class ChunkUpdate(BaseModel):
     embedding: list[float] | None = Field(None, description="Embedding vector")
     start_index: int | None = Field(None, ge=0, description="Starting character index")
     end_index: int | None = Field(None, ge=0, description="Ending character index")
-    metadata: dict[str, Any] | None = Field(None, description="Chunk metadata")
+    metadata: ChunkMetadataSchema | None = Field(None, description="Chunk metadata")
     compute_embedding: bool = Field(
         False, description="Whether to recompute embedding if text changed"
     )

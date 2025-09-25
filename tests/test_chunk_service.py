@@ -5,7 +5,7 @@ import uuid
 import pytest
 
 from app.clients.embedding import FakeEmbeddingClient
-from app.domain import ChunkNotFoundError, Document, Library
+from app.domain import ChunkMetadata, ChunkNotFoundError, Document, Library
 from app.repositories.in_memory import (
     InMemoryChunkRepository,
     InMemoryDocumentRepository,
@@ -65,7 +65,7 @@ class TestChunkService:
             text="Test chunk content",
             start_index=0,
             end_index=18,
-            metadata={"type": "paragraph"},
+            metadata=ChunkMetadata(chunk_type="paragraph"),
         )
 
         assert chunk.document_id == sample_document.id
@@ -73,7 +73,7 @@ class TestChunkService:
         assert chunk.text == "Test chunk content"
         assert chunk.start_index == 0
         assert chunk.end_index == 18
-        assert chunk.metadata["type"] == "paragraph"
+        assert chunk.metadata.chunk_type == "paragraph"
         assert service.chunk_exists(chunk.id)
 
     def test_create_chunk_with_embedding_placeholder(

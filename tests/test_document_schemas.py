@@ -5,7 +5,7 @@ import uuid
 import pytest
 from pydantic import ValidationError
 
-from app.schemas import DocumentCreateInLibrary, DocumentRead, DocumentUpdate
+from app.schemas.document import DocumentCreateInLibrary, DocumentRead, DocumentUpdate, DocumentMetadataSchema
 
 
 class TestDocumentSchemas:
@@ -22,7 +22,7 @@ class TestDocumentSchemas:
         schema = DocumentCreateInLibrary(**data)
         assert schema.title == "Test Document"
         assert schema.content == "Test content"
-        assert schema.metadata["author"] == "Test Author"
+        assert schema.metadata.author == "Test Author"
 
     def test_document_create_in_library_minimal(self):
         """Test document creation in library with minimal required fields."""
@@ -33,7 +33,7 @@ class TestDocumentSchemas:
         schema = DocumentCreateInLibrary(**data)
         assert schema.title == "Minimal Document"
         assert schema.content == ""  # Default
-        assert schema.metadata == {}  # Default
+        assert isinstance(schema.metadata, DocumentMetadataSchema)  # Default empty schema
 
     def test_document_create_in_library_invalid_title(self):
         """Test document creation in library with invalid title."""
@@ -97,6 +97,6 @@ class TestDocumentSchemas:
         assert schema.library_id == document.library_id
         assert schema.title == document.title
         assert schema.content == document.content
-        # metadata is converted to dict in schema response
-        assert "author" in schema.metadata
-        assert schema.metadata["author"] == "Test Author"
+        # metadata is now a DocumentMetadataSchema object
+        assert isinstance(schema.metadata, DocumentMetadataSchema)
+        assert schema.metadata.author == "Test Author"

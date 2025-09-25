@@ -109,8 +109,8 @@ class DocumentBase(BaseModel):
 
     title: str = Field(..., min_length=1, max_length=255, description="Document title")
     content: str = Field(default="", description="Document content")
-    metadata: dict[str, Any] = Field(
-        default_factory=dict, description="Document metadata"
+    metadata: DocumentMetadataSchema = Field(
+        default_factory=DocumentMetadataSchema, description="Document metadata"
     )
 
     @field_validator("title")
@@ -140,7 +140,7 @@ class DocumentUpdate(BaseModel):
         None, min_length=1, max_length=255, description="Document title"
     )
     content: str | None = Field(None, description="Document content")
-    metadata: dict[str, Any] | None = Field(None, description="Document metadata")
+    metadata: DocumentMetadataSchema | None = Field(None, description="Document metadata")
 
     @field_validator("title")
     @classmethod

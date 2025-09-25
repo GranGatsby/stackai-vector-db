@@ -67,7 +67,7 @@ async def create_library(
     library = service.create_library(
         name=library_data.name,
         description=library_data.description,
-        metadata=LibraryMetadataSchema.dict_to_domain(library_data.metadata),
+        metadata=library_data.metadata.to_domain(),
     )
     return LibraryOut.from_domain(library)
 
@@ -95,7 +95,7 @@ async def update_library(
         name=library_data.name,
         description=library_data.description,
         metadata=(
-            LibraryMetadataSchema.dict_to_domain(library_data.metadata)
+            library_data.metadata.to_domain()
             if library_data.metadata is not None
             else None
         ),

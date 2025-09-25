@@ -52,7 +52,7 @@ async def update_chunk(
         start_index=chunk_data.start_index,
         end_index=chunk_data.end_index,
         metadata=(
-            ChunkMetadataSchema.dict_to_domain(chunk_data.metadata)
+            chunk_data.metadata.to_domain()
             if chunk_data.metadata is not None
             else None
         ),
@@ -130,7 +130,11 @@ async def create_chunk_in_document(
         embedding=chunk_data.embedding,
         start_index=chunk_data.start_index,
         end_index=chunk_data.end_index,
-        metadata=ChunkMetadataSchema.dict_to_domain(chunk_data.metadata),
+        metadata=(
+            chunk_data.metadata.to_domain()
+            if chunk_data.metadata is not None
+            else None
+        ),
         compute_embedding=chunk_data.compute_embedding,
     )
     return ChunkRead.from_domain(chunk)

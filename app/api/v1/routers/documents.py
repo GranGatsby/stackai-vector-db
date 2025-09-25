@@ -50,7 +50,7 @@ async def update_document(
         title=document_data.title,
         content=document_data.content,
         metadata=(
-            DocumentMetadataSchema.dict_to_domain(document_data.metadata)
+            document_data.metadata.to_domain()
             if document_data.metadata is not None
             else None
         ),
@@ -126,6 +126,6 @@ async def create_document_in_library(
         library_id=library_id,
         title=document_data.title,
         content=document_data.content,
-        metadata=DocumentMetadataSchema.dict_to_domain(document_data.metadata),
+        metadata=document_data.metadata.to_domain(),
     )
     return DocumentRead.from_domain(document)

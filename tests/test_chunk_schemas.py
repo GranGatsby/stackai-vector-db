@@ -6,6 +6,7 @@ import pytest
 from pydantic import ValidationError
 
 from app.schemas import ChunkRead, ChunkUpdate, ChunkCreateInDocument
+from app.schemas.chunk import ChunkMetadataSchema
 
 
 class TestChunkSchemas:
@@ -18,7 +19,7 @@ class TestChunkSchemas:
             "embedding": [0.1, 0.2, 0.3],
             "start_index": 0,
             "end_index": 18,
-            "metadata": {"type": "paragraph"},
+            "metadata": {"chunk_type": "paragraph"},
             "compute_embedding": True,
         }
 
@@ -27,7 +28,7 @@ class TestChunkSchemas:
         assert schema.embedding == [0.1, 0.2, 0.3]
         assert schema.start_index == 0
         assert schema.end_index == 18
-        assert schema.metadata["type"] == "paragraph"
+        assert schema.metadata.chunk_type == "paragraph"
         assert schema.compute_embedding is True
 
     def test_chunk_create_minimal(self):
@@ -41,7 +42,7 @@ class TestChunkSchemas:
         assert schema.embedding == []  # Default
         assert schema.start_index == 0  # Default
         assert schema.end_index == 0  # Default
-        assert schema.metadata == {}  # Default
+        assert isinstance(schema.metadata, ChunkMetadataSchema)  # Default empty schema
         assert schema.compute_embedding is False  # Default
 
     def test_chunk_create_invalid_text(self):
@@ -135,6 +136,6 @@ class TestChunkSchemas:
         assert schema.embedding == chunk.embedding
         assert schema.start_index == chunk.start_index
         assert schema.end_index == chunk.end_index
-        # metadata is converted to dict in schema response
-        assert "chunk_type" in schema.metadata
-        assert schema.metadata["chunk_type"] == "test"
+        # metadata is now a ChunkMetadataSchema object
+        assert isinstance(schema.metadata, ChunkMetadataSchema)
+        assert schema.metadata.chunk_type == "test"
