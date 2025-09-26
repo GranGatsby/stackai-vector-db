@@ -5,7 +5,7 @@ import uuid
 import pytest
 from fastapi import status
 
-from app.core.constants import HEALTH_MESSAGE, HEALTH_STATUS
+from app.core.config import settings
 
 
 class TestHealthEndpoint:
@@ -17,8 +17,8 @@ class TestHealthEndpoint:
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert data["status"] == HEALTH_STATUS
-        assert data["message"] == HEALTH_MESSAGE
+        assert data["status"] == settings.health_status
+        assert data["message"] == settings.health_message
 
     def test_health_endpoint_has_request_id_header(self, client):
         """Test that health check includes request ID in response headers."""

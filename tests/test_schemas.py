@@ -3,7 +3,7 @@
 import pytest
 from pydantic import ValidationError
 
-from app.core.constants import HEALTH_MESSAGE, HEALTH_STATUS
+from app.core.config import settings
 from app.schemas.health import HealthResponse
 
 
@@ -12,29 +12,29 @@ class TestHealthResponse:
 
     def test_health_response_valid_data(self):
         """Test HealthResponse with valid data."""
-        response = HealthResponse(status=HEALTH_STATUS, message=HEALTH_MESSAGE)
+        response = HealthResponse(status=settings.health_status, message=settings.health_message)
 
-        assert response.status == HEALTH_STATUS
-        assert response.message == HEALTH_MESSAGE
+        assert response.status == settings.health_status
+        assert response.message == settings.health_message
 
     def test_health_response_model_validation(self):
         """Test HealthResponse model validation."""
         # Valid data
-        valid_data = {"status": HEALTH_STATUS, "message": HEALTH_MESSAGE}
+        valid_data = {"status": settings.health_status, "message": settings.health_message}
         response = HealthResponse(**valid_data)
-        assert response.status == HEALTH_STATUS
-        assert response.message == HEALTH_MESSAGE
+        assert response.status == settings.health_status
+        assert response.message == settings.health_message
 
     def test_health_response_missing_fields(self):
         """Test HealthResponse validation with missing fields."""
         # Missing status
         with pytest.raises(ValidationError) as exc_info:
-            HealthResponse(message=HEALTH_MESSAGE)
+            HealthResponse(message=settings.health_message)
         assert "status" in str(exc_info.value)
 
         # Missing message
         with pytest.raises(ValidationError) as exc_info:
-            HealthResponse(status=HEALTH_STATUS)
+            HealthResponse(status=settings.health_status)
         assert "message" in str(exc_info.value)
 
     def test_health_response_extra_fields_forbidden(self):
@@ -43,8 +43,8 @@ class TestHealthResponse:
         with pytest.raises(ValidationError) as exc_info:
             HealthResponse.model_validate(
                 {
-                    "status": HEALTH_STATUS,
-                    "message": HEALTH_MESSAGE,
+                    "status": settings.health_status,
+                    "message": settings.health_message,
                     "extra_field": "not_allowed",
                 }
             )
@@ -63,20 +63,20 @@ class TestHealthResponse:
 
     def test_health_response_serialization(self):
         """Test HealthResponse serialization to dict."""
-        response = HealthResponse(status=HEALTH_STATUS, message=HEALTH_MESSAGE)
+        response = HealthResponse(status=settings.health_status, message=settings.health_message)
 
         data = response.model_dump()
-        expected = {"status": HEALTH_STATUS, "message": HEALTH_MESSAGE}
+        expected = {"status": settings.health_status, "message": settings.health_message}
 
         assert data == expected
 
     def test_health_response_json_serialization(self):
         """Test HealthResponse JSON serialization."""
-        response = HealthResponse(status=HEALTH_STATUS, message=HEALTH_MESSAGE)
+        response = HealthResponse(status=settings.health_status, message=settings.health_message)
 
         json_str = response.model_dump_json()
-        assert f'"status":"{HEALTH_STATUS}"' in json_str
-        assert f'"message":"{HEALTH_MESSAGE}"' in json_str
+        assert f'"status":"{settings.health_status}"' in json_str
+        assert f'"message":"{settings.health_message}"' in json_str
 
     def test_health_response_from_dict(self):
         """Test creating HealthResponse from dictionary."""
