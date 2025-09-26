@@ -1,23 +1,4 @@
-"""Index service for managing vector indexes per library.
-
-This service is responsible for maintaining the state of vector indexes for each library,
-including lazy building, dirty flag management, and ensuring thread-safety through
-per-library RWLocks. It handles embedding generation and dimension validation.
-
-Key Features:
-- Per-library index management with independent state
-- Lazy index building with dirty flag tracking
-- Thread-safe operations with per-library RWLocks
-- Atomic snapshot swapping for concurrent access
-- Automatic embedding generation with batch processing
-- Dimension validation across all embeddings in a library
-
-Architecture:
-- Uses immutable snapshots for concurrent read access
-- Implements copy-on-write semantics for index updates
-- Maintains separate locks per library to avoid global contention
-- Supports configurable dirty threshold for rebuild decisions
-"""
+"""Index service for vector index management."""
 
 import logging
 import time
@@ -52,19 +33,7 @@ class IndexAlgo(str, Enum):
 
 @dataclass(frozen=True)
 class IndexSnapshot:
-    """Immutable snapshot of a vector index for thread-safe access.
-
-    This class represents an immutable view of an index at a specific point in time.
-    It's used to provide consistent read access while allowing atomic updates
-    through snapshot swapping.
-
-    Attributes:
-        index: The vector index instance
-        chunk_ids: List of chunk IDs corresponding to vectors in the index
-        built_at: Timestamp when this snapshot was created
-        version: Version number for this snapshot
-        embedding_dim: Dimension of embeddings in this index
-    """
+    """Immutable snapshot of a vector index for thread-safe access."""
 
     index: VectorIndex
     chunk_ids: list[UUID]
@@ -85,22 +54,7 @@ class IndexSnapshot:
 
 @dataclass
 class IndexState:
-    """Mutable state for a library's vector index.
-
-    This class tracks the mutable state of an index including dirty flags,
-    configuration, and the current immutable snapshot. It's protected by
-    per-library RWLocks for thread-safe access.
-
-    Attributes:
-        library_id: UUID of the library this index belongs to
-        algorithm: Index algorithm being used
-        is_dirty: Whether the index needs rebuilding
-        dirty_count: Number of changes since last build
-        total_chunks: Total number of chunks when last built
-        current_snapshot: Current immutable snapshot (None if not built)
-        lock: Per-library reader-writer lock for thread safety
-        embedding_dim: Expected embedding dimension (None if not determined)
-    """
+    """Mutable state for a library's vector index."""
 
     library_id: UUID
     algorithm: IndexAlgo = IndexAlgo.LINEAR
@@ -132,14 +86,7 @@ class IndexState:
         return self.current_snapshot.size if self.current_snapshot else 0
 
     def should_rebuild(self, rebuild_threshold: float) -> bool:
-        """Determine if the index should be rebuilt based on dirty ratio.
-
-        Args:
-            rebuild_threshold: Fraction of changes that triggers rebuild (0.0-1.0)
-
-        Returns:
-            True if index should be rebuilt
-        """
+        """Determine if the index should be rebuilt based on dirty ratio."""
         if not self.is_built:
             return True
 
@@ -152,23 +99,7 @@ class IndexState:
 
 @dataclass(frozen=True)
 class IndexStatus:
-    """Status information for a library's vector index.
-
-    This immutable class provides a snapshot of index status information
-    that can be safely returned to callers without exposing internal state.
-
-    Attributes:
-        library_id: UUID of the library
-        algorithm: Index algorithm being used
-        is_built: Whether the index has been built
-        is_dirty: Whether the index needs rebuilding
-        size: Number of vectors in the index
-        embedding_dim: Dimension of embeddings (None if not determined)
-        built_at: Timestamp when index was last built (None if not built)
-        version: Version number of the current index
-        dirty_count: Number of changes since last build
-        build_duration: Duration of last build in seconds (None if not available)
-    """
+    """Status information for a library's vector index."""
 
     library_id: UUID
     algorithm: IndexAlgo
@@ -183,36 +114,7 @@ class IndexStatus:
 
 
 class IndexService:
-    """Service for managing vector indexes per library.
-
-    This service maintains separate vector indexes for each library, providing
-    thread-safe operations through per-library RWLocks. It implements lazy
-    building, dirty flag management, and atomic snapshot swapping for concurrent
-    access.
-
-    Key Responsibilities:
-    1. Maintain index state per library with proper isolation
-    2. Lazy build indexes when needed based on dirty flags
-    3. Ensure all chunks have embeddings before building
-    4. Validate embedding dimensions within each library
-    5. Provide thread-safe access through immutable snapshots
-    6. Handle atomic updates through snapshot swapping
-
-    Time Complexity:
-    - get_status(): O(1) - Simple state access
-    - mark_dirty(): O(1) - Flag update
-    - build(): O(N*D + I) where N=vectors, D=dimension, I=index-specific build cost
-      - Linear: O(N*D) - Store vectors in memory
-      - KDTree: O(N*D*log(N)) - Tree construction
-      - IVF: O(N*D*C*K) - K-means clustering with C clusters, K iterations
-
-    Thread Safety:
-    - Uses per-library RWLocks to avoid global contention
-    - Read operations (get_status) use read locks
-    - Write operations (build, mark_dirty) use write locks
-    - Serves immutable snapshots to prevent data races
-    - Atomic snapshot swapping ensures consistency
-    """
+    """Service for vector index management per library."""
 
     def __init__(
         self,
@@ -221,14 +123,6 @@ class IndexService:
         embedding_client: EmbeddingClient | None = None,
         rebuild_threshold: float | None = None,
     ) -> None:
-        """Initialize the IndexService.
-
-        Args:
-            library_repository: Repository for library operations
-            chunk_repository: Repository for chunk operations
-            embedding_client: Client for generating embeddings (auto-created if None)
-            rebuild_threshold: Dirty ratio threshold for rebuilds (uses config default if None)
-        """
         self._library_repo = library_repository
         self._chunk_repo = chunk_repository
         self._embedding_client = embedding_client or create_embedding_client()
@@ -244,21 +138,7 @@ class IndexService:
         )
 
     def get_status(self, library_id: UUID) -> IndexStatus:
-        """Get the current status of a library's index.
-
-        This method provides a read-only view of the index status without
-        triggering any builds or modifications. It's thread-safe and uses
-        read locks for concurrent access.
-
-        Args:
-            library_id: UUID of the library to check
-
-        Returns:
-            IndexStatus with current state information
-
-        Raises:
-            LibraryNotFoundError: If the library doesn't exist
-        """
+        """Get the current status of a library's index."""
         # Verify library exists
         if not self._library_repo.exists(library_id):
             raise LibraryNotFoundError(str(library_id))
@@ -281,18 +161,7 @@ class IndexService:
             )
 
     def mark_dirty(self, library_id: UUID) -> None:
-        """Mark a library's index as dirty (needing rebuild).
-
-        This method is called when chunks or documents are modified,
-        indicating that the index needs to be rebuilt. It increments
-        the dirty counter for rebuild threshold calculations.
-
-        Args:
-            library_id: UUID of the library to mark as dirty
-
-        Raises:
-            LibraryNotFoundError: If the library doesn't exist
-        """
+        """Mark a library's index as dirty (needing rebuild)"""
         # Verify library exists
         if not self._library_repo.exists(library_id):
             raise LibraryNotFoundError(str(library_id))
@@ -329,32 +198,7 @@ class IndexService:
     def build(
         self, library_id: UUID, algorithm: IndexAlgo | str | None = None
     ) -> IndexStatus:
-        """Build or rebuild the vector index for a library.
-
-        This method performs the complete index building process:
-        1. Load all chunks for the library
-        2. Ensure all chunks have embeddings (generate if missing)
-        3. Validate embedding dimensions are consistent
-        4. Build the vector index with the specified algorithm
-        5. Create an immutable snapshot and swap it atomically
-        6. Reset dirty flags and counters
-
-        The build process uses write locks to ensure exclusive access
-        during construction, but serves the previous snapshot to concurrent
-        readers until the new one is ready.
-
-        Args:
-            library_id: UUID of the library to build index for
-            algorithm: Index algorithm to use (str or IndexAlgo, uses current/default if None)
-
-        Returns:
-            IndexStatus after successful build
-
-        Raises:
-            LibraryNotFoundError: If the library doesn't exist
-            VectorIndexBuildError: If index building fails
-            EmbeddingDimensionMismatchError: If embeddings have inconsistent dimensions
-        """
+        """Build or rebuild the vector index for a library."""
         # Verify library exists
         library = self._library_repo.get_by_id(library_id)
         if library is None:
@@ -465,25 +309,7 @@ class IndexService:
     def query(
         self, library_id: UUID, query_vector: list[float], k: int = 10
     ) -> list[tuple[UUID, float]]:
-        """Execute a k-NN query on a library's index.
-
-        This method executes a vector similarity search on the specified library's
-        index, returning the k nearest neighbors. It uses read locks to ensure
-        thread-safe access to the index snapshot.
-
-        Args:
-            library_id: UUID of the library to query
-            query_vector: Query embedding vector
-            k: Number of nearest neighbors to return
-
-        Returns:
-            List of (chunk_id, distance) tuples ordered by distance (ascending)
-
-        Raises:
-            LibraryNotFoundError: If the library doesn't exist
-            VectorIndexNotBuiltError: If the index hasn't been built
-            EmbeddingDimensionMismatchError: If query vector dimension doesn't match
-        """
+        """Execute a k-NN query on a library's index"""
         # Verify library exists
         if not self._library_repo.exists(library_id):
             raise LibraryNotFoundError(str(library_id))
@@ -539,17 +365,7 @@ class IndexService:
             return chunk_results
 
     def _get_or_create_state(self, library_id: UUID) -> IndexState:
-        """Get or create index state for a library.
-
-        This method ensures that each library has an associated IndexState
-        instance with its own RWLock for thread-safe operations.
-
-        Args:
-            library_id: UUID of the library
-
-        Returns:
-            IndexState for the library
-        """
+        """Get or create index state for a library."""
         # Check if state already exists (common case)
         with self._states_lock.read_lock():
             if library_id in self._index_states:
@@ -571,22 +387,7 @@ class IndexService:
     def _load_vectors_and_ids(
         self, library_id: UUID, state: IndexState
     ) -> tuple[list[list[float]], list[UUID]]:
-        """Load vectors and chunk IDs for index building.
-
-        This helper method loads all chunks for a library, ensures they have
-        embeddings, validates dimension consistency, and returns the vectors
-        and corresponding chunk IDs ready for index building.
-
-        Args:
-            library_id: UUID of the library to load vectors for
-            state: Index state (for dimension tracking)
-
-        Returns:
-            Tuple of (vectors, chunk_ids) where vectors and chunk_ids have same length
-
-        Raises:
-            EmbeddingDimensionMismatchError: If embeddings have inconsistent dimensions
-        """
+        """Load vectors and chunk IDs for index building."""
         # Load all chunks for this library
         chunks = self._chunk_repo.list_by_library(library_id)
 
@@ -633,18 +434,7 @@ class IndexService:
         return vectors, chunk_ids
 
     def _ensure_embeddings(self, chunks: list[Chunk]) -> list[Chunk]:
-        """Ensure all chunks have embeddings, generating them if necessary.
-
-        This helper method processes a list of chunks and ensures each one
-        has an embedding vector. It uses batch processing when possible to
-        efficiently generate embeddings for multiple chunks.
-
-        Args:
-            chunks: List of chunks to process
-
-        Returns:
-            List of chunks with embeddings (may be updated versions)
-        """
+        """Ensure all chunks have embeddings, generating them if necessary."""
         # Separate chunks with and without embeddings
         chunks_with_embeddings = []
         chunks_needing_embeddings = []

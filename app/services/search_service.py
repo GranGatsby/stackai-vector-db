@@ -1,23 +1,4 @@
-"""Search service for performing k-NN queries on vector indexes.
-
-This service orchestrates vector similarity searches across library indexes,
-integrating with IndexService for lazy building and providing both text-based
-and embedding-based query interfaces.
-
-Key Features:
-- Text and embedding-based search interfaces
-- Integration with IndexService for lazy index building
-- Thread-safe query operations using per-library read locks
-- Parameter validation (k, dimensions, library existence)
-- Consistent distance metrics across all index types
-- Automatic embedding generation for text queries
-
-Architecture:
-- Uses IndexService snapshots for concurrent read access
-- Triggers lazy index building when needed (dirty or not built)
-- Validates all parameters before executing queries
-- Maintains metric consistency between search and index algorithms
-"""
+"""Search service for k-NN vector similarity queries."""
 
 import logging
 from dataclasses import dataclass
@@ -40,20 +21,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class SearchResult:
-    """Result of a vector similarity search.
-
-    This immutable class represents the results of a k-NN search operation,
-    containing the matching chunks ordered by similarity distance.
-
-    Attributes:
-        library_id: UUID of the library that was searched
-        query_embedding: The embedding vector used for the search
-        matches: List of (chunk, distance) tuples ordered by distance (ascending)
-        total_results: Number of results returned (len(matches))
-        index_size: Total number of vectors in the searched index
-        algorithm: Index algorithm used for the search
-        embedding_dim: Dimension of the embeddings used
-    """
+    """Result of a vector similarity search."""
 
     library_id: UUID
     query_embedding: list[float]
@@ -80,38 +48,7 @@ class SearchResult:
 
 
 class SearchService:
-    """Service for performing k-NN vector similarity searches.
-
-    This service provides high-level search interfaces for both text-based and
-    embedding-based queries. It integrates with IndexService to ensure indexes
-    are built when needed and handles all parameter validation and error cases.
-
-    Key Responsibilities:
-    1. Provide text and embedding-based search interfaces
-    2. Integrate with IndexService for lazy index building
-    3. Validate all search parameters (k, dimensions, library existence)
-    4. Execute thread-safe queries using index snapshots
-    5. Generate embeddings for text queries
-    6. Maintain consistent distance metrics with index algorithms
-
-    Query Complexity:
-    - query_text(): O(E + Q) where E=embedding generation time, Q=query time
-    - query_embedding(): O(Q) where Q depends on index algorithm:
-      - Linear: O(N*D) - Must check all N vectors of dimension D
-      - KDTree: O(log(N)*D) average, O(N*D) worst case - Tree traversal
-      - IVF: O(P*M*D + k) - P probes, M avg vectors per cluster, k results
-
-    Distance Metrics:
-    - Uses same distance metric as the underlying index algorithm
-    - Linear and KDTree: Euclidean distance by default
-    - IVF: Euclidean distance for clustering and search
-    - All algorithms return results sorted by distance (ascending = most similar first)
-
-    Thread Safety:
-    - Uses read locks from IndexService for concurrent query access
-    - Operates on immutable index snapshots
-    - No shared mutable state between queries
-    """
+    """Service for k-NN vector similarity searches."""
 
     def __init__(
         self,
@@ -120,14 +57,6 @@ class SearchService:
         chunk_repository: ChunkRepository,
         embedding_client: EmbeddingClient | None = None,
     ) -> None:
-        """Initialize the SearchService.
-
-        Args:
-            index_service: Service for managing vector indexes
-            library_repository: Repository for library operations
-            chunk_repository: Repository for chunk operations
-            embedding_client: Client for generating embeddings (auto-created if None)
-        """
         self._index_service = index_service
         self._library_repo = library_repository
         self._chunk_repo = chunk_repository
@@ -136,41 +65,16 @@ class SearchService:
         logger.info("Initialized SearchService")
 
     def query_text(self, library_id: UUID, text: str, k: int = 10) -> SearchResult:
-        """Search for similar chunks using text query.
-
-        This method generates an embedding for the input text and then performs
-        a k-NN search to find the most similar chunks in the specified library.
-
-        Process:
-        1. Validate parameters (library exists, k > 0, text not empty)
-        2. Generate embedding for the input text
-        3. Delegate to query_embedding() for the actual search
-
-        Args:
-            library_id: UUID of the library to search in
-            text: Text query to search for
-            k: Number of nearest neighbors to return (must be >= 1)
-
-        Returns:
-            SearchResult with matching chunks ordered by similarity
-
-        Raises:
-            LibraryNotFoundError: If the library doesn't exist
-            InvalidSearchParameterError: If k <= 0 or text is empty
-            EmptyLibraryError: If the library contains no chunks
-            VectorIndexNotBuiltError: If index building fails
-            EmbeddingDimensionMismatchError: If embedding dimensions don't match
-        """
+        """Search for similar chunks using text query"""
         # Validate basic parameters
         if not text or not text.strip():
             raise InvalidSearchParameterError("text", text, "cannot be empty")
-
         if k <= 0:
             raise InvalidSearchParameterError("k", k, "must be greater than 0")
 
         # Verify library exists
         library = self._library_repo.get_by_id(library_id)
-        if library is None:
+        if not library:
             raise LibraryNotFoundError(str(library_id))
 
         logger.debug(f"Generating embedding for text query in library {library_id}")
@@ -178,12 +82,7 @@ class SearchService:
         try:
             # Generate embedding for the text query
             embedding_result = self._embedding_client.embed_text(text.strip())
-
-            # Delegate to embedding-based search
-            return self.query_embedding(
-                library_id, embedding_result.single_embedding, k
-            )
-
+            return self.query_embedding(library_id, embedding_result.single_embedding, k)
         except EmbeddingError as e:
             logger.error(f"Failed to generate embedding for text query: {e}")
             raise InvalidSearchParameterError(
@@ -193,40 +92,17 @@ class SearchService:
     def _validate_query_params(
         self, library_id: UUID, embedding: list[float], k: int
     ) -> None:
-        """Validate basic query parameters.
-
-        Args:
-            library_id: UUID of the library to search in
-            embedding: Query embedding vector
-            k: Number of nearest neighbors to return
-
-        Raises:
-            InvalidSearchParameterError: If parameters are invalid
-            LibraryNotFoundError: If the library doesn't exist
-        """
         if k <= 0:
             raise InvalidSearchParameterError("k", k, "must be greater than 0")
-
         if not embedding:
             raise InvalidSearchParameterError("embedding", embedding, "cannot be empty")
-
-        # Verify library exists
+        
         library = self._library_repo.get_by_id(library_id)
-        if library is None:
+        if not library:
             raise LibraryNotFoundError(str(library_id))
 
     def _ensure_index_ready(self, library_id: UUID) -> IndexStatus:
-        """Ensure index is built and ready for querying.
-
-        Args:
-            library_id: UUID of the library
-
-        Returns:
-            IndexStatus after ensuring index is ready
-
-        Raises:
-            EmptyLibraryError: If the library contains no chunks
-        """
+        """Ensure index is built and ready for querying"""
         # Get current index status
         index_status = self._index_service.get_status(library_id)
 
@@ -248,15 +124,6 @@ class SearchService:
     def _validate_embedding_dimension(
         self, embedding: list[float], index_status: IndexStatus
     ) -> None:
-        """Validate embedding dimension matches index dimension.
-
-        Args:
-            embedding: Query embedding vector
-            index_status: Current index status
-
-        Raises:
-            EmbeddingDimensionMismatchError: If dimensions don't match
-        """
         if (
             index_status.embedding_dim is not None
             and len(embedding) != index_status.embedding_dim
@@ -268,20 +135,7 @@ class SearchService:
     def _execute_index_query(
         self, library_id: UUID, embedding: list[float], k: int, index_size: int
     ) -> list[tuple[UUID, float]]:
-        """Execute k-NN query on index.
-
-        Args:
-            library_id: UUID of the library
-            embedding: Query embedding vector
-            k: Number of nearest neighbors requested
-            index_size: Current index size
-
-        Returns:
-            List of (chunk_id, distance) tuples
-
-        Raises:
-            VectorIndexNotBuiltError: If index query fails
-        """
+        """Execute k-NN query on index"""
         # Limit k to actual index size
         effective_k = min(k, index_size)
         if effective_k != k:
@@ -289,33 +143,21 @@ class SearchService:
 
         # Execute k-NN query through IndexService
         try:
-            query_results = self._index_service.query(
-                library_id, embedding, effective_k
-            )
+            query_results = self._index_service.query(library_id, embedding, effective_k)
             logger.debug(f"Index query returned {len(query_results)} results")
             return query_results
         except VectorIndexNotBuiltError as e:
-            # This shouldn't happen since we built the index above, but handle it
             raise VectorIndexNotBuiltError(str(library_id)) from e
 
     def _process_query_results(
         self, query_results: list[tuple[UUID, float]]
     ) -> list[tuple[Chunk, float]]:
-        """Convert index results to chunk entities with similarity filtering.
-
-        Args:
-            query_results: List of (chunk_id, distance) tuples from index
-
-        Returns:
-            List of (chunk, distance) tuples after filtering
-        """
         matches = []
         filtered_count = 0
 
         for chunk_id, distance in query_results:
-            # Retrieve chunk entity
             chunk = self._chunk_repo.get_by_id(chunk_id)
-            if chunk is None:
+            if not chunk:
                 logger.warning(f"Chunk {chunk_id} not found in repository")
                 continue
 
@@ -339,50 +181,14 @@ class SearchService:
         return matches
 
     def _should_filter_chunk(self, chunk: Chunk, distance: float) -> bool:
-        """Check if chunk should be filtered by similarity threshold.
-
-        Args:
-            chunk: Chunk entity
-            distance: Similarity distance
-
-        Returns:
-            True if chunk should be filtered out
-        """
+        """Check if chunk should be filtered by similarity threshold"""
         if not chunk.metadata or chunk.metadata.similarity_threshold is None:
             return False
-
         return distance > chunk.metadata.similarity_threshold
 
     def query_embedding(
         self, library_id: UUID, embedding: list[float], k: int = 10
     ) -> SearchResult:
-        """Search for similar chunks using embedding vector.
-
-        This method performs a k-NN search using the provided embedding vector
-        to find the most similar chunks in the specified library.
-
-        Process:
-        1. Validate parameters (library exists, k > 0, embedding not empty)
-        2. Ensure index is built (trigger lazy build if needed)
-        3. Validate embedding dimension matches index dimension
-        4. Execute k-NN query on index snapshot
-        5. Retrieve chunk entities and construct result
-
-        Args:
-            library_id: UUID of the library to search in
-            embedding: Query embedding vector
-            k: Number of nearest neighbors to return (must be >= 1)
-
-        Returns:
-            SearchResult with matching chunks ordered by similarity
-
-        Raises:
-            LibraryNotFoundError: If the library doesn't exist
-            InvalidSearchParameterError: If k <= 0 or embedding is invalid
-            EmptyLibraryError: If the library contains no chunks
-            VectorIndexNotBuiltError: If index building fails
-            EmbeddingDimensionMismatchError: If embedding dimensions don't match
-        """
         logger.debug(f"Executing embedding query in library {library_id} with k={k}")
 
         # Step 1: Validate parameters
