@@ -52,8 +52,10 @@ build: ## Build distribution package
 	@python -m build
 
 ##@ Docker
-docker: ## Build and run Docker container
+docker-build: ## Build Docker image
 	@docker build -t $(APP_NAME):$(DOCKER_TAG) .
+
+docker-run: ## Run Docker container
 	@docker run -p $(PORT):$(PORT) --env-file .env $(APP_NAME):$(DOCKER_TAG)
 
 ##@ CI/CD
