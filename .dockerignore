@@ -71,21 +71,11 @@ Thumbs.db
 .git/
 .gitignore
 
-# Documentation
-*.md
-docs/
-
 # Development files
-Makefile
 .pre-commit-config.yaml
 mypy.ini
 .mypy_cache/
 .ruff_cache/
-
-# Tests
-tests/
-test_*.py
-*_test.py
 
 # Logs
 *.log

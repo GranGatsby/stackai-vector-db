@@ -1,82 +1,83 @@
 # StackAI Vector Database
 
-Una API REST para indexar y consultar documentos en una base de datos vectorial, desarrollada como parte del proceso de entrevista técnica de StackAI.
+A REST API for indexing and querying documents in a Vector Database, developed as part of the StackAI technical interview process.
 
-## 🚀 Características
+## Features
 
-- **API REST completa** para operaciones CRUD en bibliotecas, documentos y chunks
-- **Búsqueda vectorial k-NN** con múltiples algoritmos de indexación
-- **Arquitectura limpia** siguiendo principios DDD y SOLID
-- **Logging estructurado** con request tracking y múltiples formatters
-- **Request middleware** con IDs únicos y métricas de timing
-- **Tipado estático** completo con MyPy
-- **Containerización** con Docker
-- **Herramientas de desarrollo** integradas (Black, Ruff, Pre-commit)
-- **Suite de tests completa** con cobertura de componentes principales
+- **Complete REST API** for CRUD operations on libraries, documents, and chunks
+- **k-NN vector search** with multiple indexing algorithms
+- **Structured logging** with request tracking and multiple formatters
+- **Request middleware** with unique IDs and timing metrics
+- **Docker containerization**
+- **Integrated development tools** (Black, Ruff, Pre-commit)
+- **Comprehensive test suite** with coverage of main components
+- **Thread-safe operations** with read-write locks
+- **Automatic index selection** based on data characteristics
+- **Flexible embedding system** with Cohere API integration and fallback
 
-## 📋 Requisitos
+## Requirements
 
 - Python 3.12+
-- Docker (opcional)
-- Clave API de Cohere para embeddings
+- Docker (optional)
+- Cohere API key for embeddings (optional - uses fake client if not provided)
 
-## 🛠️ Instalación
+## Installation & Setup
 
-### Desarrollo Local
+### Local Development
 
-1. **Clonar el repositorio**
+1. **Clone the repository**
    ```bash
    git clone <repository-url>
    cd stackai-vector-db
    ```
 
-2. **Crear entorno virtual**
+2. **Create virtual environment**
    ```bash
    python -m venv venv
    source venv/bin/activate  # Linux/Mac
-   # o
+   # or
    venv\Scripts\activate  # Windows
    ```
 
-3. **Instalar dependencias de desarrollo**
+3. **Install development dependencies**
    ```bash
    make setup
-   # o manualmente:
+   # or manually:
    pip install -e ".[dev]"
    pre-commit install
    ```
 
-4. **Configurar variables de entorno**
+4. **Configure environment variables**
    ```bash
    cp env.example .env
-   # Editar .env con tu clave API de Cohere
+   # Edit .env with your Cohere API key (optional)
    ```
 
 ### Docker
 
 ```bash
-# Construir imagen
+# Build image
 make docker-build
 
-# Ejecutar contenedor
+# Run container
 make docker-run
 ```
 
-## 🏃‍♂️ Uso
+## 🏃‍♂️ Usage
 
-### Ejecutar la aplicación
+### Running the Application
 
 ```bash
-# Desarrollo
+# Development mode
 make run
 
-# O directamente
+# Or directly
 python -m app.main
 ```
 
-La API estará disponible en `http://localhost:8000`
+The API will be available at `http://localhost:8000`
 
-### Documentación de la API
+### API Documentation
 
 - **Swagger UI**: `http://localhost:8000/docs`
 - **ReDoc**: `http://localhost:8000/redoc`
@@ -87,36 +88,93 @@ La API estará disponible en `http://localhost:8000`
 curl http://localhost:8000/api/v1/health
 ```
 
-## 🧪 Testing
+### Basic API Usage Example
 
 ```bash
-# Ejecutar todos los tests
+# 1. Create a library
+curl -X POST "http://localhost:8000/api/v1/libraries" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "My Documents",
+    "description": "Collection of technical documents",
+    "metadata": {"category": "technical", "is_public": true}
+  }'
+
+# 2. Create a document in the library
+curl -X POST "http://localhost:8000/api/v1/libraries/{library_id}/documents" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Vector Database Guide",
+    "content": "This is a comprehensive guide about vector databases...",
+    "metadata": {"author": "John Doe", "format": "markdown"}
+  }'
+
+# 3. Create chunks in the document (with automatic embedding)
+curl -X POST "http://localhost:8000/api/v1/documents/{document_id}/chunks" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "chunks": [
+      {
+        "text": "Vector databases are specialized databases for storing and querying high-dimensional vectors.",
+        "start_index": 0,
+        "end_index": 95
+      }
+    ],
+    "compute_embedding": true
+  }'
+
+# 4. Build the vector index
+curl -X POST "http://localhost:8000/api/v1/libraries/{library_id}/index" \
+  -H "Content-Type: application/json" \
+  -d '{"algorithm": "ivf"}'
+
+# 5. Search by text
+curl -X POST "http://localhost:8000/api/v1/libraries/{library_id}/query/text" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "What are vector databases?",
+    "k": 5
+  }'
+```
+
+## Testing
+
+```bash
+# Run all tests
 make test
 
-# Ejecutar tests específicos
+# Run specific test files
 pytest tests/test_health.py -v
-pytest tests/test_config.py -v
-pytest tests/test_logging.py -v
+pytest tests/test_indexes.py -v
+pytest tests/test_search_service.py -v
 
-# Con cobertura
+# Run with coverage
 pytest tests/ --cov=app --cov-report=html
 
-# Ejecutar solo tests unitarios
+# Run only unit tests
 pytest tests/ -m "not integration" -v
 ```
 
-### Tests Incluidos
+### Test Coverage
 
-- **test_health.py**: Tests para endpoints de health check y middleware
-- **test_config.py**: Tests para configuración de Pydantic Settings
-- **test_logging.py**: Tests para sistema de logging estructurado
-- **test_main.py**: Tests para aplicación principal y middleware
-- **test_schemas.py**: Tests para validación de esquemas Pydantic
+The project includes comprehensive tests covering:
 
-## 🔧 Herramientas de Desarrollo
+- **Unit tests**: Domain entities, services, repositories, and indexing algorithms
+- **Integration tests**: API endpoints, database operations, and search functionality
+- **Concurrency tests**: Thread-safety of indexing operations
+- **Edge case tests**: Error handling, validation, and boundary conditions
+
+Key test files:
+- `test_indexes.py`: Vector indexing algorithms (Linear, KDTree, IVF)
+- `test_search_service.py`: Search functionality and embedding integration
+- `test_concurrency.py`: Thread-safety and concurrent operations
+- `test_*_api.py`: REST API endpoints and validation
+- `test_*_service.py`: Business logic and use cases
+
+## Development Tools
 
 ```bash
-# Formatear código
+# Format code
 make format
 
 # Linting
@@ -125,190 +183,429 @@ make lint
 # Type checking
 make type-check
 
-# Ejecutar pre-commit hooks
+# Run pre-commit hooks
 make pre-commit
 
-# Todas las verificaciones
+# All checks
 make check
 ```
 
-## 📁 Estructura del Proyecto
+## Architecture & Design
+
+The project follows **Clean Architecture** principles with **Domain-Driven Design (DDD)**:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        API Layer                            │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │ FastAPI Routers (HTTP endpoints, validation)        │    │
+│  │ Error handlers, middleware, dependency injection    │    │
+│  └─────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────┘
+                                │
+┌─────────────────────────────────────────────────────────────┐
+│                     Service Layer                           │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │ Application services (use cases, business logic)    │    │
+│  │ LibraryService, DocumentService, ChunkService       │    │
+│  │ IndexService, SearchService                         │    │
+│  └─────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────┘
+                                │
+┌─────────────────────────────────────────────────────────────┐
+│                     Domain Layer                            │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │ Entities (Library, Document, Chunk)                 │    │
+│  │ Domain errors, business rules, invariants           │    │
+│  └─────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────┘
+                                │
+┌─────────────────────────────────────────────────────────────┐
+│                 Infrastructure Layer                        │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │ Repositories (in-memory implementations)            │    │
+│  │ Vector indexes (Linear, KDTree, IVF)                │    │
+│  │ External clients (Cohere API, FakeClient)           │    │
+│  │ Utils (RWLock, logging, configuration)              │    │
+│  └─────────────────────────────────────────────────────┘    │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Key Design Patterns
+
+1. **Repository Pattern**: Abstracts data access with protocol-based interfaces
+2. **Dependency Injection**: Services receive dependencies through constructors
+3. **Factory Pattern**: Index creation based on algorithm type and data characteristics
+4. **Strategy Pattern**: Multiple indexing algorithms with common interface
+5. **Immutable Snapshots**: Thread-safe read access to index data
+6. **Command Pattern**: Structured request/response schemas for API operations
+
+### Project Structure
 
 ```
 stackai-vector-db/
 ├── app/
-│   ├── api/v1/routers/     # Endpoints de la API
-│   ├── core/               # Configuración y logging
-│   ├── domain/             # Entidades y lógica de negocio
-│   ├── services/           # Casos de uso de la aplicación
-│   ├── clients/            # Clientes externos (Cohere)
-│   ├── repositories/       # Interfaces y adaptadores de datos
-│   ├── indexes/            # Algoritmos de indexación vectorial
-│   ├── schemas/            # DTOs de Pydantic
-│   ├── utils/              # Utilidades
-│   └── main.py             # Punto de entrada de la aplicación
-├── tests/                  # Tests unitarios e integración
-├── Dockerfile              # Imagen de Docker
-├── Makefile               # Comandos de desarrollo
-├── pyproject.toml         # Configuración del proyecto
-└── README.md              # Este archivo
+│   ├── api/v1/                 # API layer
+│   │   ├── routers/            # FastAPI route handlers
+│   │   ├── deps.py             # Dependency injection
+│   │   └── errors.py           # Error handling
+│   ├── services/               # Application services
+│   │   ├── library_service.py  # Library management
+│   │   ├── document_service.py # Document management
+│   │   ├── chunk_service.py    # Chunk management
+│   │   ├── index_service.py    # Vector indexing
+│   │   └── search_service.py   # Search operations
+│   ├── domain/                 # Domain layer
+│   │   ├── entities.py         # Business entities
+│   │   └── errors.py           # Domain exceptions
+│   ├── repositories/           # Data access layer
+│   │   ├── ports.py            # Repository interfaces
+│   │   └── in_memory/          # In-memory implementations
+│   ├── indexes/                # Vector indexing algorithms
+│   │   ├── base.py             # Common interfaces
+│   │   ├── linear.py           # Linear scan index
+│   │   ├── kdtree.py           # KD-Tree index
+│   │   ├── ivf.py              # IVF index
+│   │   └── manager.py          # Index management
+│   ├── clients/                # External service clients
+│   │   └── embedding.py        # Cohere API client
+│   ├── schemas/                # Pydantic DTOs
+│   ├── core/                   # Configuration & logging
+│   ├── utils/                  # Utilities (RWLock, etc.)
+│   └── main.py                 # Application entry point
+├── tests/                      # Test suite
+├── Dockerfile                  # Container image
+├── Makefile                    # Development commands
+└── pyproject.toml             # Project configuration
 ```
 
-## 🏗️ Arquitectura
+## Vector Indexing Algorithms
 
-El proyecto sigue una arquitectura limpia basada en Domain-Driven Design (DDD):
-
-- **API Layer**: Routers de FastAPI que manejan HTTP
-- **Service Layer**: Lógica de aplicación y casos de uso
-- **Domain Layer**: Entidades y reglas de negocio
-- **Repository Layer**: Abstracción de persistencia
-- **Infrastructure**: Implementaciones concretas (índices, clientes)
-
-## ⚙️ Configuración
-
-Todas las configuraciones se manejan a través de variables de entorno usando Pydantic Settings:
-
-### Variables Principales
-
-- `COHERE_API_KEY`: Clave API de Cohere (requerida)
-- `DEFAULT_INDEX_TYPE`: Tipo de índice por defecto (linear, kdtree, ivf)
-- `MAX_CHUNKS_PER_LIBRARY`: Máximo número de chunks por biblioteca
-- `LOG_LEVEL`: Nivel de logging (DEBUG, INFO, WARNING, ERROR)
-
-### Logging Configuración
-
-- `LOG_FORMAT_GENERAL`: Formato para logs generales
-- `LOG_FORMAT_REQUEST`: Formato para logs de requests con campos estructurados
-- Logging estructurado con request IDs únicos
-- Múltiples handlers y formatters configurados via dictConfig
-
-Ver `env.example` para todas las opciones disponibles.
-
-## 🔍 Algoritmos de Indexación
-
-### Implementados
+### Implemented Algorithms
 
 #### 1. LinearScanIndex (Baseline)
-- **Complejidad Temporal**: 
-  - Build: O(N) - Almacena vectores en memoria
-  - Query: O(N × D) - Escaneo exhaustivo
-  - Add/Remove: O(1) - Operaciones directas en lista
-- **Complejidad Espacial**: O(N × D)
-- **Características**:
-  - Resultados exactos (sin aproximación)
-  - Sin preprocesamiento requerido
-  - Excelente para datasets pequeños (<1K vectores)
-  - Baseline confiable para comparación
 
-#### 2. KDTreeIndex (Eficiente en Bajas Dimensiones)
-- **Complejidad Temporal**:
-  - Build: O(N log N) - Particionado recursivo con búsqueda de mediana
-  - Query: O(log N) promedio, O(N) peor caso
-  - Add/Remove: O(log N) - Puede requerir rebalanceo
-- **Complejidad Espacial**: O(N) - Estructura de árbol
-- **Características**:
-  - Excelente para dimensiones bajas (D ≤ 20)
-  - Performance se degrada en altas dimensiones (maldición de dimensionalidad)
-  - Resultados exactos
-  - Estructura de memoria eficiente
+**Purpose**: Provides exact results and serves as a reference implementation.
 
-#### 3. IVFIndex (Inverted File - Escalable)
-- **Complejidad Temporal**:
-  - Build: O(N × C × I) - N vectores, C clusters, I iteraciones k-means
-  - Query: O(P × M + k) - P sondeos, M vectores promedio por cluster
-  - Add: O(C) - Encontrar cluster más cercano
-  - Remove: O(M) - Buscar en lista invertida
-- **Complejidad Espacial**: O(N + C × D) - Vectores + centroides
-- **Características**:
-  - Excelente escalabilidad para datasets grandes (>10K vectores)
-  - Resultados aproximados (ajustable vía parámetro nprobe)
-  - Buen rendimiento en altas dimensiones
-  - Actualizaciones incrementales eficientes
+- **Time Complexity**: 
+  - Build: O(N) - Simply stores vectors in memory
+  - Query: O(N × D) - Exhaustive scan through all vectors
+  - Add/Remove: O(1) - Direct list operations
+- **Space Complexity**: O(N × D)
+- **Characteristics**:
+  - Exact results (no approximation)
+  - No preprocessing required
+  - Excellent for small datasets (<1K vectors)
+  - Reliable baseline for correctness comparison
+  - Supports both Euclidean and Cosine distance metrics
 
-### Selección Automática de Algoritmo
+#### 2. KDTreeIndex (Educational & Low-Dimensional Use)
 
-El sistema selecciona automáticamente el algoritmo óptimo basado en:
+**Purpose**: Demonstrates spatial partitioning techniques, effective for specific low-dimensional scenarios.
 
-- **Datasets pequeños** (<1K vectores): LinearScan
-- **Dimensiones bajas** (D ≤ 20, <50K vectores): KDTree  
-- **Datasets grandes** (≥10K vectores) o **altas dimensiones** (D > 50): IVF
-- **Prioridad de precisión**: KDTree para dim bajas, LinearScan para dim altas
-- **Prioridad de velocidad**: IVF para la mayoría de casos
+- **Time Complexity**:
+  - Build: O(N log N) - Recursive partitioning with median finding
+  - Query: O(log N) average, O(N) worst case
+  - Add/Remove: O(log N) - May require rebalancing
+- **Space Complexity**: O(N) - Tree structure overhead
+- **Characteristics**:
+  - Excellent for low dimensions (D ≤ 20)
+  - Performance degrades in high dimensions (curse of dimensionality)
+  - Exact results
+  - Memory-efficient tree structure
+  - **Educational value**: Classic algorithm for understanding spatial data structures
 
-### Justificación de Selección
+**Note**: While KDTree was included more for educational purposes than practical optimization, it demonstrates important concepts in spatial indexing and performs well in its intended use case (low-dimensional data).
 
-**¿Por qué estos 3 algoritmos?**
+#### 3. IVFIndex (Inverted File - Production-Ready)
 
-1. **LinearScan**: Baseline esencial que garantiza resultados exactos y sirve como referencia de correctitud
-2. **KDTree**: Algoritmo clásico que demuestra técnicas de particionado espacial, excelente para casos de uso específicos
-3. **IVF**: Algoritmo moderno usado en sistemas de producción (similar a FAISS), escalable y práctico
+**Purpose**: Scalable approximate search for large datasets and high-dimensional embeddings.
 
-Esta combinación cubre el espectro completo: exactitud vs velocidad, datasets pequeños vs grandes, y dimensiones bajas vs altas.
+- **Time Complexity**:
+  - Build: O(N × C × I) - N vectors, C clusters, I k-means iterations
+  - Query: O(P × M + k) - P probes, M average vectors per cluster
+  - Add: O(C) - Find nearest cluster and add to inverted list
+  - Remove: O(M) - Search and remove from inverted list
+- **Space Complexity**: O(N + C × D) - Vectors plus cluster centroids
+- **Characteristics**:
+  - Excellent scalability for large datasets (>10K vectors)
+  - Approximate results (tunable via nprobe parameter)
+  - Good performance in high dimensions
+  - Efficient incremental updates
+  - **Production-ready**: Similar to algorithms used in FAISS and other production systems
 
-### Consideraciones de Concurrencia
+### Automatic Algorithm Selection
 
-- **Single-writer principle**: Operaciones de escritura protegidas con locks
-- **Read/Write locks**: Múltiples lectores concurrentes permitidos
-- **Thread-safe wrapper**: Envoltorio automático para operaciones concurrentes
-- **Copy-on-write**: Lecturas desde snapshots inmutables durante reconstrucción
+The system intelligently selects the optimal algorithm based on data characteristics:
 
-## 🐛 Troubleshooting
+```python
+def recommend_index_type(n_vectors: int, dimension: int, accuracy_priority: bool = True) -> str:
+    # Small datasets: linear scan is fine and gives exact results
+    if n_vectors < 1000:
+        return "linear"
+    
+    # Low dimensions: KD-Tree works well
+    if dimension <= 20 and n_vectors < 50000:
+        return "kdtree"
+    
+    # Large datasets or high dimensions: IVF scales better
+    if n_vectors >= 10000 or dimension > 50:
+        return "ivf"
+    
+    # Medium datasets: choose based on accuracy priority
+    return "kdtree" if accuracy_priority and dimension <= 20 else "ivf"
+```
 
-### Errores Comunes
+### Algorithm Selection Rationale
 
-1. **Clave API faltante**
-   ```
-   Error: COHERE_API_KEY is required
-   ```
-   Solución: Configurar la variable de entorno en `.env`
+**Why these 3 algorithms?**
 
-2. **Puerto en uso**
-   ```
-   Error: Address already in use
-   ```
-   Solución: Cambiar `PORT` en `.env` o terminar el proceso existente
+1. **LinearScan**: Essential baseline that guarantees exact results and serves as a correctness reference
+2. **KDTree**: Classic algorithm demonstrating spatial partitioning techniques, valuable for educational purposes and specific low-dimensional use cases
+3. **IVF**: Modern algorithm used in production systems, scalable and practical for real-world applications
 
-## 📝 TODO
+This combination covers the complete spectrum: **accuracy vs speed**, **small vs large datasets**, and **low vs high dimensions**.
 
-### Próximas Funcionalidades
-- [ ] Crear servicios de aplicación para búsqueda k-NN
-- [ ] Implementar endpoints REST para búsqueda vectorial
-- [ ] Integrar indexación automática en LibraryService
+## Concurrency & Thread Safety
 
-### Mejoras Futuras (Extras)
-- [ ] Implementar persistencia en disco
-- [ ] Agregar filtros de metadata
-- [ ] Implementar arquitectura leader-follower
-- [ ] Crear SDK cliente de Python
-- [ ] Agregar métricas y monitoring
+### Design Decisions
 
-### ✅ Completado
-- [x] Estructura base del proyecto con arquitectura DDD
-- [x] Configuración de herramientas de desarrollo (Black, Ruff, MyPy)
-- [x] Sistema de logging estructurado con múltiples formatters
-- [x] Request middleware con tracking de IDs únicos
-- [x] Suite de tests completa para componentes base
-- [x] Containerización con Docker
-- [x] Health check endpoint funcional
-- [x] **Modelos de dominio completos** (Library, Document, Chunk)
-- [x] **Algoritmos de indexación implementados** (Linear, KD-Tree, IVF)
-- [x] **Cliente Cohere para embeddings** con fallback a FakeClient
-- [x] **Endpoints REST CRUD completos** para todas las entidades
-- [x] **Sistema de embeddings integrado** con dependency injection
-- [x] **Thread-safety y concurrencia** en algoritmos de indexación
+#### Read-Write Locks (RWLock)
+- **Multiple concurrent readers** allowed for query operations
+- **Exclusive writers** for index building and data modifications
+- **Per-library locking** to avoid global bottlenecks
+- **Context manager support** for safe lock acquisition/release
 
-## 🤝 Contribución
+```python
+class RWLock:
+    def read_lock(self):
+        # Multiple readers can acquire simultaneously
+        
+    def write_lock(self):
+        # Exclusive access for writers
+```
 
-1. Fork el proyecto
-2. Crear rama feature (`git checkout -b feature/amazing-feature`)
-3. Commit cambios (`git commit -m 'Add amazing feature'`)
-4. Push a la rama (`git push origin feature/amazing-feature`)
-5. Abrir Pull Request
+#### Immutable Snapshots
+- **Copy-on-write semantics** for index updates
+- **Atomic snapshot swapping** for consistent reads during rebuilds
+- **Version tracking** to detect stale references
 
-## 📄 Licencia
+```python
+@dataclass(frozen=True)
+class IndexSnapshot:
+    index: VectorIndex
+    chunk_ids: list[UUID]
+    built_at: float
+    version: int
+    embedding_dim: int
+```
 
-Este proyecto está bajo la licencia MIT. Ver `LICENSE` para más detalles.
+#### Single-Writer Principle
+- **One writer per library** at any time
+- **Queued write operations** to prevent race conditions
+- **Consistent state transitions** during index operations
 
+### Concurrency Benefits
+- **High read throughput** with concurrent queries
+- **Non-blocking reads** during index rebuilds
+- **Data consistency** guaranteed through proper locking
+- **Deadlock prevention** through lock ordering
+
+## Embedding System Design
+
+### Hybrid Embedding Strategy
+
+The system implements both **eager** and **lazy** embedding computation:
+
+#### Eager Embedding (Chunk Creation)
+```python
+# Embedding computed immediately when chunk is created
+chunk_service.create_chunks(
+    document_id=doc_id,
+    chunks_data=chunks,
+    compute_embedding=True  # Compute now
+)
+```
+
+#### Lazy Embedding (Index Building)
+```python
+# Missing embeddings computed during index building
+def _ensure_embeddings(self, chunks: list[Chunk]) -> list[Chunk]:
+    chunks_to_embed = [chunk for chunk in chunks if not chunk.has_embedding]
+    # Compute missing embeddings automatically
+```
+
+### Embedding Client Architecture
+
+- **Cohere API Client**: Production embedding generation
+- **Fake Client**: Development/testing with deterministic embeddings
+- **Automatic fallback**: Uses fake client when API key not provided
+- **Batch processing**: Efficient bulk embedding computation
+- **Error handling**: Robust error recovery and retries
+
+### Distance Metrics
+
+Currently uses **Euclidean distance** across all algorithms:
+- **Consistent similarity semantics** across different index types
+- **Meaningful similarity thresholds** for filtering results
+- **Prepared for Cosine distance** in LinearScan (configurable)
+
+## Configuration
+
+All configuration is managed through environment variables using Pydantic Settings:
+
+### Core Settings
+- `COHERE_API_KEY`: Cohere API key (optional - uses fake client if not provided)
+- `DEFAULT_INDEX_TYPE`: Default index algorithm (linear, kdtree, ivf)
+- `MAX_CHUNKS_PER_LIBRARY`: Maximum chunks per library (default: 10,000)
+- `DEFAULT_EMBEDDING_DIM`: Default embedding dimension (default: 1024)
+
+### Performance Settings
+- `INDEX_REBUILD_THRESHOLD`: Rebuild when X% of data changes (default: 0.1)
+- `MAX_KNN_RESULTS`: Maximum k value for search (default: 1000)
+- `DEFAULT_KNN_RESULTS`: Default k value (default: 10)
+
+### Logging Configuration
+- `LOG_LEVEL`: Logging level (DEBUG, INFO, WARNING, ERROR)
+- `LOG_FORMAT_GENERAL`: Format for general logs
+- `LOG_FORMAT_REQUEST`: Format for request logs with structured fields
+
+See `env.example` for all available configuration options.
+
+## Known Limitations
+
+### Current Limitations
+
+1. **In-Memory Storage Only**
+   - No persistence to disk implemented
+   - Data lost on application restart
+   - Memory usage grows with dataset size
+
+2. **No Advanced Features**
+   - Metadata filtering not implemented
+   - No leader-follower architecture
+   - No Python SDK client
+
+3. **Scalability Constraints**
+   - Not optimized for very large datasets (>1M vectors)
+   - Single-node deployment only
+   - No horizontal scaling support
+
+4. **Embedding Limitations**
+   - Limited to single embedding model per deployment
+   - No embedding versioning or migration
+   - Fixed distance metric per index type
+
+5. **Missing Production Features**
+   - No authentication/authorization
+   - No rate limiting
+   - No monitoring/metrics collection
+   - No backup/restore functionality
+
+### Performance Considerations
+
+- **Memory usage**: Proportional to dataset size
+- **Index rebuild cost**: Can be expensive for large datasets
+- **Cold start**: No index and memory persistence means rebuilding on restart
+
+## Future Extensions
+
+### Priority Enhancements
+
+#### 1. Improved Embedding Management
+- **Embedding status tracking**: `"up_to_date" | "stale" | "missing"`
+- **Embedding source tracking**: `"internal" | "external" | "none"`
+- **Smart recomputation**: Only recompute when text changes
+- **Embedding versioning**: Handle model updates gracefully
+
+#### 2. Enhanced Index Management
+- **Chunk indexing status**: Implement `is_indexed` field for user visibility
+- **Automatic rebuild triggers**: Rebuild when dirty ratio exceeds threshold
+- **Background rebuilding**: Non-blocking index updates
+- **Index persistence**: Save/load indexes to/from disk
+
+#### 3. Advanced Search Features
+- **Configurable distance metrics**: Choose between Euclidean and Cosine
+- **Hybrid search**: Combine vector similarity with keyword search
+- **Result ranking**: Custom scoring and ranking algorithms
+
+### Extended Features (From Task Requirements)
+
+#### 1. Metadata Filtering
+```python
+# Example: Search with metadata filters
+search_service.query_text(
+    library_id=lib_id,
+    text="machine learning",
+    k=10,
+    filters={
+        "metadata.chunk_type": "paragraph",
+        "metadata.confidence": {"$gte": 0.8},
+        "metadata.tags": {"$in": ["technical", "ai"]}
+    }
+)
+```
+
+#### 2. Disk Persistence
+- **Index serialization**: Save/load index structures
+- **WAL (Write-Ahead Logging)**: Ensure durability
+- **Incremental backups**: Efficient data protection
+- **Recovery mechanisms**: Handle corruption gracefully
+
+#### 3. Leader-Follower Architecture
+- **Read replicas**: Scale read operations
+- **Automatic failover**: High availability
+- **Data replication**: Consistent data across nodes
+- **Leader election**: Distributed consensus
+
+#### 4. Python SDK Client
+```python
+from stackai_vector_db import VectorDBClient
+
+client = VectorDBClient("http://localhost:8000")
+library = client.create_library("My Library")
+document = library.create_document("My Document", content="...")
+results = library.search("query text", k=5)
+```
 ---
 
-**Desarrollado con ❤️ para StackAI**
+**Built for StackAI Technical Interview**
+
+### Technical Interview Deliverables
+
+### Answering the Task Requirements
+
+**✅ Define Chunk, Document and Library classes**
+- Implemented as immutable domain entities with Pydantic validation
+- Fixed metadata schemas for simplified validation
+- Factory methods for consistent entity creation
+
+**✅ Implement indexing algorithms**
+- LinearScan: O(N×D) query, exact results, baseline implementation
+- KDTree: O(log N) average query, educational value, low-dimensional optimization
+- IVF: O(P×M+k) query, production-ready scalability for large datasets
+- Automatic algorithm selection based on data characteristics
+
+**✅ Ensure no data races**
+- Read-Write locks for concurrent access control
+- Immutable snapshots for consistent reads during rebuilds
+- Per-library locking to avoid global bottlenecks
+- Atomic operations for index updates
+
+**✅ CRUD operations with Services**
+- Decoupled API endpoints from business logic
+- Service layer implementing use cases
+- Repository pattern for data access abstraction
+- Dependency injection for loose coupling
+
+**✅ API layer implementation**
+- FastAPI with automatic OpenAPI documentation
+- Structured error handling with consistent responses
+- Request validation using Pydantic schemas
+- RESTful endpoint design with proper HTTP status codes
+
+**✅ Docker containerization**
+- Multi-stage Dockerfile for optimized image size
+- Development and production configurations
+- Easy deployment with make commands

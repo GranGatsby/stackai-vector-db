@@ -17,7 +17,9 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy requirements and install Python dependencies
+WORKDIR /app
 COPY pyproject.toml ./
+COPY app/ ./app/
 RUN pip install --upgrade pip setuptools wheel && \
     pip install .
 
@@ -38,10 +40,6 @@ COPY --from=builder /opt/venv /opt/venv
 
 # Set working directory
 WORKDIR /app
-
-# Copy application code
-COPY app/ ./app/
-COPY pyproject.toml ./
 
 # Change ownership to non-root user
 RUN chown -R appuser:appuser /app

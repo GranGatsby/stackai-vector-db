@@ -24,11 +24,12 @@ dependencies = [
 dev = [
     "pytest>=8.4.0",
     "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0",
     "black>=25.9.0",
     "ruff>=0.13.0",
     "mypy>=1.18.0",
     "pre-commit>=4.3.0",
-    "types-requests",
+    "types-requests>=2.32.0",
 ]
 
 [project.scripts]
