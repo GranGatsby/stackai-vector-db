@@ -369,48 +369,130 @@ This combination covers the complete spectrum: **accuracy vs speed**, **small vs
 
 ## Concurrency & Thread Safety
 
-### Design Decisions
+### Problem Statement
+Vector databases face a unique concurrency challenge: **reads must be fast and frequent** (search queries), while **writes are expensive but less frequent** (index rebuilds). Traditional solutions like global locks would severely impact read performance.
 
-#### Read-Write Locks (RWLock)
-- **Multiple concurrent readers** allowed for query operations
-- **Exclusive writers** for index building and data modifications
-- **Per-library locking** to avoid global bottlenecks
-- **Context manager support** for safe lock acquisition/release
+### Design Decisions & Rationale
+
+#### Why Read-Write Locks (RWLock)?
+
+**Considered Alternatives:**
+1. **Global Mutex** ❌
+   - Blocks all operations during writes
+   - Poor read performance under load
+   - Simple but not scalable
+
+2. **Lock-Free Data Structures** ❌
+   - Complex implementation for vector indexes
+   - GIL limits its benefit
+   - Difficult to maintain consistency across multiple data structures
+
+3. **Database-Style MVCC** ❌
+   - Overkill for in-memory operations
+   - Complex transaction management
+   - High memory overhead for snapshots
+
+4. **Read-Write Locks + Immutable Snapshots** ✅
+   - **High read concurrency**: Multiple readers can query simultaneously
+   - **Consistent reads**: Immutable snapshots prevent data races
+   - **Atomic updates**: Single writer ensures consistency
+   - **Optimal for read-heavy workloads**: Perfect match for search operations
+
+#### Implementation Strategy
 
 ```python
 class RWLock:
     def read_lock(self):
-        # Multiple readers can acquire simultaneously
+        # Multiple concurrent readers allowed
+        # No blocking between read operations
         
     def write_lock(self):
-        # Exclusive access for writers
+        # Exclusive access for index rebuilds
+        # Blocks until all readers complete
 ```
 
-#### Immutable Snapshots
-- **Copy-on-write semantics** for index updates
-- **Atomic snapshot swapping** for consistent reads during rebuilds
-- **Version tracking** to detect stale references
+**Key Benefits:**
+- **Reader-Reader Parallelism**: Search queries don't block each other
+- **Reader-Writer Safety**: Reads see consistent snapshots during writes
+- **Writer-Writer Exclusion**: Prevents race conditions in index updates
+
+#### Immutable Snapshots Pattern
 
 ```python
 @dataclass(frozen=True)
 class IndexSnapshot:
-    index: VectorIndex
-    chunk_ids: list[UUID]
-    built_at: float
-    version: int
-    embedding_dim: int
+    index: VectorIndex        # Immutable index structure
+    chunk_ids: list[UUID]     # Consistent chunk mapping
+    built_at: float          # Timestamp for staleness detection
+    version: int             # Version for optimistic concurrency
+    embedding_dim: int       # Dimension validation
 ```
 
-#### Single-Writer Principle
-- **One writer per library** at any time
-- **Queued write operations** to prevent race conditions
-- **Consistent state transitions** during index operations
+**Why Immutable Snapshots?**
+- **Copy-on-Write Semantics**: Updates create new snapshots without affecting ongoing reads
+- **Atomic Swapping**: New index becomes visible atomically
+- **Version Tracking**: Detects stale references and enables optimistic operations
+- **Memory Efficiency**: Shared immutable data reduces copying overhead
 
-### Concurrency Benefits
-- **High read throughput** with concurrent queries
-- **Non-blocking reads** during index rebuilds
-- **Data consistency** guaranteed through proper locking
-- **Deadlock prevention** through lock ordering
+#### Per-Library Granularity
+
+```python
+# Each library has its own RWLock
+library_locks: dict[UUID, RWLock] = {}
+```
+
+**Advantages over Global Locking:**
+- **Parallel Operations**: Different libraries can be accessed simultaneously
+- **Reduced Contention**: Lock contention isolated to individual libraries
+- **Better Scalability**: Performance scales with number of libraries
+- **Deadlock Prevention**: Simple lock ordering (library UUID) prevents deadlocks
+
+### Concurrency Patterns in Action
+
+#### Read Operations (Queries)
+```python
+async def search(library_id: UUID, query: str):
+    async with library_locks[library_id].read_lock():
+        snapshot = index_snapshots[library_id]  # Immutable reference
+        return snapshot.index.query(query)      # Safe concurrent access
+```
+
+#### Write Operations (Index Rebuilds)
+```python
+async def rebuild_index(library_id: UUID):
+    async with library_locks[library_id].write_lock():
+        # Build new index (expensive operation)
+        new_index = build_index(chunks)
+        new_snapshot = IndexSnapshot(new_index, ...)
+        
+        # Atomic swap - readers immediately see new index
+        index_snapshots[library_id] = new_snapshot
+```
+
+### Design Trade-offs
+
+#### ✅ Advantages
+- **Optimal Read Performance**: No contention between search operations
+- **Strong Consistency**: All readers see consistent snapshots
+- **Simple Mental Model**: Clear reader/writer semantics
+- **Deadlock Free**: Simple lock ordering prevents deadlocks
+- **Scalable**: Performance scales with number of libraries
+
+#### ⚠️ Trade-offs
+- **Memory Overhead**: Multiple snapshots during transitions
+- **Write Latency**: Writers wait for all readers to complete
+- **Complexity**: More complex than simple mutex locking
+```
+
+### Conclusion
+
+The **RWLock + Immutable Snapshots** approach provides an optimal balance for vector database workloads:
+- **High read throughput** for search-heavy applications
+- **Strong consistency guarantees** for data integrity
+- **Simple programming model** for maintainability
+- **Proven patterns** used in production databases
+
+This design directly addresses the core requirement of preventing data races while maximizing performance for the expected read-heavy workload of a vector database.
 
 ## Embedding System Design
 
