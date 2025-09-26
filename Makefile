@@ -40,10 +40,6 @@ lint: ## Check code quality
 format: ## Format code and fix issues
 	@black app/ tests/ && ruff format app/ tests/ && ruff check app/ tests/ --fix
 
-check: lint ## Run all quality checks
-	@mypy app/
-	@echo "✅ All quality checks passed"
-
 ##@ Application
 run: ## Start development server
 	@python -m app.main

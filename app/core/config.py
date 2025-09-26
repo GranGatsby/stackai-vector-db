@@ -60,9 +60,7 @@ class Settings(BaseSettings):
     # Logging Configuration
     log_level: str = "INFO"
     log_format_general: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    log_format_request: str = (
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s | method=%(method)s path=%(path)s status=%(status_code)s duration_ms=%(duration_ms)s request_id=%(request_id)s"
-    )
+    log_format_request: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s | method=%(method)s path=%(path)s status=%(status_code)s duration_ms=%(duration_ms)s request_id=%(request_id)s"
 
     # Health Configuration
     health_status: str = "healthy"

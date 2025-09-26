@@ -358,7 +358,7 @@ class IndexService:
 
             logger.info(
                 f"Query completed for library {library_id}: "
-                f"found {len(chunk_results)} results in {query_duration*1000:.2f}ms "
+                f"found {len(chunk_results)} results in {query_duration * 1000:.2f}ms "
                 f"using {state.algorithm.value} algorithm"
             )
 

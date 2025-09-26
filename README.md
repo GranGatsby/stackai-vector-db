@@ -41,7 +41,7 @@ A REST API for indexing and querying documents in a Vector Database, developed a
 
 3. **Install development dependencies**
    ```bash
-   make setup
+   make dev
    # or manually:
    pip install -e ".[dev]"
    pre-commit install
@@ -179,12 +179,6 @@ make format
 
 # Linting
 make lint
-
-# Type checking
-make type-check
-
-# Run pre-commit hooks
-make pre-commit
 
 # All checks
 make check

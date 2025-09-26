@@ -407,9 +407,9 @@ class TestSearchEndpoints:
 
         # At least some queries should succeed
         successful_queries = len(results)
-        assert (
-            successful_queries > 0
-        ), "No queries succeeded during concurrent operations"
+        assert successful_queries > 0, (
+            "No queries succeeded during concurrent operations"
+        )
 
         # Results should be consistent (same structure)
         if len(results) > 1:
