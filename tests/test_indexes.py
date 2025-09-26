@@ -8,11 +8,11 @@ import numpy as np
 import pytest
 
 from app.indexes import (
-    VectorIndexDimensionMismatchError,
-    VectorIndexNotBuiltError,
     IVFIndex,
     KDTreeIndex,
     LinearScanIndex,
+    VectorIndexDimensionMismatchError,
+    VectorIndexNotBuiltError,
     create_index,
 )
 

@@ -14,7 +14,7 @@ class DomainError(Exception):
     and provides a consistent interface for error handling.
     """
 
-    def __init__(self, message: str, code: str = None) -> None:
+    def __init__(self, message: str, code: str | None = None) -> None:
         super().__init__(message)
         self.message = message
         self.code = code or self.__class__.__name__

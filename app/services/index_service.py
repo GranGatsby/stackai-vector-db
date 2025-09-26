@@ -31,9 +31,9 @@ from app.domain import (
     Chunk,
     ChunkMetadata,
     EmbeddingDimensionMismatchError,
+    LibraryNotFoundError,
     VectorIndexBuildError,
     VectorIndexNotBuiltError,
-    LibraryNotFoundError,
 )
 from app.indexes import VectorIndex, create_index
 from app.repositories.ports import ChunkRepository, LibraryRepository

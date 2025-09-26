@@ -33,7 +33,7 @@ class InMemoryDocumentRepository(DocumentRepository):
         self._lock = RWLock()
 
     def list_by_library(
-        self, library_id: UUID, limit: int = None, offset: int = 0
+        self, library_id: UUID, limit: int | None = None, offset: int = 0
     ) -> list[Document]:
         """Retrieve documents in a library with optional pagination."""
         with self._lock.read_lock():

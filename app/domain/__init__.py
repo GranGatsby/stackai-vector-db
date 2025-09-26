@@ -23,15 +23,15 @@ from .errors import (
     EmbeddingDimensionMismatchError,
     EmbeddingError,
     EmptyLibraryError,
-    VectorIndexBuildError,
-    VectorIndexError,
-    VectorIndexNotBuiltError,
     InvalidSearchParameterError,
     LibraryAlreadyExistsError,
     LibraryError,
     LibraryNotFoundError,
     SearchError,
     ValidationError,
+    VectorIndexBuildError,
+    VectorIndexError,
+    VectorIndexNotBuiltError,
 )
 
 __all__ = [

@@ -19,7 +19,7 @@ class LibraryRepository(Protocol):
     maintaining consistent behavior for the business layer.
     """
 
-    def list_all(self, limit: int = None, offset: int = 0) -> list[Library]:
+    def list_all(self, limit: int | None = None, offset: int = 0) -> list[Library]:
         """Retrieve all libraries with optional pagination.
 
         Args:
@@ -120,7 +120,7 @@ class DocumentRepository(Protocol):
     """
 
     def list_by_library(
-        self, library_id: UUID, limit: int = None, offset: int = 0
+        self, library_id: UUID, limit: int | None = None, offset: int = 0
     ) -> list[Document]:
         """Retrieve documents in a library with optional pagination.
 
@@ -226,7 +226,7 @@ class ChunkRepository(Protocol):
     """
 
     def list_by_library(
-        self, library_id: UUID, limit: int = None, offset: int = 0
+        self, library_id: UUID, limit: int | None = None, offset: int = 0
     ) -> list[Chunk]:
         """Retrieve chunks in a library with optional pagination.
 
@@ -241,7 +241,7 @@ class ChunkRepository(Protocol):
         ...
 
     def list_by_document(
-        self, document_id: UUID, limit: int = None, offset: int = 0
+        self, document_id: UUID, limit: int | None = None, offset: int = 0
     ) -> list[Chunk]:
         """Retrieve chunks in a document with optional pagination.
 

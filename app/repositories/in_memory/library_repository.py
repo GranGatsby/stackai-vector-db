@@ -42,7 +42,7 @@ class InMemoryLibraryRepository(LibraryRepository):
         """
         return name.casefold()
 
-    def list_all(self, limit: int = None, offset: int = 0) -> list[Library]:
+    def list_all(self, limit: int | None = None, offset: int = 0) -> list[Library]:
         """Retrieve all libraries with optional pagination.
 
         Args:

@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 def create_index(
-    index_type: str = None, dimension: int = None, **kwargs
+    index_type: str | None = None, dimension: int | None = None, **kwargs
 ) -> VectorIndex:
     """Factory function to create vector index instances.
 
@@ -201,8 +201,8 @@ class IndexManager:
 
     def __init__(
         self,
-        index_type: str = None,
-        dimension: int = None,
+        index_type: str | None = None,
+        dimension: int | None = None,
         thread_safe: bool = True,
         **index_kwargs,
     ) -> None:
@@ -224,7 +224,7 @@ class IndexManager:
             f"Initialized IndexManager with type={index_type}, thread_safe={thread_safe}"
         )
 
-    def _create_index(self, n_vectors: int = None) -> VectorIndex:
+    def _create_index(self, n_vectors: int | None = None) -> VectorIndex:
         """Create the appropriate index instance.
 
         Args:

@@ -35,7 +35,7 @@ class InMemoryChunkRepository(ChunkRepository):
         self._lock = RWLock()
 
     def list_by_library(
-        self, library_id: UUID, limit: int = None, offset: int = 0
+        self, library_id: UUID, limit: int | None = None, offset: int = 0
     ) -> list[Chunk]:
         """Retrieve chunks in a library with optional pagination."""
         with self._lock.read_lock():
@@ -55,7 +55,7 @@ class InMemoryChunkRepository(ChunkRepository):
             return chunks
 
     def list_by_document(
-        self, document_id: UUID, limit: int = None, offset: int = 0
+        self, document_id: UUID, limit: int | None = None, offset: int = 0
     ) -> list[Chunk]:
         """Retrieve chunks in a document with optional pagination."""
         with self._lock.read_lock():

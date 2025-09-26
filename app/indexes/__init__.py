@@ -11,10 +11,10 @@ Available Algorithms:
 
 from .base import (
     BaseVectorIndex,
+    VectorIndex,
     VectorIndexDimensionMismatchError,
     VectorIndexError,
     VectorIndexNotBuiltError,
-    VectorIndex,
 )
 from .ivf import IVFIndex
 from .kdtree import KDTreeIndex
@@ -23,13 +23,13 @@ from .manager import IndexManager, create_index
 
 __all__ = [
     "BaseVectorIndex",
-    "VectorIndexDimensionMismatchError",
     "IVFIndex",
-    "VectorIndexError",
     "IndexManager",
-    "VectorIndexNotBuiltError",
     "KDTreeIndex",
     "LinearScanIndex",
     "VectorIndex",
+    "VectorIndexDimensionMismatchError",
+    "VectorIndexError",
+    "VectorIndexNotBuiltError",
     "create_index",
 ]

@@ -113,7 +113,7 @@ class TestChunkService:
         invalid_document_id = uuid.uuid4()
         chunks_data = [{"text": "Test chunk"}]
 
-        with pytest.raises(ValueError, match="Document .* does not exist"):
+        with pytest.raises(ValueError, match=r"Document .* does not exist"):
             service.create_chunks(
                 document_id=invalid_document_id,
                 chunks_data=chunks_data,
@@ -180,7 +180,7 @@ class TestChunkService:
 
         # Test with invalid document
         invalid_document_id = uuid.uuid4()
-        with pytest.raises(ValueError, match="Document .* does not exist"):
+        with pytest.raises(ValueError, match=r"Document .* does not exist"):
             service.list_chunks_by_document(invalid_document_id)
 
     def test_list_chunks_by_library_with_validation(
@@ -201,7 +201,7 @@ class TestChunkService:
 
         # Test with invalid library
         invalid_library_id = uuid.uuid4()
-        with pytest.raises(ValueError, match="Library .* does not exist"):
+        with pytest.raises(ValueError, match=r"Library .* does not exist"):
             service.list_chunks_by_library(invalid_library_id)
 
     def test_count_chunks_validation(
@@ -227,10 +227,10 @@ class TestChunkService:
         invalid_document_id = uuid.uuid4()
         invalid_library_id = uuid.uuid4()
 
-        with pytest.raises(ValueError, match="Document .* does not exist"):
+        with pytest.raises(ValueError, match=r"Document .* does not exist"):
             service.count_chunks_by_document(invalid_document_id)
 
-        with pytest.raises(ValueError, match="Library .* does not exist"):
+        with pytest.raises(ValueError, match=r"Library .* does not exist"):
             service.count_chunks_by_library(invalid_library_id)
 
     def test_create_multiple_chunks_batch(

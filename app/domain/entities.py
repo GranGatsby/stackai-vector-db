@@ -133,8 +133,8 @@ class Library:
 
     def update(
         self,
-        name: str = None,
-        description: str = None,
+        name: str | None = None,
+        description: str | None = None,
         metadata: LibraryMetadata | None = None,
     ) -> "Library":
         """Create a new Library instance with updated fields.
@@ -212,8 +212,8 @@ class Document:
 
     def update(
         self,
-        title: str = None,
-        content: str = None,
+        title: str | None = None,
+        content: str | None = None,
         metadata: DocumentMetadata | None = None,
     ) -> "Document":
         """Create a new Document instance with updated fields.
@@ -291,7 +291,7 @@ class Chunk:
         document_id: UUID,
         library_id: UUID,
         text: str,
-        embedding: list[float] = None,
+        embedding: list[float] | None = None,
         start_index: int = 0,
         end_index: int = 0,
         metadata: ChunkMetadata | None = None,
@@ -310,10 +310,10 @@ class Chunk:
 
     def update(
         self,
-        text: str = None,
-        embedding: list[float] = None,
-        start_index: int = None,
-        end_index: int = None,
+        text: str | None = None,
+        embedding: list[float] | None = None,
+        start_index: int | None = None,
+        end_index: int | None = None,
         metadata: ChunkMetadata | None = None,
     ) -> "Chunk":
         """Create a new Chunk instance with updated fields.

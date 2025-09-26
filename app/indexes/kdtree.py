@@ -76,7 +76,7 @@ class KDTreeIndex(BaseVectorIndex):
     - Datasets with frequent queries and infrequent updates
     """
 
-    def __init__(self, dimension: int = None, leaf_size: int = 10) -> None:
+    def __init__(self, dimension: int | None = None, leaf_size: int = 10) -> None:
         """Initialize the KD-Tree index.
 
         Args:

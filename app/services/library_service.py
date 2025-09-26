@@ -32,8 +32,8 @@ class LibraryService:
     def __init__(
         self,
         repository: LibraryRepository,
-        document_repository: DocumentRepository = None,
-        chunk_repository: ChunkRepository = None,
+        document_repository: DocumentRepository | None = None,
+        chunk_repository: ChunkRepository | None = None,
     ) -> None:
         """Initialize the library service.
 
@@ -47,7 +47,7 @@ class LibraryService:
         self._chunk_repository = chunk_repository
 
     def list_libraries(
-        self, limit: int = None, offset: int = 0
+        self, limit: int | None = None, offset: int = 0
     ) -> tuple[list[Library], int]:
         """Retrieve libraries with pagination.
 
@@ -125,8 +125,8 @@ class LibraryService:
     def update_library(
         self,
         library_id: UUID,
-        name: str = None,
-        description: str = None,
+        name: str | None = None,
+        description: str | None = None,
         metadata: LibraryMetadata | None = None,
     ) -> Library:
         """Update an existing library.

@@ -28,9 +28,9 @@ from app.domain import (
     Chunk,
     EmbeddingDimensionMismatchError,
     EmptyLibraryError,
-    VectorIndexNotBuiltError,
     InvalidSearchParameterError,
     LibraryNotFoundError,
+    VectorIndexNotBuiltError,
 )
 from app.repositories.ports import ChunkRepository, LibraryRepository
 from app.services.index_service import IndexAlgo, IndexService

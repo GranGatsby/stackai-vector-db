@@ -100,7 +100,7 @@ class EmbeddingClient(Protocol):
 class EmbeddingError(Exception):
     """Exception raised when embedding computation fails."""
 
-    def __init__(self, message: str, cause: Exception = None) -> None:
+    def __init__(self, message: str, cause: Exception | None = None) -> None:
         super().__init__(message)
         self.cause = cause
 
@@ -112,7 +112,7 @@ class FakeEmbeddingClient:
     Useful when no API key is available or for testing purposes.
     """
 
-    def __init__(self, embedding_dim: int = None) -> None:
+    def __init__(self, embedding_dim: int | None = None) -> None:
         """Initialize the fake embedding client.
 
         Args:
@@ -200,8 +200,8 @@ class CohereEmbeddingClient:
     def __init__(
         self,
         api_key: str,
-        model: str = None,
-        input_type: str = None,
+        model: str | None = None,
+        input_type: str | None = None,
         timeout: float = 30.0,
     ) -> None:
         """Initialize the Cohere embedding client.
@@ -261,7 +261,7 @@ class CohereEmbeddingClient:
         except EmbeddingError:
             raise
         except Exception as e:
-            raise EmbeddingError(f"Failed to embed single text: {e}", e)
+            raise EmbeddingError(f"Failed to embed single text: {e}", e) from e
 
     def embed_texts(self, texts: list[str]) -> EmbeddingResult:
         """Compute embeddings for multiple texts using Cohere API.
@@ -353,10 +353,10 @@ class CohereEmbeddingClient:
         except Exception as e:
             error_msg = f"Failed to call Cohere API: {e}"
             logger.error(error_msg)
-            raise EmbeddingError(error_msg, e)
+            raise EmbeddingError(error_msg, e) from e
 
 
-def create_embedding_client(api_key: str = None) -> EmbeddingClient:
+def create_embedding_client(api_key: str | None = None) -> EmbeddingClient:
     """Factory function to create the appropriate embedding client.
 
     This function creates either a real Cohere client (if API key is provided)

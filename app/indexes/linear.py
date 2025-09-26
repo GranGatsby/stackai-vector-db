@@ -41,7 +41,7 @@ class LinearScanIndex(BaseVectorIndex):
     """
 
     def __init__(
-        self, dimension: int = None, distance_metric: str = "euclidean"
+        self, dimension: int | None = None, distance_metric: str = "euclidean"
     ) -> None:
         """Initialize the linear scan index.
 

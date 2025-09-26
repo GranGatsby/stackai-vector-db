@@ -6,6 +6,7 @@ and the domain/repository layers.
 """
 
 # Import for type hints only - will be injected as dependency
+from __future__ import annotations
 from contextlib import suppress
 from datetime import datetime
 from typing import TYPE_CHECKING
@@ -61,7 +62,7 @@ class ChunkService:
         self._index_service = index_service
 
     def list_chunks_by_document(
-        self, document_id: UUID, limit: int = None, offset: int = 0
+        self, document_id: UUID, limit: int | None = None, offset: int = 0
     ) -> tuple[list[Chunk], int]:
         """Retrieve chunks in a document with pagination.
 
@@ -87,7 +88,7 @@ class ChunkService:
         return chunks, total
 
     def list_chunks_by_library(
-        self, library_id: UUID, limit: int = None, offset: int = 0
+        self, library_id: UUID, limit: int | None = None, offset: int = 0
     ) -> tuple[list[Chunk], int]:
         """Retrieve chunks in a library with pagination.
 
@@ -249,10 +250,10 @@ class ChunkService:
     def update_chunk(
         self,
         chunk_id: UUID,
-        text: str = None,
-        embedding: list[float] = None,
-        start_index: int = None,
-        end_index: int = None,
+        text: str | None = None,
+        embedding: list[float] | None = None,
+        start_index: int | None = None,
+        end_index: int | None = None,
         metadata: ChunkMetadata | None = None,
         compute_embedding: bool = False,
     ) -> Chunk:

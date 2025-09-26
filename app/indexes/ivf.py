@@ -48,8 +48,8 @@ class IVFIndex(BaseVectorIndex):
 
     def __init__(
         self,
-        dimension: int = None,
-        n_clusters: int = None,
+        dimension: int | None = None,
+        n_clusters: int | None = None,
         nprobe: int = 1,
         max_kmeans_iter: int = 50,
     ) -> None:

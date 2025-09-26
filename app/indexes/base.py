@@ -136,7 +136,7 @@ class BaseVectorIndex(ABC):
     for all concrete index implementations.
     """
 
-    def __init__(self, dimension: int = None) -> None:
+    def __init__(self, dimension: int | None = None) -> None:
         """Initialize the base index.
 
         Args:

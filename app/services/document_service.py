@@ -6,6 +6,7 @@ and the domain/repository layers.
 """
 
 # Import for type hints only - will be injected as dependency
+from __future__ import annotations
 from contextlib import suppress
 from typing import TYPE_CHECKING
 from uuid import UUID
@@ -38,8 +39,8 @@ class DocumentService:
         self,
         document_repository: DocumentRepository,
         library_repository: LibraryRepository,
-        chunk_repository: ChunkRepository = None,
-        index_service: "IndexService" = None,
+        chunk_repository: ChunkRepository | None = None,
+        index_service: "IndexService" | None = None,
     ) -> None:
         """Initialize the document service.
 
@@ -55,7 +56,7 @@ class DocumentService:
         self._index_service = index_service
 
     def list_documents_by_library(
-        self, library_id: UUID, limit: int = None, offset: int = 0
+        self, library_id: UUID, limit: int | None = None, offset: int = 0
     ) -> tuple[list[Document], int]:
         """Retrieve documents in a library with pagination.
 
@@ -143,8 +144,8 @@ class DocumentService:
     def update_document(
         self,
         document_id: UUID,
-        title: str = None,
-        content: str = None,
+        title: str | None = None,
+        content: str | None = None,
         metadata: DocumentMetadata | None = None,
     ) -> Document:
         """Update an existing document with partial data.

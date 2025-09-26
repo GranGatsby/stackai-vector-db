@@ -42,7 +42,7 @@ class ErrorResponse(BaseModel):
         )
 
     @classmethod
-    def validation_error(cls, message: str, field: str = None) -> "ErrorResponse":
+    def validation_error(cls, message: str, field: str | None = None) -> "ErrorResponse":
         """Create a validation error response.
 
         Args:

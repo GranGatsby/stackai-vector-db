@@ -15,12 +15,12 @@ from app.domain import (
     DomainError,
     EmbeddingDimensionMismatchError,
     EmptyLibraryError,
-    VectorIndexBuildError,
-    VectorIndexNotBuiltError,
     InvalidSearchParameterError,
     LibraryAlreadyExistsError,
     LibraryNotFoundError,
     SearchError,
+    VectorIndexBuildError,
+    VectorIndexNotBuiltError,
 )
 from app.domain import (
     ValidationError as DomainValidationError,
@@ -32,8 +32,8 @@ def _create_error_response(
     status_code: int,
     error_code: str,
     message: str,
-    field: str = None,
-    context: dict = None,
+    field: str | None = None,
+    context: dict | None = None,
 ) -> JSONResponse:
     """Helper to create consistent error responses.
 
@@ -74,7 +74,7 @@ def _create_conflict_response(message: str) -> JSONResponse:
     )
 
 
-def _create_validation_response(message: str, field: str = None) -> JSONResponse:
+def _create_validation_response(message: str, field: str | None = None) -> JSONResponse:
     """Helper to create 422 validation error responses."""
     return _create_error_response(
         status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -85,28 +85,28 @@ def _create_validation_response(message: str, field: str = None) -> JSONResponse
 
 
 async def library_not_found_handler(
-    request: Request, exc: LibraryNotFoundError
+    _request: Request, exc: LibraryNotFoundError
 ) -> JSONResponse:
     """Handle LibraryNotFoundError exceptions."""
     return _create_not_found_response("Library", exc.library_id)
 
 
 async def library_already_exists_handler(
-    request: Request, exc: LibraryAlreadyExistsError
+    _request: Request, exc: LibraryAlreadyExistsError
 ) -> JSONResponse:
     """Handle LibraryAlreadyExistsError exceptions."""
     return _create_conflict_response(f"Library with name '{exc.name}' already exists")
 
 
 async def document_not_found_handler(
-    request: Request, exc: DocumentNotFoundError
+    _request: Request, exc: DocumentNotFoundError
 ) -> JSONResponse:
     """Handle DocumentNotFoundError exceptions."""
     return _create_not_found_response("Document", exc.document_id)
 
 
 async def document_already_exists_handler(
-    request: Request, exc: DocumentAlreadyExistsError
+    _request: Request, exc: DocumentAlreadyExistsError
 ) -> JSONResponse:
     """Handle DocumentAlreadyExistsError exceptions."""
     return _create_conflict_response(
@@ -115,14 +115,14 @@ async def document_already_exists_handler(
 
 
 async def chunk_not_found_handler(
-    request: Request, exc: ChunkNotFoundError
+    _request: Request, exc: ChunkNotFoundError
 ) -> JSONResponse:
     """Handle ChunkNotFoundError exceptions."""
     return _create_not_found_response("Chunk", exc.chunk_id)
 
 
 async def index_not_built_handler(
-    request: Request, exc: VectorIndexNotBuiltError
+    _request: Request, exc: VectorIndexNotBuiltError
 ) -> JSONResponse:
     """Handle VectorIndexNotBuiltError exceptions."""
     return _create_error_response(
@@ -133,7 +133,7 @@ async def index_not_built_handler(
 
 
 async def index_build_error_handler(
-    request: Request, exc: VectorIndexBuildError
+    _request: Request, exc: VectorIndexBuildError
 ) -> JSONResponse:
     """Handle VectorIndexBuildError exceptions."""
     return _create_error_response(
@@ -144,7 +144,7 @@ async def index_build_error_handler(
 
 
 async def embedding_dimension_mismatch_handler(
-    request: Request, exc: EmbeddingDimensionMismatchError
+    _request: Request, exc: EmbeddingDimensionMismatchError
 ) -> JSONResponse:
     """Handle EmbeddingDimensionMismatchError exceptions."""
     return _create_error_response(
@@ -155,14 +155,14 @@ async def embedding_dimension_mismatch_handler(
 
 
 async def domain_validation_error_handler(
-    request: Request, exc: DomainValidationError
+    _request: Request, exc: DomainValidationError
 ) -> JSONResponse:
     """Handle domain ValidationError exceptions."""
     return _create_validation_response(str(exc))
 
 
 async def pydantic_validation_error_handler(
-    request: Request, exc: RequestValidationError
+    _request: Request, exc: RequestValidationError
 ) -> JSONResponse:
     """Handle Pydantic validation errors."""
     # Extract the first error for simplicity
@@ -174,7 +174,7 @@ async def pydantic_validation_error_handler(
 
 
 async def generic_domain_error_handler(
-    request: Request, exc: DomainError
+    _request: Request, exc: DomainError
 ) -> JSONResponse:
     """Handle generic domain errors."""
     return _create_error_response(
@@ -184,13 +184,13 @@ async def generic_domain_error_handler(
     )
 
 
-async def value_error_handler(request: Request, exc: ValueError) -> JSONResponse:
+async def value_error_handler(_request: Request, exc: ValueError) -> JSONResponse:
     """Handle ValueError exceptions (often from domain validation)."""
     return _create_validation_response(str(exc))
 
 
 async def empty_library_error_handler(
-    request: Request, exc: EmptyLibraryError
+    _request: Request, exc: EmptyLibraryError
 ) -> JSONResponse:
     """Handle EmptyLibraryError exceptions."""
     return _create_error_response(
@@ -201,7 +201,7 @@ async def empty_library_error_handler(
 
 
 async def invalid_search_parameter_error_handler(
-    request: Request, exc: InvalidSearchParameterError
+    _request: Request, exc: InvalidSearchParameterError
 ) -> JSONResponse:
     """Handle InvalidSearchParameterError exceptions."""
     return _create_error_response(
@@ -213,7 +213,7 @@ async def invalid_search_parameter_error_handler(
     )
 
 
-async def search_error_handler(request: Request, exc: SearchError) -> JSONResponse:
+async def search_error_handler(_request: Request, exc: SearchError) -> JSONResponse:
     """Handle generic SearchError exceptions."""
     return _create_error_response(
         status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -222,7 +222,7 @@ async def search_error_handler(request: Request, exc: SearchError) -> JSONRespon
     )
 
 
-async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+async def generic_exception_handler(_request: Request, _exc: Exception) -> JSONResponse:
     """Handle unexpected exceptions."""
     return _create_error_response(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
