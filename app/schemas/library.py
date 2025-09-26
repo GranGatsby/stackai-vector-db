@@ -4,6 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.core.config import settings
 from app.domain import LibraryMetadata
 
 
@@ -12,11 +13,11 @@ class LibraryMetadataSchema(BaseModel):
 
     model_config = ConfigDict(strict=True, extra="forbid", exclude_none=True)
 
-    author: str | None = Field(None, max_length=255, description="Library author")
+    author: str | None = Field(None, max_length=settings.max_name_length, description="Library author")
     version: str | None = Field(None, max_length=50, description="Library version")
     tags: list[str] | None = Field(None, description="Library tags")
-    created_by: str | None = Field(None, max_length=255, description="Creator name")
-    project: str | None = Field(None, max_length=255, description="Project name")
+    created_by: str | None = Field(None, max_length=settings.max_name_length, description="Creator name")
+    project: str | None = Field(None, max_length=settings.max_name_length, description="Project name")
     category: str | None = Field(None, max_length=100, description="Library category")
     is_public: bool | None = Field(None, description="Whether library is public")
     # Test/workflow fields
@@ -34,9 +35,7 @@ class LibraryMetadataSchema(BaseModel):
             created_by=self.created_by,
             project=self.project,
             category=self.category,
-            is_public=(
-                self.is_public if self.is_public is not None else True
-            ),  # Default to True
+            is_public=self.is_public if self.is_public is not None else True,
             test=self.test,
             updated=self.updated,
             original=self.original,
@@ -45,36 +44,22 @@ class LibraryMetadataSchema(BaseModel):
 
     @classmethod
     def from_domain(cls, metadata: LibraryMetadata) -> dict:
-        """Create a dict from domain LibraryMetadata for API responses.
-
-        This returns only fields that have non-default values to maintain
-        backward compatibility with existing API tests.
-        """
-        data = {}
-        if metadata.author is not None:
-            data["author"] = metadata.author
-        if metadata.version is not None:
-            data["version"] = metadata.version
-        if metadata.tags:  # Only if not empty list
-            data["tags"] = metadata.tags
-        if metadata.created_by is not None:
-            data["created_by"] = metadata.created_by
-        if metadata.project is not None:
-            data["project"] = metadata.project
-        if metadata.category is not None:
-            data["category"] = metadata.category
-        if metadata.is_public is not True:  # Only if not default
-            data["is_public"] = metadata.is_public
-        if metadata.test is not None:
-            data["test"] = metadata.test
-        if metadata.updated is not None:
-            data["updated"] = metadata.updated
-        if metadata.original is not None:
-            data["original"] = metadata.original
-        if metadata.workflow is not None:
-            data["workflow"] = metadata.workflow
-
-        return data
+        """Create dict from domain LibraryMetadata, excluding default values."""
+        return {
+            k: v for k, v in {
+                "author": metadata.author,
+                "version": metadata.version,
+                "tags": metadata.tags if metadata.tags else None,
+                "created_by": metadata.created_by,
+                "project": metadata.project,
+                "category": metadata.category,
+                "is_public": metadata.is_public if metadata.is_public is not True else None,
+                "test": metadata.test,
+                "updated": metadata.updated,
+                "original": metadata.original,
+                "workflow": metadata.workflow,
+            }.items() if v is not None
+        }
 
 
 class LibraryBase(BaseModel):
@@ -82,7 +67,7 @@ class LibraryBase(BaseModel):
 
     model_config = ConfigDict(strict=False, extra="forbid")
 
-    name: str = Field(..., min_length=1, max_length=255, description="Library name")
+    name: str = Field(..., min_length=1, max_length=settings.max_name_length, description="Library name")
     description: str = Field(
         default="", max_length=1000, description="Library description"
     )
@@ -93,7 +78,6 @@ class LibraryBase(BaseModel):
     @field_validator("name")
     @classmethod
     def validate_name(cls, v: str) -> str:
-        """Validate library name."""
         if not v.strip():
             raise ValueError("Library name cannot be empty or whitespace only")
         return v.strip()
@@ -107,15 +91,12 @@ class LibraryCreate(LibraryBase):
 
 
 class LibraryUpdate(BaseModel):
-    """Schema for updating an existing library.
-
-    All fields are optional to support partial updates.
-    """
+    """Schema for updating an existing library."""
 
     model_config = ConfigDict(strict=False, extra="forbid")
 
     name: str | None = Field(
-        None, min_length=1, max_length=255, description="Library name"
+        None, min_length=1, max_length=settings.max_name_length, description="Library name"
     )
     description: str | None = Field(
         None, max_length=1000, description="Library description"
@@ -127,7 +108,6 @@ class LibraryUpdate(BaseModel):
     @field_validator("name")
     @classmethod
     def validate_name(cls, v: str | None) -> str | None:
-        """Validate library name if provided."""
         if v is not None and not v.strip():
             raise ValueError("Library name cannot be empty or whitespace only")
         return v.strip() if v is not None else None
@@ -140,14 +120,6 @@ class LibraryOut(LibraryBase):
 
     @classmethod
     def from_domain(cls, library) -> "LibraryOut":
-        """Create a LibraryOut from a domain Library entity.
-
-        Args:
-            library: The domain Library entity
-
-        Returns:
-            A LibraryOut schema instance
-        """
         return cls(
             id=library.id,
             name=library.name,
@@ -170,17 +142,6 @@ class LibraryList(BaseModel):
     def from_domain_list(
         cls, libraries, total: int, limit: int | None = None, offset: int = 0
     ) -> "LibraryList":
-        """Create a LibraryList from a list of domain Library entities.
-
-        Args:
-            libraries: List of domain Library entities
-            total: Total count of libraries (before pagination)
-            limit: Number of items requested
-            offset: Number of items skipped
-
-        Returns:
-            A LibraryList schema instance
-        """
         return cls(
             libraries=[LibraryOut.from_domain(lib) for lib in libraries],
             total=total,

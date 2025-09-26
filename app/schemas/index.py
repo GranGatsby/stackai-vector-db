@@ -1,8 +1,4 @@
-"""Index management schemas for API requests and responses.
-
-This module contains Pydantic schemas for index operations including
-building, status checking, and algorithm selection.
-"""
+"""Index management schemas for API requests and responses."""
 
 from typing import Literal
 from uuid import UUID
@@ -14,11 +10,7 @@ IndexAlgo = Literal["linear", "kdtree", "ivf"]
 
 
 class IndexStatus(BaseModel):
-    """Schema for index status information.
-
-    Provides comprehensive information about the current state of a library's
-    vector index including build status, algorithm used, and performance metrics.
-    """
+    """Schema for index status information."""
 
     model_config = ConfigDict(strict=True, extra="forbid")
 
@@ -44,10 +36,6 @@ class IndexStatus(BaseModel):
     @field_validator("version")
     @classmethod
     def validate_version_consistency(cls, v: int, info) -> int:
-        """Validate version consistency with build status.
-
-        Built indexes must have version >= 1, unbuilt indexes have version = 0.
-        """
         if hasattr(info, "data") and "is_built" in info.data:
             is_built = info.data["is_built"]
             if is_built and v == 0:
@@ -58,11 +46,7 @@ class IndexStatus(BaseModel):
 
 
 class BuildIndexRequest(BaseModel):
-    """Schema for index building requests.
-
-    Allows specifying the algorithm to use for building the vector index.
-    If no algorithm is specified, the service will use the current or default algorithm.
-    """
+    """Schema for index building requests."""
 
     model_config = ConfigDict(strict=True, extra="forbid")
 
@@ -72,11 +56,7 @@ class BuildIndexRequest(BaseModel):
 
 
 class BuildIndexResponse(BaseModel):
-    """Schema for index building responses.
-
-    Returns the updated index status after a successful build operation,
-    including performance metrics and build information.
-    """
+    """Schema for index building responses."""
 
     model_config = ConfigDict(strict=True, extra="forbid")
 
@@ -96,18 +76,6 @@ class BuildIndexResponse(BaseModel):
     def from_index_status(
         cls, status: IndexStatus, build_duration: float | None = None
     ) -> "BuildIndexResponse":
-        """Create a BuildIndexResponse from an IndexStatus.
-
-        Args:
-            status: The IndexStatus after building
-            build_duration: Optional build duration in seconds
-
-        Returns:
-            BuildIndexResponse instance
-
-        Raises:
-            ValueError: If status is not built or missing required fields
-        """
         if not status.is_built:
             raise ValueError("Cannot create BuildIndexResponse from unbuilt index")
         if status.embedding_dim is None:

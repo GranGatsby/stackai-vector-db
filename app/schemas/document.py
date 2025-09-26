@@ -4,6 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.core.config import settings
 from app.domain import DocumentMetadata
 
 
@@ -12,7 +13,7 @@ class DocumentMetadataSchema(BaseModel):
 
     model_config = ConfigDict(strict=True, extra="forbid", exclude_none=True)
 
-    author: str | None = Field(None, max_length=255, description="Document author")
+    author: str | None = Field(None, max_length=settings.max_name_length, description="Document author")
     source: str | None = Field(None, max_length=500, description="Document source")
     language: str | None = Field(None, max_length=50, description="Document language")
     format: str | None = Field(
@@ -49,38 +50,23 @@ class DocumentMetadataSchema(BaseModel):
 
     @classmethod
     def from_domain(cls, metadata: DocumentMetadata) -> dict:
-        """Create a dict from domain DocumentMetadata for API responses.
-
-        This returns only fields that have non-default values to maintain
-        backward compatibility with existing API tests.
-        """
-        data = {}
-        if metadata.author is not None:
-            data["author"] = metadata.author
-        if metadata.source is not None:
-            data["source"] = metadata.source
-        if metadata.language is not None:
-            data["language"] = metadata.language
-        if metadata.format is not None:
-            data["format"] = metadata.format
-        if metadata.created_at is not None:
-            data["created_at"] = metadata.created_at
-        if metadata.modified_at is not None:
-            data["modified_at"] = metadata.modified_at
-        if metadata.tags:  # Only if not empty list
-            data["tags"] = metadata.tags
-        if metadata.category is not None:
-            data["category"] = metadata.category
-        if metadata.is_public is not True:  # Only if not default
-            data["is_public"] = metadata.is_public
-        if metadata.processed is not None:
-            data["processed"] = metadata.processed
-        if metadata.chunk_count is not None:
-            data["chunk_count"] = metadata.chunk_count
-        if metadata.word_count is not None:
-            data["word_count"] = metadata.word_count
-
-        return data
+        """Create dict from domain DocumentMetadata, excluding default values."""
+        return {
+            k: v for k, v in {
+                "author": metadata.author,
+                "source": metadata.source,
+                "language": metadata.language,
+                "format": metadata.format,
+                "created_at": metadata.created_at,
+                "modified_at": metadata.modified_at,
+                "tags": metadata.tags if metadata.tags else None,
+                "category": metadata.category,
+                "is_public": metadata.is_public if metadata.is_public is not True else None,
+                "processed": metadata.processed,
+                "chunk_count": metadata.chunk_count,
+                "word_count": metadata.word_count,
+            }.items() if v is not None
+        }
 
 
 class DocumentBase(BaseModel):
@@ -88,7 +74,7 @@ class DocumentBase(BaseModel):
 
     model_config = ConfigDict(strict=False, extra="forbid")
 
-    title: str = Field(..., min_length=1, max_length=255, description="Document title")
+    title: str = Field(..., min_length=1, max_length=settings.max_title_length, description="Document title")
     content: str = Field(default="", description="Document content")
     metadata: DocumentMetadataSchema = Field(
         default_factory=DocumentMetadataSchema, description="Document metadata"
@@ -97,7 +83,6 @@ class DocumentBase(BaseModel):
     @field_validator("title")
     @classmethod
     def validate_title(cls, v: str) -> str:
-        """Validate document title."""
         if not v.strip():
             raise ValueError("Document title cannot be empty or whitespace only")
         return v.strip()
@@ -110,16 +95,11 @@ class DocumentCreateInLibrary(DocumentBase):
 
 
 class DocumentUpdate(BaseModel):
-    """Schema for updating an existing document.
-
-    All fields are optional to support partial updates.
-    """
+    """Schema for updating an existing document."""
 
     model_config = ConfigDict(strict=False, extra="forbid")
 
-    title: str | None = Field(
-        None, min_length=1, max_length=255, description="Document title"
-    )
+    title: str | None = Field(None, min_length=1, max_length=settings.max_title_length, description="Document title")
     content: str | None = Field(None, description="Document content")
     metadata: DocumentMetadataSchema | None = Field(
         None, description="Document metadata"
@@ -128,7 +108,6 @@ class DocumentUpdate(BaseModel):
     @field_validator("title")
     @classmethod
     def validate_title(cls, v: str | None) -> str | None:
-        """Validate document title if provided."""
         if v is not None and not v.strip():
             raise ValueError("Document title cannot be empty or whitespace only")
         return v.strip() if v is not None else None
@@ -142,14 +121,6 @@ class DocumentRead(DocumentBase):
 
     @classmethod
     def from_domain(cls, document) -> "DocumentRead":
-        """Create a DocumentRead from a domain Document entity.
-
-        Args:
-            document: The domain Document entity
-
-        Returns:
-            A DocumentRead schema instance
-        """
         return cls(
             id=document.id,
             library_id=document.library_id,
@@ -173,17 +144,6 @@ class DocumentList(BaseModel):
     def from_domain_list(
         cls, documents, total: int, limit: int | None = None, offset: int = 0
     ) -> "DocumentList":
-        """Create a DocumentList from a list of domain Document entities.
-
-        Args:
-            documents: List of domain Document entities
-            total: Total count of documents (before pagination)
-            limit: Number of items requested
-            offset: Number of items skipped
-
-        Returns:
-            A DocumentList schema instance
-        """
         return cls(
             documents=[DocumentRead.from_domain(doc) for doc in documents],
             total=total,

@@ -4,6 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.core.config import settings
 from app.domain import ChunkMetadata
 
 
@@ -15,7 +16,7 @@ class ChunkMetadataSchema(BaseModel):
     chunk_type: str | None = Field(
         None, max_length=100, description="Chunk type (paragraph, heading, table, etc.)"
     )
-    section: str | None = Field(None, max_length=255, description="Section name")
+    section: str | None = Field(None, max_length=settings.max_name_length, description="Section name")
     page_number: int | None = Field(None, ge=1, description="Page number")
     confidence: float | None = Field(
         None, ge=0.0, le=1.0, description="Extraction confidence"
@@ -67,34 +68,21 @@ class ChunkMetadataSchema(BaseModel):
 
     @classmethod
     def from_domain(cls, metadata: ChunkMetadata) -> dict:
-        """Create a dict from domain ChunkMetadata for API responses.
-
-        This returns only fields that have non-default values to maintain
-        backward compatibility with existing API tests.
-        """
-        data = {}
-        if metadata.chunk_type is not None:
-            data["chunk_type"] = metadata.chunk_type
-        if metadata.section is not None:
-            data["section"] = metadata.section
-        if metadata.page_number is not None:
-            data["page_number"] = metadata.page_number
-        if metadata.confidence is not None:
-            data["confidence"] = metadata.confidence
-        if metadata.language is not None:
-            data["language"] = metadata.language
-        if metadata.tags:  # Only if not empty list
-            data["tags"] = metadata.tags
-        if metadata.embedding_model is not None:
-            data["embedding_model"] = metadata.embedding_model
-        if metadata.embedding_dim is not None:
-            data["embedding_dim"] = metadata.embedding_dim
-        if metadata.similarity_threshold is not None:
-            data["similarity_threshold"] = metadata.similarity_threshold
-        if metadata.processed_at is not None:
-            data["processed_at"] = metadata.processed_at
-
-        return data
+        """Create dict from domain ChunkMetadata, excluding None values."""
+        return {
+            k: v for k, v in {
+                "chunk_type": metadata.chunk_type,
+                "section": metadata.section,
+                "page_number": metadata.page_number,
+                "confidence": metadata.confidence,
+                "language": metadata.language,
+                "tags": metadata.tags if metadata.tags else None,
+                "embedding_model": metadata.embedding_model,
+                "embedding_dim": metadata.embedding_dim,
+                "similarity_threshold": metadata.similarity_threshold,
+                "processed_at": metadata.processed_at,
+            }.items() if v is not None
+        }
 
 
 class ChunkBase(BaseModel):
@@ -115,7 +103,6 @@ class ChunkBase(BaseModel):
     @field_validator("text")
     @classmethod
     def validate_text(cls, v: str) -> str:
-        """Validate chunk text."""
         if not v.strip():
             raise ValueError("Chunk text cannot be empty or whitespace only")
         return v.strip()
@@ -123,7 +110,6 @@ class ChunkBase(BaseModel):
     @field_validator("end_index")
     @classmethod
     def validate_end_index(cls, v: int, info) -> int:
-        """Validate end_index is >= start_index."""
         if hasattr(info, "data") and "start_index" in info.data:
             start_index = info.data["start_index"]
             if v < start_index:
@@ -158,10 +144,7 @@ class ChunkCreateInDocument(BaseModel):
 
 
 class ChunkUpdate(BaseModel):
-    """Schema for updating an existing chunk.
-
-    All fields are optional to support partial updates.
-    """
+    """Schema for updating an existing chunk."""
 
     model_config = ConfigDict(strict=False, extra="forbid")
 
@@ -177,7 +160,6 @@ class ChunkUpdate(BaseModel):
     @field_validator("text")
     @classmethod
     def validate_text(cls, v: str | None) -> str | None:
-        """Validate chunk text if provided."""
         if v is not None and not v.strip():
             raise ValueError("Chunk text cannot be empty or whitespace only")
         return v.strip() if v is not None else None
@@ -202,14 +184,6 @@ class ChunkRead(ChunkBase):
 
     @classmethod
     def from_domain(cls, chunk) -> "ChunkRead":
-        """Create a ChunkRead from a domain Chunk entity.
-
-        Args:
-            chunk: The domain Chunk entity
-
-        Returns:
-            A ChunkRead schema instance
-        """
         return cls(
             id=chunk.id,
             document_id=chunk.document_id,
@@ -236,17 +210,6 @@ class ChunkList(BaseModel):
     def from_domain_list(
         cls, chunks, total: int, limit: int | None = None, offset: int = 0
     ) -> "ChunkList":
-        """Create a ChunkList from a list of domain Chunk entities.
-
-        Args:
-            chunks: List of domain Chunk entities
-            total: Total count of chunks (before pagination)
-            limit: Number of items requested
-            offset: Number of items skipped
-
-        Returns:
-            A ChunkList schema instance
-        """
         return cls(
             chunks=[ChunkRead.from_domain(chunk) for chunk in chunks],
             total=total,
@@ -265,14 +228,6 @@ class ChunkCreateResponse(BaseModel):
 
     @classmethod
     def from_domain_list(cls, chunks) -> "ChunkCreateResponse":
-        """Create a ChunkCreateResponse from a list of domain Chunk entities.
-
-        Args:
-            chunks: List of created domain Chunk entities
-
-        Returns:
-            A ChunkCreateResponse schema instance
-        """
         return cls(
             chunks=[ChunkRead.from_domain(chunk) for chunk in chunks],
             total_created=len(chunks),
