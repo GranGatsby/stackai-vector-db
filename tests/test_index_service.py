@@ -53,14 +53,15 @@ class TestIndexService:
         """Create sample chunks with embeddings."""
         _, library = library_repo
         doc_id = uuid.uuid4()
-        
+
         chunks = []
         for i in range(3):
             chunk = Chunk.create(
                 document_id=doc_id,
                 library_id=library.id,
                 text=f"Test chunk {i}",
-                embedding=[float(i), float(i+1), float(i+2)] + [0.0] * 125,  # 128-dim
+                embedding=[float(i), float(i + 1), float(i + 2)]
+                + [0.0] * 125,  # 128-dim
                 start_index=i * 10,
                 end_index=(i * 10) + 9,
                 metadata=ChunkMetadata(chunk_type="test"),
@@ -115,7 +116,7 @@ class TestIndexService:
 
         # Build should succeed but create empty index
         status = service.build(library.id)
-        
+
         assert status.is_built
         assert status.size == 0
         assert status.embedding_dim == 1024  # Default from settings

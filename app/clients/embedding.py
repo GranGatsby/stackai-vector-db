@@ -218,7 +218,9 @@ class CohereEmbeddingClient:
         clean_texts = []
         for text in texts:
             try:
-                clean_texts.append(validate_non_empty_text(text, "Cannot embed empty text"))
+                clean_texts.append(
+                    validate_non_empty_text(text, "Cannot embed empty text")
+                )
             except ValueError as e:
                 raise EmbeddingError(str(e)) from e
 

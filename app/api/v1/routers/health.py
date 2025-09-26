@@ -17,4 +17,6 @@ router = APIRouter(tags=["health"])
 )
 async def health_check() -> HealthResponse:
     """Health check endpoint."""
-    return HealthResponse(status=settings.health_status, message=settings.health_message)
+    return HealthResponse(
+        status=settings.health_status, message=settings.health_message
+    )

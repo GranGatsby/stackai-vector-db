@@ -23,9 +23,9 @@ class InMemoryDocumentRepository(DocumentRepository):
             document_ids = self._library_index.get(library_id, set())
             documents = sorted(
                 (self._documents[doc_id] for doc_id in document_ids),
-                key=lambda d: d.title.lower()
+                key=lambda d: d.title.lower(),
             )
-            return documents[offset:offset + limit if limit else None]
+            return documents[offset : offset + limit if limit else None]
 
     def count_by_library(self, library_id: UUID) -> int:
         with self._lock.read_lock():
@@ -71,7 +71,7 @@ class InMemoryDocumentRepository(DocumentRepository):
         with self._lock.write_lock():
             document_ids = list(self._library_index.get(library_id, set()))
             deleted_count = 0
-            
+
             for document_id in document_ids:
                 if document_id in self._documents:
                     del self._documents[document_id]

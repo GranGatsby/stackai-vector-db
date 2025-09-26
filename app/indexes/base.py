@@ -164,7 +164,7 @@ class BaseVectorIndex(ABC):
         # Validate and sort results
         if len(results) > k:
             results = results[:k]
-            
+
         results.sort(key=lambda x: x[1])
         return results
 

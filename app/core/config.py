@@ -48,7 +48,7 @@ class Settings(BaseSettings):
     max_chunks_per_library: int = 10000
     max_knn_results: int = 1000
     default_knn_results: int = 10
-    
+
     # Validation Limits
     max_name_length: int = 255
     max_title_length: int = 255

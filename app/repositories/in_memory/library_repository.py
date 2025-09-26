@@ -20,8 +20,10 @@ class InMemoryLibraryRepository(LibraryRepository):
 
     def list_all(self, limit: int | None = None, offset: int = 0) -> list[Library]:
         with self._lock.read_lock():
-            libraries = sorted(self._libraries.values(), key=lambda lib: lib.name.casefold())
-            return libraries[offset:offset + limit if limit else None]
+            libraries = sorted(
+                self._libraries.values(), key=lambda lib: lib.name.casefold()
+            )
+            return libraries[offset : offset + limit if limit else None]
 
     def count_all(self) -> int:
         with self._lock.read_lock():

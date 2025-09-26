@@ -11,7 +11,7 @@ from contextlib import contextmanager
 
 class RWLock:
     """Reader-writer lock with writer priority to prevent starvation.
-    
+
     Key properties:
     - Multiple readers can acquire the lock simultaneously
     - Only one writer can hold the lock at a time

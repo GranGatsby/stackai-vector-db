@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 class LinearScanIndex(BaseVectorIndex):
     """Linear scan index - exhaustive search baseline.
-    
+
     Time: Build O(N), Query O(N*D), Space O(N*D)
     Best for: Small datasets, exact results, reference implementation
     """

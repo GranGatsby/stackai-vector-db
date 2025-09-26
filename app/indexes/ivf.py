@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 class IVFIndex(BaseVectorIndex):
     """IVF index using coarse quantization and inverted lists.
-    
+
     Time: Build O(N*C*I), Query O(P*M+k), Space O(N+C*D)
     Best for: Large datasets, high dimensions, approximate search
     """
@@ -171,6 +171,7 @@ class IVFIndex(BaseVectorIndex):
 
         if self._dimension is not None and len(np_vector) != self._dimension:
             from .base import VectorIndexDimensionMismatchError
+
             raise VectorIndexDimensionMismatchError(
                 f"Vector dimension {len(np_vector)} doesn't match index dimension {self._dimension}"
             )

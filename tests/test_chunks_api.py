@@ -90,7 +90,9 @@ class TestChunksAPI:
         create_response = client.post(
             f"/api/v1/documents/{sample_document['id']}/chunks",
             json={
-                "chunks": [{"text": "Chunk to retrieve", "start_index": 0, "end_index": 17}],
+                "chunks": [
+                    {"text": "Chunk to retrieve", "start_index": 0, "end_index": 17}
+                ],
                 "compute_embedding": False,
             },
         )
@@ -123,7 +125,9 @@ class TestChunksAPI:
         create_response = client.post(
             f"/api/v1/documents/{sample_document['id']}/chunks",
             json={
-                "chunks": [{"text": "Original chunk text", "start_index": 0, "end_index": 19}],
+                "chunks": [
+                    {"text": "Original chunk text", "start_index": 0, "end_index": 19}
+                ],
                 "compute_embedding": False,
             },
         )
@@ -137,7 +141,9 @@ class TestChunksAPI:
             "metadata": {"chunk_type": "updated"},
             "compute_embedding": False,
         }
-        response = client.patch(f"/api/v1/chunks/{created_chunk['id']}", json=update_data)
+        response = client.patch(
+            f"/api/v1/chunks/{created_chunk['id']}", json=update_data
+        )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -155,7 +161,9 @@ class TestChunksAPI:
         create_response = client.post(
             f"/api/v1/documents/{sample_document['id']}/chunks",
             json={
-                "chunks": [{"text": "Chunk to delete", "start_index": 0, "end_index": 15}],
+                "chunks": [
+                    {"text": "Chunk to delete", "start_index": 0, "end_index": 15}
+                ],
                 "compute_embedding": False,
             },
         )
@@ -177,12 +185,18 @@ class TestChunksAPI:
         # Create multiple chunks
         chunks_data = {
             "chunks": [
-                {"text": f"Chunk {i:02d}", "start_index": i * 10, "end_index": i * 10 + 8}
+                {
+                    "text": f"Chunk {i:02d}",
+                    "start_index": i * 10,
+                    "end_index": i * 10 + 8,
+                }
                 for i in range(3)
             ],
             "compute_embedding": False,
         }
-        client.post(f"/api/v1/documents/{sample_document['id']}/chunks", json=chunks_data)
+        client.post(
+            f"/api/v1/documents/{sample_document['id']}/chunks", json=chunks_data
+        )
 
         # List all chunks
         response = client.get(f"/api/v1/documents/{sample_document['id']}/chunks")

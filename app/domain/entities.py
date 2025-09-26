@@ -75,7 +75,7 @@ class LibraryMetadata:
 @dataclass(frozen=True)
 class Library:
     """Collection of documents with metadata and organizational structure.
-    
+
     Attributes:
         id: Unique identifier for the library
         name: Human-readable name for the library
@@ -100,7 +100,7 @@ class Library:
         metadata: LibraryMetadata | None = None,
     ) -> "Library":
         """Create new Library with generated ID.
-        
+
         Raises:
             ValueError: If name is empty or too long
         """
@@ -118,12 +118,14 @@ class Library:
         metadata: LibraryMetadata | None = None,
     ) -> "Library":
         """Create new Library instance with updated fields.
-        
+
         Raises:
             ValueError: If new name is empty or too long
         """
         updated_name = (
-            validate_name_length(name, "Library name") if name is not None else self.name
+            validate_name_length(name, "Library name")
+            if name is not None
+            else self.name
         )
         return Library(
             id=self.id,
@@ -136,7 +138,7 @@ class Library:
 @dataclass(frozen=True)
 class Document:
     """Document within a library, composed of multiple chunks.
-    
+
     Attributes:
         id: Unique identifier for the document
         library_id: ID of the library containing this document
@@ -179,12 +181,14 @@ class Document:
         metadata: DocumentMetadata | None = None,
     ) -> "Document":
         """Create new Document instance with updated fields.
-        
+
         Raises:
             ValueError: If new title is empty or too long
         """
         updated_title = (
-            validate_title_length(title, "Document title") if title is not None else self.title
+            validate_title_length(title, "Document title")
+            if title is not None
+            else self.title
         )
         return Document(
             id=self.id,
@@ -198,7 +202,7 @@ class Document:
 @dataclass(frozen=True)
 class Chunk:
     """Text chunk with embedding and metadata for vector search.
-    
+
     Attributes:
         id: Unique identifier for the chunk
         document_id: ID of the parent document
@@ -224,7 +228,7 @@ class Chunk:
         validate_non_empty_text(self.text, "Chunk text cannot be empty")
         validate_non_negative(self.start_index, "Chunk start_index")
         validate_index_range(self.start_index, self.end_index, "Chunk ")
-        
+
         if self.embedding is None:
             object.__setattr__(self, "embedding", [])
 
@@ -261,21 +265,23 @@ class Chunk:
         metadata: ChunkMetadata | None = None,
     ) -> "Chunk":
         """Create new Chunk instance with updated fields.
-        
+
         Raises:
             ValueError: If new text is empty or indices are invalid
         """
         updated_text = (
-            validate_non_empty_text(text, "Chunk text cannot be empty") 
-            if text is not None else self.text
+            validate_non_empty_text(text, "Chunk text cannot be empty")
+            if text is not None
+            else self.text
         )
         updated_start = (
-            validate_non_negative(start_index, "Chunk start_index") 
-            if start_index is not None else self.start_index
+            validate_non_negative(start_index, "Chunk start_index")
+            if start_index is not None
+            else self.start_index
         )
         updated_end = end_index if end_index is not None else self.end_index
         validate_index_range(updated_start, updated_end, "Chunk ")
-        
+
         return Chunk(
             id=self.id,
             document_id=self.document_id,

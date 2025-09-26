@@ -61,14 +61,15 @@ class TestSearchService:
         """Create sample chunks with embeddings."""
         _, library = library_repo
         doc_id = uuid.uuid4()
-        
+
         chunks = []
         for i in range(3):
             chunk = Chunk.create(
                 document_id=doc_id,
                 library_id=library.id,
                 text=f"Test chunk {i}",
-                embedding=[float(i), float(i+1), float(i+2)] + [0.0] * 125,  # 128-dim
+                embedding=[float(i), float(i + 1), float(i + 2)]
+                + [0.0] * 125,  # 128-dim
                 start_index=i * 10,
                 end_index=(i * 10) + 9,
                 metadata=ChunkMetadata(chunk_type="test"),
@@ -77,10 +78,12 @@ class TestSearchService:
             chunks.append(chunk)
         return chunks
 
-    def test_query_text_success(self, service, library_repo, mock_index_service, sample_chunks):
+    def test_query_text_success(
+        self, service, library_repo, mock_index_service, sample_chunks
+    ):
         """Test successful text query with embedding generation."""
         _, library = library_repo
-        
+
         # Mock index service responses
         index_status = IndexStatus(
             library_id=library.id,
@@ -113,7 +116,9 @@ class TestSearchService:
         assert len(result.query_embedding) == 128
         mock_index_service.query.assert_called_once()
 
-    def test_query_embedding_success(self, service, library_repo, mock_index_service, sample_chunks):
+    def test_query_embedding_success(
+        self, service, library_repo, mock_index_service, sample_chunks
+    ):
         """Test successful embedding query."""
         _, library = library_repo
         query_embedding = [0.5] * 128
@@ -163,7 +168,7 @@ class TestSearchService:
             version=0,
             dirty_count=0,
         )
-        
+
         # After build, it should still be empty (no chunks)
         built_status = IndexStatus(
             library_id=library.id,
@@ -176,16 +181,19 @@ class TestSearchService:
             version=1,
             dirty_count=0,
         )
-        
+
         mock_index_service.get_status.return_value = initial_status
         mock_index_service.build.return_value = built_status
 
         # Should fail with EmptyLibraryError, not VectorIndexNotBuiltError
         from app.domain import EmptyLibraryError
+
         with pytest.raises(EmptyLibraryError):
             service.query_text(library.id, "test query")
 
-    def test_query_dimension_mismatch(self, service, library_repo, mock_index_service, sample_chunks):
+    def test_query_dimension_mismatch(
+        self, service, library_repo, mock_index_service, sample_chunks
+    ):
         """Test query fails with dimension mismatch."""
         _, library = library_repo
         wrong_embedding = [0.5] * 64  # Wrong dimension

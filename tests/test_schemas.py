@@ -12,7 +12,9 @@ class TestHealthResponse:
 
     def test_health_response_valid_data(self):
         """Test HealthResponse with valid data."""
-        response = HealthResponse(status=settings.health_status, message=settings.health_message)
+        response = HealthResponse(
+            status=settings.health_status, message=settings.health_message
+        )
 
         assert response.status == settings.health_status
         assert response.message == settings.health_message
@@ -20,7 +22,10 @@ class TestHealthResponse:
     def test_health_response_model_validation(self):
         """Test HealthResponse model validation."""
         # Valid data
-        valid_data = {"status": settings.health_status, "message": settings.health_message}
+        valid_data = {
+            "status": settings.health_status,
+            "message": settings.health_message,
+        }
         response = HealthResponse(**valid_data)
         assert response.status == settings.health_status
         assert response.message == settings.health_message
@@ -63,16 +68,23 @@ class TestHealthResponse:
 
     def test_health_response_serialization(self):
         """Test HealthResponse serialization to dict."""
-        response = HealthResponse(status=settings.health_status, message=settings.health_message)
+        response = HealthResponse(
+            status=settings.health_status, message=settings.health_message
+        )
 
         data = response.model_dump()
-        expected = {"status": settings.health_status, "message": settings.health_message}
+        expected = {
+            "status": settings.health_status,
+            "message": settings.health_message,
+        }
 
         assert data == expected
 
     def test_health_response_json_serialization(self):
         """Test HealthResponse JSON serialization."""
-        response = HealthResponse(status=settings.health_status, message=settings.health_message)
+        response = HealthResponse(
+            status=settings.health_status, message=settings.health_message
+        )
 
         json_str = response.model_dump_json()
         assert f'"status":"{settings.health_status}"' in json_str

@@ -32,7 +32,7 @@ class KDNode:
 
 class KDTreeIndex(BaseVectorIndex):
     """KD-Tree index for low-medium dimensional data.
-    
+
     Time: Build O(N log N), Query O(log N) avg/O(N) worst, Space O(N)
     Best for: Low dimensions (D <= 20), exact results required
     """

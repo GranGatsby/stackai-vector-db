@@ -24,9 +24,9 @@ class InMemoryChunkRepository(ChunkRepository):
             chunk_ids = self._library_index.get(library_id, set())
             chunks = sorted(
                 (self._chunks[chunk_id] for chunk_id in chunk_ids),
-                key=lambda c: (c.document_id, c.start_index)
+                key=lambda c: (c.document_id, c.start_index),
             )
-            return chunks[offset:offset + limit if limit else None]
+            return chunks[offset : offset + limit if limit else None]
 
     def list_by_document(
         self, document_id: UUID, limit: int | None = None, offset: int = 0
@@ -35,9 +35,9 @@ class InMemoryChunkRepository(ChunkRepository):
             chunk_ids = self._document_index.get(document_id, set())
             chunks = sorted(
                 (self._chunks[chunk_id] for chunk_id in chunk_ids),
-                key=lambda c: c.start_index
+                key=lambda c: c.start_index,
             )
-            return chunks[offset:offset + limit if limit else None]
+            return chunks[offset : offset + limit if limit else None]
 
     def count_by_library(self, library_id: UUID) -> int:
         """Get the total count of chunks in a library."""
