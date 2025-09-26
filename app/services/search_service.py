@@ -180,7 +180,9 @@ class SearchService:
             embedding_result = self._embedding_client.embed_text(text.strip())
 
             # Delegate to embedding-based search
-            return self.query_embedding(library_id, embedding_result.single_embedding, k)
+            return self.query_embedding(
+                library_id, embedding_result.single_embedding, k
+            )
 
         except EmbeddingError as e:
             logger.error(f"Failed to generate embedding for text query: {e}")
@@ -273,7 +275,7 @@ class SearchService:
         # Convert index results to chunk entities and apply similarity threshold filtering
         matches = []
         filtered_count = 0
-        
+
         for chunk_id, distance in query_results:
             # Retrieve chunk entity
             chunk = self._chunk_repo.get_by_id(chunk_id)
@@ -297,7 +299,7 @@ class SearchService:
                     )
 
             matches.append((chunk, distance))
-        
+
         if filtered_count > 0:
             logger.info(
                 f"Filtered out {filtered_count} chunks by similarity_threshold "

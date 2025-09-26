@@ -188,7 +188,9 @@ class TestLibrariesAPI:
         assert data["name"] == update_data["name"]
         assert data["description"] == create_data["description"]  # Unchanged
         # Check specific metadata field that was set originally
-        assert data["metadata"]["original"] == create_data["metadata"]["original"]  # Unchanged
+        assert (
+            data["metadata"]["original"] == create_data["metadata"]["original"]
+        )  # Unchanged
 
     def test_update_library_not_found(self, client: TestClient):
         """Test updating a non-existent library fails."""

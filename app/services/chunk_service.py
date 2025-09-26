@@ -161,16 +161,20 @@ class ChunkService:
             texts_to_embed = [
                 chunk_data.get("text", "")
                 for chunk_data in chunks_data
-                if not chunk_data.get("embedding")  # Only embed texts without existing embeddings
+                if not chunk_data.get(
+                    "embedding"
+                )
             ]
             if texts_to_embed:
                 try:
-                    embedding_result = self._embedding_client.embed_texts(texts_to_embed)
+                    embedding_result = self._embedding_client.embed_texts(
+                        texts_to_embed
+                    )
                 except EmbeddingError as e:
                     raise ValueError(f"Failed to compute embeddings: {e}") from e
 
         current_time = datetime.now().isoformat()
-        
+
         # Process each chunk
         embedding_index = 0
         for chunk_data in chunks_data:
@@ -186,11 +190,11 @@ class ChunkService:
 
             if final_metadata is None:
                 final_metadata = ChunkMetadata()
-            
+
             if compute_embedding and not embedding and embedding_result:
                 final_embedding = embedding_result.embeddings[embedding_index]
                 embedding_index += 1
-                
+
                 # Create updated metadata with embedding info
                 final_metadata = ChunkMetadata(
                     # Preserve existing metadata
@@ -281,11 +285,11 @@ class ChunkService:
         # Compute new embedding if requested and text changed
         final_embedding = embedding
         final_metadata = metadata if metadata is not None else existing_chunk.metadata
-        
+
         # Handle embedding computation if requested
         embedding_model = None
         embedding_dim = None
-        
+
         if compute_embedding and text is not None and text != existing_chunk.text:
             embedding_result = self._compute_embedding(text)
             final_embedding = embedding_result.single_embedding
@@ -293,11 +297,11 @@ class ChunkService:
             embedding_dim = embedding_result.embedding_dim
         elif embedding is None:
             final_embedding = existing_chunk.embedding
-        
+
         # Always ensure metadata exists and update it with current processing time
         if final_metadata is None:
             final_metadata = ChunkMetadata()
-        
+
         # Create updated metadata with current processing time
         final_metadata = ChunkMetadata(
             # Preserve existing metadata

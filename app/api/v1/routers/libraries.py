@@ -56,7 +56,9 @@ async def get_library(
     summary="Create a new library",
     description="Create a new library with the provided information",
     responses={
-        status.HTTP_409_CONFLICT: {"description": "Library with the same name already exists"},
+        status.HTTP_409_CONFLICT: {
+            "description": "Library with the same name already exists"
+        },
         status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Validation error"},
     },
 )
@@ -80,7 +82,9 @@ async def create_library(
     description="Update an existing library with new information",
     responses={
         status.HTTP_404_NOT_FOUND: {"description": "Library not found"},
-        status.HTTP_409_CONFLICT: {"description": "Library name conflicts with existing library"},
+        status.HTTP_409_CONFLICT: {
+            "description": "Library name conflicts with existing library"
+        },
         status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Validation error"},
     },
 )

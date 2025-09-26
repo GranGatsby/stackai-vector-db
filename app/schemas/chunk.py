@@ -29,7 +29,9 @@ class ChunkMetadataSchema(BaseModel):
     )
     embedding_dim: int | None = Field(None, ge=1, description="Embedding dimension")
     similarity_threshold: float | None = Field(
-        None, ge=0.0, description="Maximum distance threshold for search results (lower = more similar)"
+        None,
+        ge=0.0,
+        description="Maximum distance threshold for search results (lower = more similar)",
     )
     # Processing fields
     processed_at: str | None = Field(
@@ -44,7 +46,9 @@ class ChunkMetadataSchema(BaseModel):
             if v < 0:
                 raise ValueError("similarity_threshold must be non-negative")
             if v > 10:  # Very generous upper bound for distance-based similarity
-                raise ValueError("similarity_threshold must be <= 10 (distances are typically 0-2)")
+                raise ValueError(
+                    "similarity_threshold must be <= 10 (distances are typically 0-2)"
+                )
         return v
 
     def to_domain(self) -> ChunkMetadata:
@@ -105,7 +109,9 @@ class ChunkBase(BaseModel):
         0, ge=0, description="Starting character index in document"
     )
     end_index: int = Field(0, ge=0, description="Ending character index in document")
-    metadata: ChunkMetadataSchema = Field(default_factory=ChunkMetadataSchema, description="Chunk metadata")
+    metadata: ChunkMetadataSchema = Field(
+        default_factory=ChunkMetadataSchema, description="Chunk metadata"
+    )
 
     @field_validator("text")
     @classmethod
@@ -132,10 +138,10 @@ class ChunkCreateInDocument(BaseModel):
     model_config = ConfigDict(strict=False, extra="forbid")
 
     chunks: list[ChunkBase] = Field(
-        ..., 
-        min_length=1, 
+        ...,
+        min_length=1,
         max_length=100,
-        description="List of chunks to create (1-100 chunks)"
+        description="List of chunks to create (1-100 chunks)",
     )
     compute_embedding: bool = Field(
         False, description="Whether to compute embedding automatically for all chunks"

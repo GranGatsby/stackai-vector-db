@@ -122,7 +122,9 @@ class DocumentUpdate(BaseModel):
         None, min_length=1, max_length=255, description="Document title"
     )
     content: str | None = Field(None, description="Document content")
-    metadata: DocumentMetadataSchema | None = Field(None, description="Document metadata")
+    metadata: DocumentMetadataSchema | None = Field(
+        None, description="Document metadata"
+    )
 
     @field_validator("title")
     @classmethod

@@ -52,9 +52,7 @@ async def update_chunk(
         start_index=chunk_data.start_index,
         end_index=chunk_data.end_index,
         metadata=(
-            chunk_data.metadata.to_domain()
-            if chunk_data.metadata is not None
-            else None
+            chunk_data.metadata.to_domain() if chunk_data.metadata is not None else None
         ),
         compute_embedding=chunk_data.compute_embedding,
     )
@@ -89,7 +87,9 @@ document_router = APIRouter(prefix="/documents", tags=["chunks"])
     status_code=status.HTTP_200_OK,
     summary="List chunks in a document",
     description="Retrieve a paginated list of chunks in the specified document",
-    responses={status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Document not found"}},
+    responses={
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Document not found"}
+    },
 )
 async def list_chunks_by_document(
     document_id: UUID,
@@ -132,15 +132,17 @@ async def create_chunk_in_document(
             "embedding": chunk.embedding,
             "start_index": chunk.start_index,
             "end_index": chunk.end_index,
-            "metadata": chunk.metadata.to_domain() if chunk.metadata is not None else None,
+            "metadata": (
+                chunk.metadata.to_domain() if chunk.metadata is not None else None
+            ),
         }
         chunks_data.append(chunk_dict)
-    
+
     # Create chunks using the service
     created_chunks = service.create_chunks(
         document_id=document_id,
         chunks_data=chunks_data,
         compute_embedding=chunk_data.compute_embedding,
     )
-    
+
     return ChunkCreateResponse.from_domain_list(created_chunks)

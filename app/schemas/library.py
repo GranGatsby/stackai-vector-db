@@ -86,7 +86,9 @@ class LibraryBase(BaseModel):
     description: str = Field(
         default="", max_length=1000, description="Library description"
     )
-    metadata: LibraryMetadataSchema = Field(default_factory=LibraryMetadataSchema, description="Structured metadata")
+    metadata: LibraryMetadataSchema = Field(
+        default_factory=LibraryMetadataSchema, description="Structured metadata"
+    )
 
     @field_validator("name")
     @classmethod
@@ -118,7 +120,9 @@ class LibraryUpdate(BaseModel):
     description: str | None = Field(
         None, max_length=1000, description="Library description"
     )
-    metadata: LibraryMetadataSchema | None = Field(None, description="Structured metadata")
+    metadata: LibraryMetadataSchema | None = Field(
+        None, description="Structured metadata"
+    )
 
     @field_validator("name")
     @classmethod

@@ -60,12 +60,14 @@ class TestChunkService:
         self, service: ChunkService, sample_document: Document, sample_library: Library
     ):
         """Test successful chunk creation."""
-        chunks_data = [{
-            "text": "Test chunk content",
-            "start_index": 0,
-            "end_index": 18,
-            "metadata": ChunkMetadata(chunk_type="paragraph"),
-        }]
+        chunks_data = [
+            {
+                "text": "Test chunk content",
+                "start_index": 0,
+                "end_index": 18,
+                "metadata": ChunkMetadata(chunk_type="paragraph"),
+            }
+        ]
         chunks = service.create_chunks(
             document_id=sample_document.id,
             chunks_data=chunks_data,
@@ -85,9 +87,11 @@ class TestChunkService:
         self, service: ChunkService, sample_document: Document, sample_library: Library
     ):
         """Test chunk creation with embedding computation."""
-        chunks_data = [{
-            "text": "Test chunk for embedding",
-        }]
+        chunks_data = [
+            {
+                "text": "Test chunk for embedding",
+            }
+        ]
         chunks = service.create_chunks(
             document_id=sample_document.id,
             chunks_data=chunks_data,
@@ -238,7 +242,7 @@ class TestChunkService:
             {"text": "Second chunk", "start_index": 12, "end_index": 24},
             {"text": "Third chunk", "start_index": 25, "end_index": 36},
         ]
-        
+
         chunks = service.create_chunks(
             document_id=sample_document.id,
             chunks_data=chunks_data,

@@ -15,13 +15,15 @@ class TestChunkSchemas:
     def test_chunk_create_valid(self):
         """Test valid chunk creation schema."""
         data = {
-            "chunks": [{
-                "text": "Test chunk content",
-                "embedding": [0.1, 0.2, 0.3],
-                "start_index": 0,
-                "end_index": 18,
-                "metadata": {"chunk_type": "paragraph"},
-            }],
+            "chunks": [
+                {
+                    "text": "Test chunk content",
+                    "embedding": [0.1, 0.2, 0.3],
+                    "start_index": 0,
+                    "end_index": 18,
+                    "metadata": {"chunk_type": "paragraph"},
+                }
+            ],
             "compute_embedding": True,
         }
 
@@ -38,9 +40,11 @@ class TestChunkSchemas:
     def test_chunk_create_minimal(self):
         """Test chunk creation with minimal required fields."""
         data = {
-            "chunks": [{
-                "text": "Minimal chunk",
-            }]
+            "chunks": [
+                {
+                    "text": "Minimal chunk",
+                }
+            ]
         }
 
         schema = ChunkCreateInDocument(**data)
@@ -69,18 +73,26 @@ class TestChunkSchemas:
 
         # end_index < start_index
         with pytest.raises(ValidationError, match="end_index must be >= start_index"):
-            ChunkCreateInDocument(chunks=[{
-                "text": "Test",
-                "start_index": 10,
-                "end_index": 5,
-            }])
+            ChunkCreateInDocument(
+                chunks=[
+                    {
+                        "text": "Test",
+                        "start_index": 10,
+                        "end_index": 5,
+                    }
+                ]
+            )
 
         # Negative start_index
         with pytest.raises(ValidationError, match="greater than or equal to 0"):
-            ChunkCreateInDocument(chunks=[{
-                "text": "Test",
-                "start_index": -1,
-            }])
+            ChunkCreateInDocument(
+                chunks=[
+                    {
+                        "text": "Test",
+                        "start_index": -1,
+                    }
+                ]
+            )
 
     def test_chunk_create_empty_chunks_list(self):
         """Test chunk creation with empty chunks list."""

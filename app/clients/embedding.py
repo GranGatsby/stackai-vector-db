@@ -21,27 +21,28 @@ logger = logging.getLogger(__name__)
 @dataclass(frozen=True)
 class EmbeddingResult:
     """Result of embedding computation including metadata.
-    
+
     This immutable class encapsulates both the computed embeddings and
     metadata about the embedding process (model used, dimensions, etc.).
     Following the principle of returning rich, self-contained results.
-    
+
     Attributes:
         embeddings: List of embedding vectors
         model_name: Name/identifier of the embedding model used
         embedding_dim: Dimension of each embedding vector
     """
+
     embeddings: list[list[float]]
     model_name: str
     embedding_dim: int
-    
+
     @property
     def single_embedding(self) -> list[float]:
         """Get single embedding for single-text operations.
-        
+
         Returns:
             The first (and presumably only) embedding vector
-            
+
         Raises:
             ValueError: If result contains != 1 embedding
         """
@@ -160,7 +161,7 @@ class FakeEmbeddingClient:
             embedding.append(component)
 
         logger.debug(f"Generated fake embedding for text length {len(text)}")
-        
+
         return EmbeddingResult(
             embeddings=[embedding],
             model_name="fake-embedding-model",
@@ -172,7 +173,7 @@ class FakeEmbeddingClient:
         if not texts:
             return EmbeddingResult(
                 embeddings=[],
-                model_name="fake-embedding-model", 
+                model_name="fake-embedding-model",
                 embedding_dim=self._embedding_dim,
             )
 
@@ -338,11 +339,13 @@ class CohereEmbeddingClient:
                 )
 
             logger.debug(f"Successfully embedded {len(clean_texts)} texts")
-            
+
             return EmbeddingResult(
                 embeddings=embeddings,
                 model_name=self._model,
-                embedding_dim=self._embedding_dim or len(embeddings[0]) if embeddings else 0,
+                embedding_dim=(
+                    self._embedding_dim or len(embeddings[0]) if embeddings else 0
+                ),
             )
 
         except EmbeddingError:

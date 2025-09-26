@@ -86,7 +86,9 @@ library_router = APIRouter(prefix="/libraries", tags=["documents"])
     status_code=status.HTTP_200_OK,
     summary="List documents in a library",
     description="Retrieve a paginated list of documents in the specified library",
-    responses={status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Library not found"}},
+    responses={
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Library not found"}
+    },
 )
 async def list_documents_by_library(
     library_id: UUID,
@@ -112,7 +114,9 @@ async def list_documents_by_library(
     summary="Create a document in a library",
     description="Create a new document in the specified library",
     responses={
-        status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Validation error or library not found"},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {
+            "description": "Validation error or library not found"
+        },
     },
 )
 async def create_document_in_library(

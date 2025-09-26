@@ -23,8 +23,6 @@ from app.services.index_service import IndexAlgo
 router = APIRouter(prefix="/libraries", tags=["search"])
 
 
-
-
 @router.post(
     "/{library_id}/index",
     response_model=BuildIndexResponse,
@@ -33,7 +31,9 @@ router = APIRouter(prefix="/libraries", tags=["search"])
     description="Build or rebuild the vector index for a library. This operation may take time for large libraries.",
     responses={
         status.HTTP_404_NOT_FOUND: {"description": "Library not found"},
-        status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Index build failed or validation error"},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {
+            "description": "Index build failed or validation error"
+        },
     },
 )
 async def build_index(
@@ -51,7 +51,9 @@ async def build_index(
     index_status = index_service.build(library_id, algorithm_enum)
 
     # Convert domain result to response schema
-    return BuildIndexResponse.from_index_status(index_status, index_status.build_duration)
+    return BuildIndexResponse.from_index_status(
+        index_status, index_status.build_duration
+    )
 
 
 @router.get(
@@ -71,7 +73,7 @@ async def get_index_status(
     """Get the current status of a library's vector index."""
     # Get index status from service
     index_status = index_service.get_status(library_id)
-    
+
     # Convert to schema (IndexStatus from service matches IndexStatus schema)
     return IndexStatus(
         library_id=index_status.library_id,
@@ -95,7 +97,9 @@ async def get_index_status(
     responses={
         status.HTTP_404_NOT_FOUND: {"description": "Library not found"},
         status.HTTP_409_CONFLICT: {"description": "Index not built or dirty"},
-        status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Invalid query parameters or validation error"},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {
+            "description": "Invalid query parameters or validation error"
+        },
     },
 )
 async def search_by_text(
@@ -112,7 +116,11 @@ async def search_by_text(
         SearchHit(
             chunk_id=chunk.id,
             score=distance,
-            metadata=ChunkMetadataSchema.from_domain(chunk.metadata) if chunk.metadata else None,
+            metadata=(
+                ChunkMetadataSchema.from_domain(chunk.metadata)
+                if chunk.metadata
+                else None
+            ),
         )
         for chunk, distance in search_result.matches
     ]
@@ -158,7 +166,11 @@ async def search_by_vector(
         SearchHit(
             chunk_id=chunk.id,
             score=distance,
-            metadata=ChunkMetadataSchema.from_domain(chunk.metadata) if chunk.metadata else None,
+            metadata=(
+                ChunkMetadataSchema.from_domain(chunk.metadata)
+                if chunk.metadata
+                else None
+            ),
         )
         for chunk, distance in search_result.matches
     ]

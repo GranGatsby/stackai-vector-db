@@ -5,7 +5,12 @@ import uuid
 import pytest
 from pydantic import ValidationError
 
-from app.schemas.document import DocumentCreateInLibrary, DocumentRead, DocumentUpdate, DocumentMetadataSchema
+from app.schemas.document import (
+    DocumentCreateInLibrary,
+    DocumentRead,
+    DocumentUpdate,
+    DocumentMetadataSchema,
+)
 
 
 class TestDocumentSchemas:
@@ -33,7 +38,9 @@ class TestDocumentSchemas:
         schema = DocumentCreateInLibrary(**data)
         assert schema.title == "Minimal Document"
         assert schema.content == ""  # Default
-        assert isinstance(schema.metadata, DocumentMetadataSchema)  # Default empty schema
+        assert isinstance(
+            schema.metadata, DocumentMetadataSchema
+        )
 
     def test_document_create_in_library_invalid_title(self):
         """Test document creation in library with invalid title."""

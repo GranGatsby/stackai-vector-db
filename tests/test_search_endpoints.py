@@ -64,7 +64,7 @@ class TestSearchEndpoints:
                 "end_index": i * 50 + len(text),
             }
             chunks_data.append(chunk_data)
-        
+
         batch_request = {
             "chunks": chunks_data,
             "compute_embedding": True,
@@ -266,9 +266,11 @@ class TestSearchEndpoints:
 
         # Add a new chunk (should mark dirty)
         new_chunk_batch = {
-            "chunks": [{
-                "text": "This is a new chunk that should mark index dirty",
-            }],
+            "chunks": [
+                {
+                    "text": "This is a new chunk that should mark index dirty",
+                }
+            ],
             "compute_embedding": True,
         }
         response = client.post(

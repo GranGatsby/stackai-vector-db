@@ -305,11 +305,12 @@ class IndexService:
             was_dirty = state.is_dirty
             state.is_dirty = True
             state.dirty_count += 1
-            
+
             # Calculate dirty ratio for rebuild decision
             dirty_ratio = (
-                state.dirty_count / max(state.total_chunks, 1) 
-                if state.total_chunks > 0 else 0
+                state.dirty_count / max(state.total_chunks, 1)
+                if state.total_chunks > 0
+                else 0
             )
             should_rebuild = state.should_rebuild(self._rebuild_threshold)
 
@@ -380,7 +381,7 @@ class IndexService:
 
                 # Load vectors and chunk IDs
                 vectors, chunk_ids = self._load_vectors_and_ids(library_id, state)
-                
+
                 # Track build duration
                 build_start_time = time.time()
                 build_duration = None
@@ -495,7 +496,9 @@ class IndexService:
             # Get current snapshot
             snapshot = state.current_snapshot
             if snapshot is None or not snapshot.is_built:
-                logger.warning(f"Query failed for library {library_id}: index not built")
+                logger.warning(
+                    f"Query failed for library {library_id}: index not built"
+                )
                 raise IndexNotBuiltError(str(library_id))
 
             # Validate embedding dimension
@@ -668,7 +671,9 @@ class IndexService:
 
             # Update chunks with new embeddings and metadata
             updated_chunks = []
-            for chunk, embedding in zip(chunks_needing_embeddings, embedding_result.embeddings, strict=False):
+            for chunk, embedding in zip(
+                chunks_needing_embeddings, embedding_result.embeddings, strict=False
+            ):
                 # Update metadata with embedding information
                 current_metadata = chunk.metadata or ChunkMetadata()
                 updated_metadata = ChunkMetadata(
@@ -685,13 +690,17 @@ class IndexService:
                     embedding_model=embedding_result.model_name,
                     embedding_dim=embedding_result.embedding_dim,
                 )
-                
-                updated_chunk = chunk.update(embedding=embedding, metadata=updated_metadata)
+
+                updated_chunk = chunk.update(
+                    embedding=embedding, metadata=updated_metadata
+                )
                 # Update in repository
                 self._chunk_repo.update(updated_chunk)
                 updated_chunks.append(updated_chunk)
 
-            logger.info(f"Generated {len(embedding_result.embeddings)} embeddings successfully")
+            logger.info(
+                f"Generated {len(embedding_result.embeddings)} embeddings successfully"
+            )
 
             # Return all chunks with embeddings
             return chunks_with_embeddings + updated_chunks
