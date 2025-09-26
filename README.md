@@ -27,7 +27,7 @@ A REST API for indexing and querying documents in a Vector Database, developed a
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/GranGatsby/stackai-vector-db
    cd stackai-vector-db
    ```
 
