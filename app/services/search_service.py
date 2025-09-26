@@ -33,7 +33,7 @@ from app.domain import (
     VectorIndexNotBuiltError,
 )
 from app.repositories.ports import ChunkRepository, LibraryRepository
-from app.services.index_service import IndexAlgo, IndexService
+from app.services.index_service import IndexAlgo, IndexService, IndexStatus
 
 logger = logging.getLogger(__name__)
 
@@ -190,6 +190,169 @@ class SearchService:
                 "text", text, f"embedding generation failed: {e}"
             ) from e
 
+    def _validate_query_params(
+        self, library_id: UUID, embedding: list[float], k: int
+    ) -> None:
+        """Validate basic query parameters.
+
+        Args:
+            library_id: UUID of the library to search in
+            embedding: Query embedding vector
+            k: Number of nearest neighbors to return
+
+        Raises:
+            InvalidSearchParameterError: If parameters are invalid
+            LibraryNotFoundError: If the library doesn't exist
+        """
+        if k <= 0:
+            raise InvalidSearchParameterError("k", k, "must be greater than 0")
+
+        if not embedding:
+            raise InvalidSearchParameterError("embedding", embedding, "cannot be empty")
+
+        # Verify library exists
+        library = self._library_repo.get_by_id(library_id)
+        if library is None:
+            raise LibraryNotFoundError(str(library_id))
+
+    def _ensure_index_ready(self, library_id: UUID) -> IndexStatus:
+        """Ensure index is built and ready for querying.
+
+        Args:
+            library_id: UUID of the library
+
+        Returns:
+            IndexStatus after ensuring index is ready
+
+        Raises:
+            EmptyLibraryError: If the library contains no chunks
+        """
+        # Get current index status
+        index_status = self._index_service.get_status(library_id)
+
+        # Trigger lazy build if needed
+        if not index_status.is_built or index_status.is_dirty:
+            logger.info(
+                f"Triggering lazy index build for library {library_id}: "
+                f"is_built={index_status.is_built}, is_dirty={index_status.is_dirty}, "
+                f"algorithm={index_status.algorithm.value}, size={index_status.size}"
+            )
+            index_status = self._index_service.build(library_id)
+
+        # Check if library is empty after potential build
+        if index_status.size == 0:
+            raise EmptyLibraryError(str(library_id))
+
+        return index_status
+
+    def _validate_embedding_dimension(
+        self, embedding: list[float], index_status: IndexStatus
+    ) -> None:
+        """Validate embedding dimension matches index dimension.
+
+        Args:
+            embedding: Query embedding vector
+            index_status: Current index status
+
+        Raises:
+            EmbeddingDimensionMismatchError: If dimensions don't match
+        """
+        if (
+            index_status.embedding_dim is not None
+            and len(embedding) != index_status.embedding_dim
+        ):
+            raise EmbeddingDimensionMismatchError(
+                index_status.embedding_dim, len(embedding)
+            )
+
+    def _execute_index_query(
+        self, library_id: UUID, embedding: list[float], k: int, index_size: int
+    ) -> list[tuple[UUID, float]]:
+        """Execute k-NN query on index.
+
+        Args:
+            library_id: UUID of the library
+            embedding: Query embedding vector
+            k: Number of nearest neighbors requested
+            index_size: Current index size
+
+        Returns:
+            List of (chunk_id, distance) tuples
+
+        Raises:
+            VectorIndexNotBuiltError: If index query fails
+        """
+        # Limit k to actual index size
+        effective_k = min(k, index_size)
+        if effective_k != k:
+            logger.debug(f"Limited k from {k} to {effective_k} based on index size")
+
+        # Execute k-NN query through IndexService
+        try:
+            query_results = self._index_service.query(
+                library_id, embedding, effective_k
+            )
+            logger.debug(f"Index query returned {len(query_results)} results")
+            return query_results
+        except VectorIndexNotBuiltError as e:
+            # This shouldn't happen since we built the index above, but handle it
+            raise VectorIndexNotBuiltError(str(library_id)) from e
+
+    def _process_query_results(
+        self, query_results: list[tuple[UUID, float]]
+    ) -> list[tuple[Chunk, float]]:
+        """Convert index results to chunk entities with similarity filtering.
+
+        Args:
+            query_results: List of (chunk_id, distance) tuples from index
+
+        Returns:
+            List of (chunk, distance) tuples after filtering
+        """
+        matches = []
+        filtered_count = 0
+
+        for chunk_id, distance in query_results:
+            # Retrieve chunk entity
+            chunk = self._chunk_repo.get_by_id(chunk_id)
+            if chunk is None:
+                logger.warning(f"Chunk {chunk_id} not found in repository")
+                continue
+
+            # Apply similarity threshold filtering if configured
+            if self._should_filter_chunk(chunk, distance):
+                logger.debug(
+                    f"Chunk {chunk_id} filtered out by similarity_threshold: "
+                    f"score={distance:.4f} > threshold={chunk.metadata.similarity_threshold}"
+                )
+                filtered_count += 1
+                continue
+
+            matches.append((chunk, distance))
+
+        if filtered_count > 0:
+            logger.info(
+                f"Filtered out {filtered_count} chunks by similarity_threshold "
+                f"(kept {len(matches)} out of {len(query_results)} total results)"
+            )
+
+        return matches
+
+    def _should_filter_chunk(self, chunk: Chunk, distance: float) -> bool:
+        """Check if chunk should be filtered by similarity threshold.
+
+        Args:
+            chunk: Chunk entity
+            distance: Similarity distance
+
+        Returns:
+            True if chunk should be filtered out
+        """
+        if not chunk.metadata or chunk.metadata.similarity_threshold is None:
+            return False
+
+        return distance > chunk.metadata.similarity_threshold
+
     def query_embedding(
         self, library_id: UUID, embedding: list[float], k: int = 10
     ) -> SearchResult:
@@ -220,91 +383,24 @@ class SearchService:
             VectorIndexNotBuiltError: If index building fails
             EmbeddingDimensionMismatchError: If embedding dimensions don't match
         """
-        # Validate basic parameters
-        if k <= 0:
-            raise InvalidSearchParameterError("k", k, "must be greater than 0")
-
-        if not embedding:
-            raise InvalidSearchParameterError("embedding", embedding, "cannot be empty")
-
-        # Verify library exists
-        library = self._library_repo.get_by_id(library_id)
-        if library is None:
-            raise LibraryNotFoundError(str(library_id))
-
         logger.debug(f"Executing embedding query in library {library_id} with k={k}")
 
-        # Get current index status
-        index_status = self._index_service.get_status(library_id)
+        # Step 1: Validate parameters
+        self._validate_query_params(library_id, embedding, k)
 
-        # Trigger lazy build if needed
-        if not index_status.is_built or index_status.is_dirty:
-            logger.info(
-                f"Triggering lazy index build for library {library_id}: "
-                f"is_built={index_status.is_built}, is_dirty={index_status.is_dirty}, "
-                f"algorithm={index_status.algorithm.value}, size={index_status.size}"
-            )
-            index_status = self._index_service.build(library_id)
+        # Step 2: Ensure index is ready
+        index_status = self._ensure_index_ready(library_id)
 
-        # Check if library is empty after potential build
-        if index_status.size == 0:
-            raise EmptyLibraryError(str(library_id))
+        # Step 3: Validate embedding dimension
+        self._validate_embedding_dimension(embedding, index_status)
 
-        # Validate embedding dimension
-        if index_status.embedding_dim is not None:
-            if len(embedding) != index_status.embedding_dim:
-                raise EmbeddingDimensionMismatchError(
-                    index_status.embedding_dim, len(embedding)
-                )
+        # Step 4: Execute query
+        query_results = self._execute_index_query(
+            library_id, embedding, k, index_status.size
+        )
 
-        # Limit k to actual index size
-        effective_k = min(k, index_status.size)
-        if effective_k != k:
-            logger.debug(f"Limited k from {k} to {effective_k} based on index size")
-
-        # Execute k-NN query through IndexService
-        try:
-            query_results = self._index_service.query(
-                library_id, embedding, effective_k
-            )
-            logger.debug(f"Index query returned {len(query_results)} results")
-        except VectorIndexNotBuiltError:
-            # This shouldn't happen since we built the index above, but handle it
-            raise VectorIndexNotBuiltError(str(library_id))
-
-        # Convert index results to chunk entities and apply similarity threshold filtering
-        matches = []
-        filtered_count = 0
-
-        for chunk_id, distance in query_results:
-            # Retrieve chunk entity
-            chunk = self._chunk_repo.get_by_id(chunk_id)
-            if chunk is None:
-                logger.warning(f"Chunk {chunk_id} not found in repository")
-                continue
-
-            # Apply similarity threshold filtering if configured
-            if chunk.metadata and chunk.metadata.similarity_threshold is not None:
-                if distance > chunk.metadata.similarity_threshold:
-                    logger.debug(
-                        f"Chunk {chunk_id} filtered out by similarity_threshold: "
-                        f"score={distance:.4f} > threshold={chunk.metadata.similarity_threshold}"
-                    )
-                    filtered_count += 1
-                    continue
-                else:
-                    logger.debug(
-                        f"Chunk {chunk_id} passed similarity_threshold: "
-                        f"score={distance:.4f} <= threshold={chunk.metadata.similarity_threshold}"
-                    )
-
-            matches.append((chunk, distance))
-
-        if filtered_count > 0:
-            logger.info(
-                f"Filtered out {filtered_count} chunks by similarity_threshold "
-                f"(kept {len(matches)} out of {len(query_results)} total results)"
-            )
+        # Step 5: Process results
+        matches = self._process_query_results(query_results)
 
         # Create search result
         result = SearchResult(

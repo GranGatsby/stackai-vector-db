@@ -7,16 +7,20 @@ and the domain/repository layers.
 
 # Import for type hints only - will be injected as dependency
 from __future__ import annotations
+
 from contextlib import suppress
 from typing import TYPE_CHECKING
-from uuid import UUID
 
 from app.domain import Document, DocumentMetadata, DocumentNotFoundError
-from app.repositories.ports import (
-    ChunkRepository,
-    DocumentRepository,
-    LibraryRepository,
-)
+
+if TYPE_CHECKING:
+    from uuid import UUID
+
+    from app.repositories.ports import (
+        ChunkRepository,
+        DocumentRepository,
+        LibraryRepository,
+    )
 
 if TYPE_CHECKING:
     from app.services.index_service import IndexService
@@ -40,7 +44,7 @@ class DocumentService:
         document_repository: DocumentRepository,
         library_repository: LibraryRepository,
         chunk_repository: ChunkRepository | None = None,
-        index_service: "IndexService" | None = None,
+        index_service: IndexService | None = None,
     ) -> None:
         """Initialize the document service.
 

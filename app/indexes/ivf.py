@@ -10,7 +10,7 @@ from collections.abc import Sequence
 
 import numpy as np
 
-from .base import BaseVectorIndex
+from .base import BaseVectorIndex, DimensionMismatchError
 
 logger = logging.getLogger(__name__)
 
@@ -143,7 +143,7 @@ class IVFIndex(BaseVectorIndex):
         Returns:
             Array of cluster centroids
         """
-        n_vectors, dim = vectors.shape
+        n_vectors, _dim = vectors.shape
 
         # Initialize centroids randomly
         rng = np.random.RandomState(42)  # Fixed seed for reproducibility
@@ -253,8 +253,6 @@ class IVFIndex(BaseVectorIndex):
 
         # Validate dimension
         if self._dimension is not None and len(np_vector) != self._dimension:
-            from .base import DimensionMismatchError
-
             raise DimensionMismatchError(
                 f"Vector dimension {len(np_vector)} doesn't match index dimension {self._dimension}"
             )

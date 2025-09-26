@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "stackai-vector-db"
 version = "0.1.0"
 description = "Vector Database REST API for indexing and querying documents"
-authors = [{name = "StackAI", email = "dev@stackai.com"}]
+authors = [{name = "Dani", email = "danielmunarp@gmail.com"}]
 readme = "README.md"
 requires-python = ">=3.12"
 license = {text = "MIT"}
@@ -89,7 +89,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
-"tests/**/*" = ["PLR2004", "S101", "ARG", "FBT"]
+"tests/**/*" = ["PLR2004", "PLC0415", "B007", "F841", "S101", "ARG", "FBT"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["app"]

@@ -5,22 +5,24 @@ for chunk management, providing a clean interface between the API layer
 and the domain/repository layers.
 """
 
-# Import for type hints only - will be injected as dependency
 from __future__ import annotations
+
+# Import for type hints only - will be injected as dependency
 from contextlib import suppress
 from datetime import datetime
 from typing import TYPE_CHECKING
-from uuid import UUID
 
 from app.clients import EmbeddingClient, EmbeddingError, EmbeddingResult
 from app.domain import Chunk, ChunkMetadata, ChunkNotFoundError
-from app.repositories.ports import (
-    ChunkRepository,
-    DocumentRepository,
-    LibraryRepository,
-)
 
 if TYPE_CHECKING:
+    from uuid import UUID
+
+    from app.repositories.ports import (
+        ChunkRepository,
+        DocumentRepository,
+        LibraryRepository,
+    )
     from app.services.index_service import IndexService
 
 
@@ -44,7 +46,7 @@ class ChunkService:
         document_repository: DocumentRepository,
         library_repository: LibraryRepository,
         embedding_client: EmbeddingClient,
-        index_service: "IndexService" = None,
+        index_service: IndexService = None,
     ) -> None:
         """Initialize the chunk service.
 
