@@ -8,7 +8,7 @@ from app.core.config import settings
 
 
 def setup_logging() -> None:
-    """Configure application logging using dictConfig."""
+    """Configure application logging."""
     dictConfig(
         {
             "version": 1,
@@ -55,7 +55,7 @@ def setup_logging() -> None:
 
 
 def get_logger(name: str) -> logging.Logger:
-    """Get a logger instance with the given name."""
+    """Get logger instance by name."""
     return logging.getLogger(name)
 
 
@@ -66,7 +66,7 @@ def log_request_info(
     duration_ms: float,
     **kwargs: Any,
 ) -> None:
-    """Log request information in a structured format."""
+    """Log structured request information."""
     logger = get_logger("api.request")
     logger.info(
         "Request completed",

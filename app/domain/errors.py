@@ -8,11 +8,7 @@ HTTP responses at the API layer.
 
 
 class DomainError(Exception):
-    """Base class for all domain-specific errors.
-
-    This serves as the root exception for all business logic errors
-    and provides a consistent interface for error handling.
-    """
+    """Base class for all domain-specific business logic errors."""
 
     def __init__(self, message: str, code: str | None = None) -> None:
         super().__init__(message)
@@ -22,8 +18,6 @@ class DomainError(Exception):
 
 class LibraryError(DomainError):
     """Base class for library-related errors."""
-
-    pass
 
 
 class LibraryNotFoundError(LibraryError):
@@ -46,8 +40,6 @@ class LibraryAlreadyExistsError(LibraryError):
 
 class DocumentError(DomainError):
     """Base class for document-related errors."""
-
-    pass
 
 
 class DocumentNotFoundError(DocumentError):
@@ -74,8 +66,6 @@ class DocumentAlreadyExistsError(DocumentError):
 class ChunkError(DomainError):
     """Base class for chunk-related errors."""
 
-    pass
-
 
 class ChunkNotFoundError(ChunkError):
     """Raised when a requested chunk cannot be found."""
@@ -88,8 +78,6 @@ class ChunkNotFoundError(ChunkError):
 
 class VectorIndexError(DomainError):
     """Base class for vector index-related errors."""
-
-    pass
 
 
 class VectorIndexNotBuiltError(VectorIndexError):
@@ -114,8 +102,6 @@ class VectorIndexBuildError(VectorIndexError):
 class EmbeddingError(DomainError):
     """Base class for embedding-related errors."""
 
-    pass
-
 
 class EmbeddingDimensionMismatchError(EmbeddingError):
     """Raised when embedding dimensions don't match expected dimensions."""
@@ -135,8 +121,6 @@ class ValidationError(DomainError):
 
 class SearchError(DomainError):
     """Base class for search-related errors."""
-
-    pass
 
 
 class InvalidSearchParameterError(SearchError):

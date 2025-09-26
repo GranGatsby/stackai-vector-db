@@ -24,49 +24,25 @@ from app.services import (
 
 @lru_cache
 def get_library_repository() -> InMemoryLibraryRepository:
-    """Get the library repository instance.
-
-    This function provides a singleton instance of the library repository.
-    Using lru_cache ensures the same instance is reused across requests,
-    maintaining data consistency in the in-memory implementation.
-
-    Returns:
-        The library repository instance
-    """
+    """Get singleton library repository instance."""
     return InMemoryLibraryRepository()
 
 
 @lru_cache
 def get_document_repository() -> InMemoryDocumentRepository:
-    """Get the document repository instance.
-
-    Returns:
-        The document repository instance
-    """
+    """Get singleton document repository instance."""
     return InMemoryDocumentRepository()
 
 
 @lru_cache
 def get_chunk_repository() -> InMemoryChunkRepository:
-    """Get the chunk repository instance.
-
-    Returns:
-        The chunk repository instance
-    """
+    """Get singleton chunk repository instance."""
     return InMemoryChunkRepository()
 
 
 @lru_cache
 def get_library_service() -> LibraryService:
-    """Get the library service instance with cascade support.
-
-    This function provides a singleton instance of the library service
-    with its required dependencies injected, including repositories
-    for cascading delete operations.
-
-    Returns:
-        The library service instance
-    """
+    """Get singleton library service with cascade support."""
     library_repo = get_library_repository()
     document_repo = get_document_repository()
     chunk_repo = get_chunk_repository()
@@ -75,14 +51,7 @@ def get_library_service() -> LibraryService:
 
 @lru_cache
 def get_document_service() -> DocumentService:
-    """Get the document service instance.
-
-    This function provides a singleton instance of the document service
-    with its required dependencies injected.
-
-    Returns:
-        The document service instance
-    """
+    """Get singleton document service instance."""
     document_repo = get_document_repository()
     library_repo = get_library_repository()
     chunk_repo = get_chunk_repository()
@@ -92,28 +61,13 @@ def get_document_service() -> DocumentService:
 
 @lru_cache
 def get_embedding_client() -> EmbeddingClient:
-    """Get the embedding client instance.
-
-    This function provides a singleton instance of the embedding client.
-    It automatically selects between Cohere API client (if API key is available)
-    or fake client (for testing/development).
-
-    Returns:
-        The embedding client instance
-    """
+    """Get singleton embedding client (Cohere or fake for testing)."""
     return create_embedding_client()
 
 
 @lru_cache
 def get_chunk_service() -> ChunkService:
-    """Get the chunk service instance.
-
-    This function provides a singleton instance of the chunk service
-    with its required dependencies injected, including the embedding client.
-
-    Returns:
-        The chunk service instance
-    """
+    """Get singleton chunk service with embedding support."""
     chunk_repo = get_chunk_repository()
     document_repo = get_document_repository()
     library_repo = get_library_repository()
@@ -126,14 +80,7 @@ def get_chunk_service() -> ChunkService:
 
 @lru_cache
 def get_index_service() -> IndexService:
-    """Get the index service instance.
-
-    This function provides a singleton instance of the index service
-    with its required dependencies injected.
-
-    Returns:
-        The index service instance
-    """
+    """Get singleton index service instance."""
     library_repo = get_library_repository()
     chunk_repo = get_chunk_repository()
     embedding_client = get_embedding_client()
@@ -142,14 +89,7 @@ def get_index_service() -> IndexService:
 
 @lru_cache
 def get_search_service() -> SearchService:
-    """Get the search service instance.
-
-    This function provides a singleton instance of the search service
-    with its required dependencies injected.
-
-    Returns:
-        The search service instance
-    """
+    """Get singleton search service instance."""
     index_service = get_index_service()
     library_repo = get_library_repository()
     chunk_repo = get_chunk_repository()

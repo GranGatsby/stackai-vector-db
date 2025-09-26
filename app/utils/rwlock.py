@@ -1,8 +1,7 @@
 """Reader-Writer lock implementation for concurrent access control.
 
-This module provides a thread-safe reader-writer lock that allows multiple
-concurrent readers or a single exclusive writer, preventing data races in
-shared data structures. This is a consolidated version used across the application.
+Provides thread-safe reader-writer lock allowing multiple concurrent readers
+or single exclusive writer, preventing data races in shared data structures.
 """
 
 import threading
@@ -11,23 +10,17 @@ from contextlib import contextmanager
 
 
 class RWLock:
-    """A reader-writer lock implementation.
-
-    This lock allows multiple concurrent readers or a single exclusive writer.
-    Writers have priority over readers to prevent writer starvation.
-
+    """Reader-writer lock with writer priority to prevent starvation.
+    
     Key properties:
     - Multiple readers can acquire the lock simultaneously
     - Only one writer can hold the lock at a time
     - Writers block all readers and other writers
     - Writers have priority over new readers to prevent starvation
-
-    This implementation provides both context manager and direct acquisition
-    methods for maximum compatibility with different usage patterns.
     """
 
     def __init__(self) -> None:
-        """Initialize the reader-writer lock."""
+        """Initialize reader-writer lock."""
         self._read_ready = threading.Condition(threading.RLock())
         self._readers = 0
         self._writers_waiting = 0
@@ -64,31 +57,23 @@ class RWLock:
             self._release_write()
 
     def acquire_read(self) -> None:
-        """Acquire a read lock (direct method for compatibility).
-
-        Note: When using this method, you must call release_read() manually.
-        Consider using the read_lock() context manager instead.
-        """
+        """Acquire read lock (manual - prefer read_lock() context manager)."""
         self._acquire_read()
 
     def release_read(self) -> None:
-        """Release a read lock (direct method for compatibility)."""
+        """Release read lock (manual - prefer read_lock() context manager)."""
         self._release_read()
 
     def acquire_write(self) -> None:
-        """Acquire a write lock (direct method for compatibility).
-
-        Note: When using this method, you must call release_write() manually.
-        Consider using the write_lock() context manager instead.
-        """
+        """Acquire write lock (manual - prefer write_lock() context manager)."""
         self._acquire_write()
 
     def release_write(self) -> None:
-        """Release a write lock (direct method for compatibility)."""
+        """Release write lock (manual - prefer write_lock() context manager)."""
         self._release_write()
 
     def _acquire_read(self) -> None:
-        """Internal method to acquire a read lock."""
+        """Internal method to acquire read lock."""
         with self._read_ready:
             # Wait while there's an active writer or writers waiting
             while self._writer_active or self._writers_waiting > 0:
@@ -96,7 +81,7 @@ class RWLock:
             self._readers += 1
 
     def _release_read(self) -> None:
-        """Internal method to release a read lock."""
+        """Internal method to release read lock."""
         with self._read_ready:
             self._readers -= 1
             if self._readers == 0:
@@ -104,7 +89,7 @@ class RWLock:
                 self._read_ready.notify_all()
 
     def _acquire_write(self) -> None:
-        """Internal method to acquire a write lock."""
+        """Internal method to acquire write lock."""
         with self._read_ready:
             self._writers_waiting += 1
             try:
@@ -116,7 +101,7 @@ class RWLock:
                 self._writers_waiting -= 1
 
     def _release_write(self) -> None:
-        """Internal method to release a write lock."""
+        """Internal method to release write lock."""
         with self._read_ready:
             self._writer_active = False
             # Notify all waiting readers and writers
@@ -124,13 +109,13 @@ class RWLock:
 
     @property
     def reader_count(self) -> int:
-        """Get the current number of active readers."""
+        """Get current number of active readers."""
         with self._read_ready:
             return self._readers
 
     @property
     def writer_waiting_count(self) -> int:
-        """Get the current number of waiting writers."""
+        """Get current number of waiting writers."""
         with self._read_ready:
             return self._writers_waiting
 

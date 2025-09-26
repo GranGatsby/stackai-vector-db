@@ -39,6 +39,7 @@ class Settings(BaseSettings):
         default=None,
         description="Cohere API key for embeddings (optional - uses fake client if not provided)",
     )
+    cohere_base_url: str = "https://api.cohere.ai/v1"
     cohere_model: str = "embed-english-v3.0"
     cohere_input_type: str = "search_document"
 
@@ -47,6 +48,10 @@ class Settings(BaseSettings):
     max_chunks_per_library: int = 10000
     max_knn_results: int = 1000
     default_knn_results: int = 10
+    
+    # Validation Limits
+    max_name_length: int = 255
+    max_title_length: int = 255
 
     # Index Configuration
     default_index_type: str = "linear"  # linear, kdtree, ivf

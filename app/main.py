@@ -17,8 +17,8 @@ from app.api.v1.routers import (
     documents_router,
     health_router,
     libraries_router,
+    search_router,
 )
-from app.api.v1.routers.search import router as search_router
 from app.core.config import settings
 from app.core.logging import log_request_info, setup_logging
 

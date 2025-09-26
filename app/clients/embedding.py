@@ -14,17 +14,14 @@ from typing import Protocol, runtime_checkable
 import httpx
 
 from app.core.config import settings
+from app.utils import validate_non_empty_text
 
 logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
 class EmbeddingResult:
-    """Result of embedding computation including metadata.
-
-    This immutable class encapsulates both the computed embeddings and
-    metadata about the embedding process (model used, dimensions, etc.).
-    Following the principle of returning rich, self-contained results.
+    """Embedding computation result with metadata.
 
     Attributes:
         embeddings: List of embedding vectors
@@ -40,9 +37,6 @@ class EmbeddingResult:
     def single_embedding(self) -> list[float]:
         """Get single embedding for single-text operations.
 
-        Returns:
-            The first (and presumably only) embedding vector
-
         Raises:
             ValueError: If result contains != 1 embedding
         """
@@ -53,29 +47,15 @@ class EmbeddingResult:
 
 @runtime_checkable
 class EmbeddingClient(Protocol):
-    """Protocol for embedding clients.
-
-    This protocol defines the interface that all embedding clients must implement.
-    It allows for easy substitution of different embedding providers.
-    """
+    """Protocol for embedding clients with pluggable providers."""
 
     @property
     def embedding_dim(self) -> int:
-        """Get the dimension of embeddings produced by this client.
-
-        Returns:
-            The embedding vector dimension
-        """
+        """Get embedding vector dimension."""
         ...
 
     def embed_text(self, text: str) -> EmbeddingResult:
-        """Compute embedding for the given text.
-
-        Args:
-            text: The text to embed
-
-        Returns:
-            EmbeddingResult containing the embedding vector and metadata
+        """Compute embedding for single text.
 
         Raises:
             EmbeddingError: If embedding computation fails
@@ -83,13 +63,7 @@ class EmbeddingClient(Protocol):
         ...
 
     def embed_texts(self, texts: list[str]) -> EmbeddingResult:
-        """Compute embeddings for multiple texts (batch operation).
-
-        Args:
-            texts: List of texts to embed
-
-        Returns:
-            EmbeddingResult containing embedding vectors and metadata
+        """Compute embeddings for multiple texts.
 
         Raises:
             EmbeddingError: If embedding computation fails
@@ -106,43 +80,27 @@ class EmbeddingError(Exception):
 
 
 class FakeEmbeddingClient:
-    """Fake embedding client for testing and development.
-
-    This client generates deterministic fake embeddings based on text content.
-    Useful when no API key is available or for testing purposes.
-    """
+    """Deterministic fake embedding client for testing."""
 
     def __init__(self, embedding_dim: int | None = None) -> None:
-        """Initialize the fake embedding client.
-
-        Args:
-            embedding_dim: Dimension of embeddings to generate
-        """
+        """Initialize fake embedding client."""
         self._embedding_dim = embedding_dim or settings.default_embedding_dim
         logger.info(f"Initialized FakeEmbeddingClient with dim={self._embedding_dim}")
 
     @property
     def embedding_dim(self) -> int:
-        """Get the dimension of embeddings produced by this client."""
+        """Get embedding vector dimension."""
         return self._embedding_dim
 
     def embed_text(self, text: str) -> EmbeddingResult:
-        """Generate a deterministic fake embedding for the given text.
-
-        The embedding is generated based on text characteristics to ensure
-        similar texts get similar embeddings for testing purposes.
-
-        Args:
-            text: The text to embed
-
-        Returns:
-            EmbeddingResult with deterministic fake embedding and metadata
-        """
-        if not text or not text.strip():
-            raise EmbeddingError("Cannot embed empty text")
+        """Generate deterministic fake embedding based on text characteristics."""
+        try:
+            text_clean = validate_non_empty_text(text, "Cannot embed empty text")
+        except ValueError as e:
+            raise EmbeddingError(str(e)) from e
 
         # Generate deterministic embedding based on text characteristics
-        text_clean = text.strip().lower()
+        text_clean = text_clean.lower()
 
         # Use text properties to generate embedding components
         embedding = []
@@ -191,11 +149,7 @@ class FakeEmbeddingClient:
 
 
 class CohereEmbeddingClient:
-    """Cohere API embedding client.
-
-    This client uses the Cohere API to generate real embeddings.
-    It handles API authentication, rate limiting, and error handling.
-    """
+    """Cohere API embedding client with authentication and error handling."""
 
     def __init__(
         self,
@@ -204,14 +158,7 @@ class CohereEmbeddingClient:
         input_type: str | None = None,
         timeout: float = 30.0,
     ) -> None:
-        """Initialize the Cohere embedding client.
-
-        Args:
-            api_key: Cohere API key
-            model: Cohere model name to use
-            input_type: Input type for embeddings
-            timeout: Request timeout in seconds
-        """
+        """Initialize Cohere embedding client."""
         if not api_key or not api_key.strip():
             raise ValueError("Cohere API key is required")
 
@@ -219,7 +166,7 @@ class CohereEmbeddingClient:
         self._model = model or settings.cohere_model
         self._input_type = input_type or settings.cohere_input_type
         self._timeout = timeout
-        self._base_url = "https://api.cohere.ai/v1"
+        self._base_url = settings.cohere_base_url
 
         # We'll determine embedding dimension on first call
         self._embedding_dim = None
@@ -231,30 +178,21 @@ class CohereEmbeddingClient:
 
     @property
     def embedding_dim(self) -> int:
-        """Get the dimension of embeddings produced by this client.
-
-        Returns:
-            The embedding dimension (determined after first API call)
-        """
+        """Get embedding dimension (determined after first API call)."""
         if self._embedding_dim is None:
-            # Use configured default until we make first API call
             return settings.default_embedding_dim
         return self._embedding_dim
 
     def embed_text(self, text: str) -> EmbeddingResult:
-        """Compute embedding using Cohere API.
-
-        Args:
-            text: The text to embed
-
-        Returns:
-            EmbeddingResult containing the embedding vector and metadata from Cohere API
+        """Compute single text embedding using Cohere API.
 
         Raises:
             EmbeddingError: If API call fails or returns invalid data
         """
-        if not text or not text.strip():
-            raise EmbeddingError("Cannot embed empty text")
+        try:
+            validate_non_empty_text(text, "Cannot embed empty text")
+        except ValueError as e:
+            raise EmbeddingError(str(e)) from e
 
         try:
             return self.embed_texts([text])
@@ -264,13 +202,7 @@ class CohereEmbeddingClient:
             raise EmbeddingError(f"Failed to embed single text: {e}", e) from e
 
     def embed_texts(self, texts: list[str]) -> EmbeddingResult:
-        """Compute embeddings for multiple texts using Cohere API.
-
-        Args:
-            texts: List of texts to embed
-
-        Returns:
-            EmbeddingResult containing embedding vectors and metadata from Cohere API
+        """Compute batch embeddings using Cohere API.
 
         Raises:
             EmbeddingError: If API call fails or returns invalid data
@@ -285,9 +217,10 @@ class CohereEmbeddingClient:
         # Validate inputs
         clean_texts = []
         for text in texts:
-            if not text or not text.strip():
-                raise EmbeddingError("Cannot embed empty text")
-            clean_texts.append(text.strip())
+            try:
+                clean_texts.append(validate_non_empty_text(text, "Cannot embed empty text"))
+            except ValueError as e:
+                raise EmbeddingError(str(e)) from e
 
         try:
             # Prepare API request
@@ -357,20 +290,8 @@ class CohereEmbeddingClient:
 
 
 def create_embedding_client(api_key: str | None = None) -> EmbeddingClient:
-    """Factory function to create the appropriate embedding client.
-
-    This function creates either a real Cohere client (if API key is provided)
-    or a fake client (for testing/development without API key).
-
-    Args:
-        api_key: Optional Cohere API key. If None, uses settings.
-
-    Returns:
-        An embedding client instance
-    """
-    # Determine API key to use
-    # If api_key is explicitly provided (even if empty), use that
-    # Otherwise, fall back to settings
+    """Create Cohere client (if API key available) or fake client."""
+    # Determine API key: explicit param takes precedence over settings
     if api_key is not None:
         final_api_key = api_key
     else:
