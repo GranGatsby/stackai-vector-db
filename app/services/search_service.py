@@ -82,7 +82,9 @@ class SearchService:
         try:
             # Generate embedding for the text query
             embedding_result = self._embedding_client.embed_text(text.strip())
-            return self.query_embedding(library_id, embedding_result.single_embedding, k)
+            return self.query_embedding(
+                library_id, embedding_result.single_embedding, k
+            )
         except EmbeddingError as e:
             logger.error(f"Failed to generate embedding for text query: {e}")
             raise InvalidSearchParameterError(
@@ -96,7 +98,7 @@ class SearchService:
             raise InvalidSearchParameterError("k", k, "must be greater than 0")
         if not embedding:
             raise InvalidSearchParameterError("embedding", embedding, "cannot be empty")
-        
+
         library = self._library_repo.get_by_id(library_id)
         if not library:
             raise LibraryNotFoundError(str(library_id))
@@ -143,7 +145,9 @@ class SearchService:
 
         # Execute k-NN query through IndexService
         try:
-            query_results = self._index_service.query(library_id, embedding, effective_k)
+            query_results = self._index_service.query(
+                library_id, embedding, effective_k
+            )
             logger.debug(f"Index query returned {len(query_results)} results")
             return query_results
         except VectorIndexNotBuiltError as e:

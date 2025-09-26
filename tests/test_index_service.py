@@ -1,7 +1,6 @@
 """Unit tests for IndexService."""
 
 import uuid
-from unittest.mock import Mock
 
 import pytest
 
@@ -11,7 +10,6 @@ from app.domain import (
     ChunkMetadata,
     Library,
     LibraryNotFoundError,
-    VectorIndexBuildError,
     VectorIndexNotBuiltError,
 )
 from app.repositories.in_memory import (

@@ -13,11 +13,17 @@ class LibraryMetadataSchema(BaseModel):
 
     model_config = ConfigDict(strict=True, extra="forbid", exclude_none=True)
 
-    author: str | None = Field(None, max_length=settings.max_name_length, description="Library author")
+    author: str | None = Field(
+        None, max_length=settings.max_name_length, description="Library author"
+    )
     version: str | None = Field(None, max_length=50, description="Library version")
     tags: list[str] | None = Field(None, description="Library tags")
-    created_by: str | None = Field(None, max_length=settings.max_name_length, description="Creator name")
-    project: str | None = Field(None, max_length=settings.max_name_length, description="Project name")
+    created_by: str | None = Field(
+        None, max_length=settings.max_name_length, description="Creator name"
+    )
+    project: str | None = Field(
+        None, max_length=settings.max_name_length, description="Project name"
+    )
     category: str | None = Field(None, max_length=100, description="Library category")
     is_public: bool | None = Field(None, description="Whether library is public")
     # Test/workflow fields
@@ -46,19 +52,23 @@ class LibraryMetadataSchema(BaseModel):
     def from_domain(cls, metadata: LibraryMetadata) -> dict:
         """Create dict from domain LibraryMetadata, excluding default values."""
         return {
-            k: v for k, v in {
+            k: v
+            for k, v in {
                 "author": metadata.author,
                 "version": metadata.version,
                 "tags": metadata.tags if metadata.tags else None,
                 "created_by": metadata.created_by,
                 "project": metadata.project,
                 "category": metadata.category,
-                "is_public": metadata.is_public if metadata.is_public is not True else None,
+                "is_public": (
+                    metadata.is_public if metadata.is_public is not True else None
+                ),
                 "test": metadata.test,
                 "updated": metadata.updated,
                 "original": metadata.original,
                 "workflow": metadata.workflow,
-            }.items() if v is not None
+            }.items()
+            if v is not None
         }
 
 
@@ -67,7 +77,12 @@ class LibraryBase(BaseModel):
 
     model_config = ConfigDict(strict=False, extra="forbid")
 
-    name: str = Field(..., min_length=1, max_length=settings.max_name_length, description="Library name")
+    name: str = Field(
+        ...,
+        min_length=1,
+        max_length=settings.max_name_length,
+        description="Library name",
+    )
     description: str = Field(
         default="", max_length=1000, description="Library description"
     )
@@ -96,7 +111,10 @@ class LibraryUpdate(BaseModel):
     model_config = ConfigDict(strict=False, extra="forbid")
 
     name: str | None = Field(
-        None, min_length=1, max_length=settings.max_name_length, description="Library name"
+        None,
+        min_length=1,
+        max_length=settings.max_name_length,
+        description="Library name",
     )
     description: str | None = Field(
         None, max_length=1000, description="Library description"

@@ -13,7 +13,9 @@ class DocumentMetadataSchema(BaseModel):
 
     model_config = ConfigDict(strict=True, extra="forbid", exclude_none=True)
 
-    author: str | None = Field(None, max_length=settings.max_name_length, description="Document author")
+    author: str | None = Field(
+        None, max_length=settings.max_name_length, description="Document author"
+    )
     source: str | None = Field(None, max_length=500, description="Document source")
     language: str | None = Field(None, max_length=50, description="Document language")
     format: str | None = Field(
@@ -52,7 +54,8 @@ class DocumentMetadataSchema(BaseModel):
     def from_domain(cls, metadata: DocumentMetadata) -> dict:
         """Create dict from domain DocumentMetadata, excluding default values."""
         return {
-            k: v for k, v in {
+            k: v
+            for k, v in {
                 "author": metadata.author,
                 "source": metadata.source,
                 "language": metadata.language,
@@ -61,11 +64,14 @@ class DocumentMetadataSchema(BaseModel):
                 "modified_at": metadata.modified_at,
                 "tags": metadata.tags if metadata.tags else None,
                 "category": metadata.category,
-                "is_public": metadata.is_public if metadata.is_public is not True else None,
+                "is_public": (
+                    metadata.is_public if metadata.is_public is not True else None
+                ),
                 "processed": metadata.processed,
                 "chunk_count": metadata.chunk_count,
                 "word_count": metadata.word_count,
-            }.items() if v is not None
+            }.items()
+            if v is not None
         }
 
 
@@ -74,7 +80,12 @@ class DocumentBase(BaseModel):
 
     model_config = ConfigDict(strict=False, extra="forbid")
 
-    title: str = Field(..., min_length=1, max_length=settings.max_title_length, description="Document title")
+    title: str = Field(
+        ...,
+        min_length=1,
+        max_length=settings.max_title_length,
+        description="Document title",
+    )
     content: str = Field(default="", description="Document content")
     metadata: DocumentMetadataSchema = Field(
         default_factory=DocumentMetadataSchema, description="Document metadata"
@@ -99,7 +110,12 @@ class DocumentUpdate(BaseModel):
 
     model_config = ConfigDict(strict=False, extra="forbid")
 
-    title: str | None = Field(None, min_length=1, max_length=settings.max_title_length, description="Document title")
+    title: str | None = Field(
+        None,
+        min_length=1,
+        max_length=settings.max_title_length,
+        description="Document title",
+    )
     content: str | None = Field(None, description="Document content")
     metadata: DocumentMetadataSchema | None = Field(
         None, description="Document metadata"

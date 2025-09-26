@@ -1,20 +1,18 @@
 """Unit tests for SearchService."""
 
 import uuid
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 
-from app.clients.embedding import EmbeddingResult, FakeEmbeddingClient
+from app.clients.embedding import FakeEmbeddingClient
 from app.domain import (
     Chunk,
     ChunkMetadata,
     EmbeddingDimensionMismatchError,
     EmptyLibraryError,
-    InvalidSearchParameterError,
     Library,
     LibraryNotFoundError,
-    VectorIndexNotBuiltError,
 )
 from app.repositories.in_memory import (
     InMemoryChunkRepository,
@@ -186,7 +184,6 @@ class TestSearchService:
         mock_index_service.build.return_value = built_status
 
         # Should fail with EmptyLibraryError, not VectorIndexNotBuiltError
-        from app.domain import EmptyLibraryError
 
         with pytest.raises(EmptyLibraryError):
             service.query_text(library.id, "test query")

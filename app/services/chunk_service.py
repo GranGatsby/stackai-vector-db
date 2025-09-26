@@ -78,18 +78,24 @@ class ChunkService:
         if not document:
             raise ValueError(f"Document with ID {document_id} does not exist")
 
-        embedding_result = self._compute_batch_embeddings(chunks_data, compute_embedding)
+        embedding_result = self._compute_batch_embeddings(
+            chunks_data, compute_embedding
+        )
         current_time = datetime.now().isoformat()
-        
+
         created_chunks = []
         embedding_index = 0
-        
+
         for chunk_data in chunks_data:
             final_embedding, final_metadata = self._process_chunk_data(
                 chunk_data, embedding_result, embedding_index, current_time
             )
-            
-            if compute_embedding and not chunk_data.get("embedding") and embedding_result:
+
+            if (
+                compute_embedding
+                and not chunk_data.get("embedding")
+                and embedding_result
+            ):
                 embedding_index += 1
 
             chunk = Chunk.create(
@@ -98,8 +104,10 @@ class ChunkService:
                 text=chunk_data.get("text", ""),
                 embedding=final_embedding,
                 start_index=chunk_data.get("start_index", 0),
-                end_index=chunk_data.get("end_index") or (
-                    chunk_data.get("start_index", 0) + len(chunk_data.get("text", "").strip())
+                end_index=chunk_data.get("end_index")
+                or (
+                    chunk_data.get("start_index", 0)
+                    + len(chunk_data.get("text", "").strip())
                 ),
                 metadata=final_metadata,
             )
@@ -128,12 +136,12 @@ class ChunkService:
         final_embedding, embedding_model, embedding_dim = self._handle_embedding_update(
             existing_chunk, text, embedding, compute_embedding
         )
-        
+
         final_metadata = self._update_chunk_metadata(
             metadata or existing_chunk.metadata,
             current_time,
             embedding_model,
-            embedding_dim
+            embedding_dim,
         )
 
         # Create updated chunk with new values
@@ -190,31 +198,31 @@ class ChunkService:
     ) -> EmbeddingResult | None:
         if not compute_embedding:
             return None
-            
+
         texts_to_embed = [
             chunk_data.get("text", "")
             for chunk_data in chunks_data
             if not chunk_data.get("embedding")
         ]
-        
+
         if not texts_to_embed:
             return None
-            
+
         try:
             return self._embedding_client.embed_texts(texts_to_embed)
         except EmbeddingError as e:
             raise ValueError(f"Failed to compute embeddings: {e}") from e
-    
+
     def _process_chunk_data(
-        self, 
-        chunk_data: dict, 
-        embedding_result: EmbeddingResult | None, 
+        self,
+        chunk_data: dict,
+        embedding_result: EmbeddingResult | None,
         embedding_index: int,
-        current_time: str
+        current_time: str,
     ) -> tuple[list[float] | None, ChunkMetadata]:
         embedding = chunk_data.get("embedding")
         metadata = chunk_data.get("metadata") or ChunkMetadata()
-        
+
         if embedding_result and not embedding:
             embedding = embedding_result.embeddings[embedding_index]
             metadata = ChunkMetadata(
@@ -242,11 +250,15 @@ class ChunkService:
                 embedding_model=metadata.embedding_model,
                 embedding_dim=metadata.embedding_dim,
             )
-        
+
         return embedding, metadata
-    
+
     def _handle_embedding_update(
-        self, existing_chunk: Chunk, text: str | None, embedding: list[float] | None, compute_embedding: bool
+        self,
+        existing_chunk: Chunk,
+        text: str | None,
+        embedding: list[float] | None,
+        compute_embedding: bool,
     ) -> tuple[list[float] | None, str | None, int | None]:
         if compute_embedding and text and text != existing_chunk.text:
             try:
@@ -254,19 +266,19 @@ class ChunkService:
                 return (
                     embedding_result.single_embedding,
                     embedding_result.model_name,
-                    embedding_result.embedding_dim
+                    embedding_result.embedding_dim,
                 )
             except EmbeddingError as e:
                 raise ValueError(f"Failed to compute embedding: {e}") from e
-        
+
         return embedding or existing_chunk.embedding, None, None
-    
+
     def _update_chunk_metadata(
-        self, 
-        base_metadata: ChunkMetadata, 
-        current_time: str, 
-        embedding_model: str | None, 
-        embedding_dim: int | None
+        self,
+        base_metadata: ChunkMetadata,
+        current_time: str,
+        embedding_model: str | None,
+        embedding_dim: int | None,
     ) -> ChunkMetadata:
         return ChunkMetadata(
             chunk_type=base_metadata.chunk_type,

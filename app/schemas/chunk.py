@@ -16,7 +16,9 @@ class ChunkMetadataSchema(BaseModel):
     chunk_type: str | None = Field(
         None, max_length=100, description="Chunk type (paragraph, heading, table, etc.)"
     )
-    section: str | None = Field(None, max_length=settings.max_name_length, description="Section name")
+    section: str | None = Field(
+        None, max_length=settings.max_name_length, description="Section name"
+    )
     page_number: int | None = Field(None, ge=1, description="Page number")
     confidence: float | None = Field(
         None, ge=0.0, le=1.0, description="Extraction confidence"
@@ -70,7 +72,8 @@ class ChunkMetadataSchema(BaseModel):
     def from_domain(cls, metadata: ChunkMetadata) -> dict:
         """Create dict from domain ChunkMetadata, excluding None values."""
         return {
-            k: v for k, v in {
+            k: v
+            for k, v in {
                 "chunk_type": metadata.chunk_type,
                 "section": metadata.section,
                 "page_number": metadata.page_number,
@@ -81,7 +84,8 @@ class ChunkMetadataSchema(BaseModel):
                 "embedding_dim": metadata.embedding_dim,
                 "similarity_threshold": metadata.similarity_threshold,
                 "processed_at": metadata.processed_at,
-            }.items() if v is not None
+            }.items()
+            if v is not None
         }
 
 

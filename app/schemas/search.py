@@ -57,7 +57,7 @@ class SearchByVectorRequest(BaseModel):
     def validate_embedding(cls, v: list[float]) -> list[float]:
         if not v:
             raise ValueError("Embedding vector cannot be empty")
-        
+
         for i, val in enumerate(v):
             if not isinstance(val, (int, float)):
                 raise ValueError(f"Embedding value at index {i} must be a number")
