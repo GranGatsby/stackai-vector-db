@@ -1,11 +1,4 @@
-"""In-memory repository implementations.
-
-This package provides thread-safe, in-memory implementations of the repository
-interfaces. These implementations use reader-writer locks to ensure data
-consistency during concurrent operations.
-"""
-
-from app.utils import RWLock
+"""Thread-safe in-memory repository implementations."""
 
 from .chunk_repository import InMemoryChunkRepository
 from .document_repository import InMemoryDocumentRepository

@@ -1,9 +1,4 @@
-"""Index management with thread-safety and factory functions.
-
-This module provides thread-safe index management and factory functions
-for creating appropriate index instances based on configuration and data
-characteristics.
-"""
+"""Index management with thread-safety and factory functions."""
 
 import logging
 from collections.abc import Sequence
@@ -22,19 +17,7 @@ logger = logging.getLogger(__name__)
 def create_index(
     index_type: str | None = None, dimension: int | None = None, **kwargs
 ) -> VectorIndex:
-    """Factory function to create vector index instances.
-
-    Args:
-        index_type: Type of index to create ("linear", "kdtree", "ivf")
-        dimension: Expected vector dimension
-        **kwargs: Additional arguments passed to index constructor
-
-    Returns:
-        Vector index instance
-
-    Raises:
-        ValueError: If index_type is not supported
-    """
+    """Factory to create vector index instances."""
     if index_type is None:
         index_type = settings.default_index_type
 
@@ -53,52 +36,38 @@ def create_index(
         )
 
 
+# Index selection thresholds
+_SMALL_DATASET_THRESHOLD = 1000
+_LARGE_DATASET_THRESHOLD = 10000
+_MEDIUM_DATASET_THRESHOLD = 50000
+_LOW_DIMENSION_THRESHOLD = 20
+_HIGH_DIMENSION_THRESHOLD = 50
+
+
 def recommend_index_type(
     n_vectors: int, dimension: int, accuracy_priority: bool = True
 ) -> str:
-    """Recommend the best index type based on data characteristics.
-
-    Args:
-        n_vectors: Number of vectors to index
-        dimension: Vector dimension
-        accuracy_priority: Whether to prioritize accuracy over speed
-
-    Returns:
-        Recommended index type ("linear", "kdtree", or "ivf")
-    """
-    # Small datasets: linear scan is fine and gives exact results
-    if n_vectors < 1000:
+    """Recommend best index type based on data characteristics."""
+    if n_vectors < _SMALL_DATASET_THRESHOLD:
         return "linear"
 
-    # Low dimensions: KD-Tree works well
-    if dimension <= 20 and n_vectors < 50000:
+    if dimension <= _LOW_DIMENSION_THRESHOLD and n_vectors < _MEDIUM_DATASET_THRESHOLD:
         return "kdtree"
 
-    # Large datasets or high dimensions: IVF scales better
-    if n_vectors >= 10000 or dimension > 50:
+    if n_vectors >= _LARGE_DATASET_THRESHOLD or dimension > _HIGH_DIMENSION_THRESHOLD:
         return "ivf"
 
-    # Medium-sized datasets: choose based on accuracy priority
     if accuracy_priority:
-        return "kdtree" if dimension <= 20 else "linear"
+        return "kdtree" if dimension <= _LOW_DIMENSION_THRESHOLD else "linear"
     else:
         return "ivf"
 
 
 class ThreadSafeIndex:
-    """Thread-safe wrapper for vector indexes.
-
-    This wrapper provides thread-safe access to vector indexes using
-    read-write locks. Multiple readers can access the index concurrently,
-    but writes are exclusive.
-    """
+    """Thread-safe wrapper using read-write locks."""
 
     def __init__(self, index: VectorIndex) -> None:
-        """Initialize the thread-safe index wrapper.
-
-        Args:
-            index: The underlying vector index to wrap
-        """
+        """Initialize thread-safe wrapper."""
         self._index = index
         self._lock = RWLock()
 
@@ -122,7 +91,7 @@ class ThreadSafeIndex:
 
     @property
     def dim(self) -> int:
-        """Get vector dimension (thread-safe read)."""
+        """Vector dimension (thread-safe)."""
         self._acquire_read()
         try:
             return self._index.dim
@@ -131,7 +100,7 @@ class ThreadSafeIndex:
 
     @property
     def size(self) -> int:
-        """Get number of vectors (thread-safe read)."""
+        """Number of vectors (thread-safe)."""
         self._acquire_read()
         try:
             return self._index.size
@@ -140,7 +109,7 @@ class ThreadSafeIndex:
 
     @property
     def is_built(self) -> bool:
-        """Check if index is built (thread-safe read)."""
+        """Index built status (thread-safe)."""
         self._acquire_read()
         try:
             return self._index.is_built
@@ -148,7 +117,7 @@ class ThreadSafeIndex:
             self._release_read()
 
     def build(self, vectors: Sequence[Sequence[float]]) -> None:
-        """Build index (thread-safe write)."""
+        """Build index (thread-safe)."""
         self._acquire_write()
         try:
             self._index.build(vectors)
@@ -158,7 +127,7 @@ class ThreadSafeIndex:
     def query(
         self, query_vector: Sequence[float], k: int = 10
     ) -> list[tuple[int, float]]:
-        """Query index (thread-safe read)."""
+        """Query index (thread-safe)."""
         self._acquire_read()
         try:
             return self._index.query(query_vector, k)
@@ -166,7 +135,7 @@ class ThreadSafeIndex:
             self._release_read()
 
     def add_vector(self, vector: Sequence[float]) -> int:
-        """Add vector (thread-safe write)."""
+        """Add vector (thread-safe)."""
         self._acquire_write()
         try:
             return self._index.add_vector(vector)
@@ -174,7 +143,7 @@ class ThreadSafeIndex:
             self._release_write()
 
     def remove_vector(self, index: int) -> bool:
-        """Remove vector (thread-safe write)."""
+        """Remove vector (thread-safe)."""
         self._acquire_write()
         try:
             return self._index.remove_vector(index)
@@ -182,7 +151,7 @@ class ThreadSafeIndex:
             self._release_write()
 
     def get_stats(self) -> dict:
-        """Get index statistics (thread-safe read)."""
+        """Index statistics (thread-safe)."""
         self._acquire_read()
         try:
             if hasattr(self._index, "get_stats"):
@@ -193,11 +162,7 @@ class ThreadSafeIndex:
 
 
 class IndexManager:
-    """Manager for vector indexes with automatic type selection and thread-safety.
-
-    This class provides high-level index management including automatic
-    index type selection, thread-safe operations, and index lifecycle management.
-    """
+    """High-level index manager with auto-selection and thread-safety."""
 
     def __init__(
         self,
@@ -206,14 +171,7 @@ class IndexManager:
         thread_safe: bool = True,
         **index_kwargs,
     ) -> None:
-        """Initialize the index manager.
-
-        Args:
-            index_type: Type of index to use (auto-selected if None)
-            dimension: Expected vector dimension
-            thread_safe: Whether to use thread-safe wrapper
-            **index_kwargs: Additional arguments for index creation
-        """
+        """Initialize index manager."""
         self._index_type = index_type
         self._dimension = dimension
         self._thread_safe = thread_safe
@@ -225,46 +183,30 @@ class IndexManager:
         )
 
     def _create_index(self, n_vectors: int | None = None) -> VectorIndex:
-        """Create the appropriate index instance.
-
-        Args:
-            n_vectors: Number of vectors (for auto-selection)
-
-        Returns:
-            Vector index instance
-        """
+        """Create appropriate index instance."""
         index_type = self._index_type
 
-        # Auto-select index type if not specified
         if index_type is None and n_vectors is not None and self._dimension is not None:
             index_type = recommend_index_type(n_vectors, self._dimension)
             logger.info(f"Auto-selected index type: {index_type}")
 
-        # Create the index
         index = create_index(
             index_type=index_type, dimension=self._dimension, **self._index_kwargs
         )
 
-        # Wrap with thread-safety if requested
         if self._thread_safe:
             index = ThreadSafeIndex(index)
 
         return index
 
     def build_index(self, vectors: Sequence[Sequence[float]]) -> None:
-        """Build the index from vectors.
-
-        Args:
-            vectors: Vectors to index
-        """
+        """Build index from vectors."""
         if not vectors:
             raise ValueError("Cannot build index from empty vector collection")
 
-        # Create index if not exists
         if self._index is None:
             self._index = self._create_index(len(vectors))
 
-        # Build the index
         self._index.build(vectors)
 
         logger.info(f"Built index with {len(vectors)} vectors")
@@ -272,61 +214,28 @@ class IndexManager:
     def query(
         self, query_vector: Sequence[float], k: int = 10
     ) -> list[tuple[int, float]]:
-        """Query the index for nearest neighbors.
-
-        Args:
-            query_vector: Query vector
-            k: Number of neighbors to return
-
-        Returns:
-            List of (index, distance) tuples
-
-        Raises:
-            RuntimeError: If index hasn't been built
-        """
+        """Query index for nearest neighbors."""
         if self._index is None:
             raise RuntimeError("Index hasn't been created yet")
 
         return self._index.query(query_vector, k)
 
     def add_vector(self, vector: Sequence[float]) -> int:
-        """Add a vector to the index.
-
-        Args:
-            vector: Vector to add
-
-        Returns:
-            Index of the added vector
-
-        Raises:
-            RuntimeError: If index hasn't been built
-        """
+        """Add vector to index."""
         if self._index is None:
-            # Create index for single vector
             self._index = self._create_index()
 
         return self._index.add_vector(vector)
 
     def remove_vector(self, index: int) -> bool:
-        """Remove a vector from the index.
-
-        Args:
-            index: Index of vector to remove
-
-        Returns:
-            True if removed, False if index was invalid
-        """
+        """Remove vector from index."""
         if self._index is None:
             return False
 
         return self._index.remove_vector(index)
 
     def get_stats(self) -> dict:
-        """Get index statistics.
-
-        Returns:
-            Dictionary with index statistics
-        """
+        """Index statistics."""
         if self._index is None:
             return {"status": "not_created"}
 
@@ -341,10 +250,10 @@ class IndexManager:
 
     @property
     def is_built(self) -> bool:
-        """Check if index is built."""
+        """True if index is built."""
         return self._index is not None and self._index.is_built
 
     @property
     def size(self) -> int:
-        """Get number of vectors in index."""
+        """Number of vectors in index."""
         return self._index.size if self._index is not None else 0
