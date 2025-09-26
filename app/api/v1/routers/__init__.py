@@ -1,8 +1,4 @@
-"""API v1 routers.
-
-This package contains all the API endpoint routers for version 1 of the API.
-Each router handles a specific domain area (health, libraries, documents, etc.).
-"""
+"""API v1 routers."""
 
 from .chunks import document_router as chunks_document_router
 from .chunks import router as chunks_router

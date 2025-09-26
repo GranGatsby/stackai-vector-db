@@ -13,11 +13,7 @@ from app.main import app
 
 @pytest.fixture
 def client():
-    """Create a fresh test client for each test.
-
-    This ensures that each test starts with a clean state by creating
-    a new client instance and clearing the repository.
-    """
+    """Create a fresh test client for each test."""
     test_client = TestClient(app)
     # Clear the repository before each test
     repo = get_library_repository()

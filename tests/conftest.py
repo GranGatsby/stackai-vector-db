@@ -13,11 +13,7 @@ from app.main import app
 
 @pytest.fixture(scope="session")
 def client() -> TestClient:
-    """Create a test client for the FastAPI application.
-
-    Uses session scope for efficiency since the app is stateless
-    and doesn't change between tests.
-    """
+    """Create a test client for the FastAPI application."""
     return TestClient(app)
 
 
