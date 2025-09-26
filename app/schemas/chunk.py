@@ -35,7 +35,6 @@ class ChunkMetadataSchema(BaseModel):
     processed_at: str | None = Field(
         None, description="Processing datetime (ISO string)"
     )
-    is_indexed: bool | None = Field(None, description="Whether chunk is indexed")
 
     @field_validator("similarity_threshold")
     @classmethod
@@ -61,24 +60,6 @@ class ChunkMetadataSchema(BaseModel):
             embedding_dim=self.embedding_dim,
             similarity_threshold=self.similarity_threshold,
             processed_at=self.processed_at,
-            is_indexed=self.is_indexed if self.is_indexed is not None else False,
-        )
-
-    @classmethod
-    def dict_to_domain(cls, metadata_dict: dict) -> ChunkMetadata:
-        """Convert a dict to domain ChunkMetadata."""
-        return ChunkMetadata(
-            chunk_type=metadata_dict.get("chunk_type"),
-            section=metadata_dict.get("section"),
-            page_number=metadata_dict.get("page_number"),
-            confidence=metadata_dict.get("confidence"),
-            language=metadata_dict.get("language"),
-            tags=metadata_dict.get("tags", []),
-            embedding_model=metadata_dict.get("embedding_model"),
-            embedding_dim=metadata_dict.get("embedding_dim"),
-            similarity_threshold=metadata_dict.get("similarity_threshold"),
-            processed_at=metadata_dict.get("processed_at"),
-            is_indexed=metadata_dict.get("is_indexed", False),
         )
 
     @classmethod
@@ -109,8 +90,6 @@ class ChunkMetadataSchema(BaseModel):
             data["similarity_threshold"] = metadata.similarity_threshold
         if metadata.processed_at is not None:
             data["processed_at"] = metadata.processed_at
-        if metadata.is_indexed is not False:  # Only if not default
-            data["is_indexed"] = metadata.is_indexed
 
         return data
 

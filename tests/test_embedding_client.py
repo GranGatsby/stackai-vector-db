@@ -21,23 +21,25 @@ class TestFakeEmbeddingClient:
         client = FakeEmbeddingClient(embedding_dim=10)
 
         text = "This is a test text"
-        embedding1 = client.embed_text(text)
-        embedding2 = client.embed_text(text)
+        result1 = client.embed_text(text)
+        result2 = client.embed_text(text)
 
         # Should be deterministic
-        assert embedding1 == embedding2
-        assert len(embedding1) == 10
-        assert all(isinstance(x, float) for x in embedding1)
+        assert result1 == result2
+        assert len(result1.single_embedding) == 10
+        assert all(isinstance(x, float) for x in result1.single_embedding)
+        assert result1.model_name == "fake-embedding-model"
+        assert result1.embedding_dim == 10
 
     def test_embed_text_different_texts_different_embeddings(self):
         """Test that different texts produce different embeddings."""
         client = FakeEmbeddingClient(embedding_dim=10)
 
-        embedding1 = client.embed_text("Hello world")
-        embedding2 = client.embed_text("Goodbye world")
+        result1 = client.embed_text("Hello world")
+        result2 = client.embed_text("Goodbye world")
 
         # Should be different
-        assert embedding1 != embedding2
+        assert result1.single_embedding != result2.single_embedding
 
     def test_embed_text_empty_text_raises_error(self):
         """Test that empty text raises an error."""
@@ -54,14 +56,16 @@ class TestFakeEmbeddingClient:
         client = FakeEmbeddingClient(embedding_dim=5)
 
         texts = ["First text", "Second text", "Third text"]
-        embeddings = client.embed_texts(texts)
+        result = client.embed_texts(texts)
 
-        assert len(embeddings) == 3
-        assert all(len(emb) == 5 for emb in embeddings)
+        assert len(result.embeddings) == 3
+        assert result.model_name == "fake-embedding-model"
+        assert result.embedding_dim == 5
+        assert all(len(emb) == 5 for emb in result.embeddings)
 
         # Each should be different
-        assert embeddings[0] != embeddings[1]
-        assert embeddings[1] != embeddings[2]
+        assert result.embeddings[0] != result.embeddings[1]
+        assert result.embeddings[1] != result.embeddings[2]
 
     def test_embedding_dim_property(self):
         """Test embedding dimension property."""

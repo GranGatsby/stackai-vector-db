@@ -52,7 +52,6 @@ class ChunkMetadata:
     similarity_threshold: float | None = None
     # Processing fields
     processed_at: str | None = None  # ISO datetime string
-    is_indexed: bool = False
 
 
 @dataclass(frozen=True)

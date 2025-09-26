@@ -9,7 +9,7 @@ and the domain/repository layers.
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from app.clients import EmbeddingClient, EmbeddingError
+from app.clients import EmbeddingClient, EmbeddingError, EmbeddingResult
 from app.domain import Chunk, ChunkMetadata, ChunkNotFoundError
 from app.repositories.ports import (
     ChunkRepository,
@@ -154,7 +154,22 @@ class ChunkService:
         library_id = document.library_id
         created_chunks = []
 
+        # Compute embeddings in batch if requested
+        embedding_result = None
+        if compute_embedding:
+            texts_to_embed = [
+                chunk_data.get("text", "")
+                for chunk_data in chunks_data
+                if not chunk_data.get("embedding")  # Only embed texts without existing embeddings
+            ]
+            if texts_to_embed:
+                try:
+                    embedding_result = self._embedding_client.embed_texts(texts_to_embed)
+                except EmbeddingError as e:
+                    raise ValueError(f"Failed to compute embeddings: {e}") from e
+
         # Process each chunk
+        embedding_index = 0
         for chunk_data in chunks_data:
             text = chunk_data.get("text", "")
             embedding = chunk_data.get("embedding")
@@ -162,10 +177,33 @@ class ChunkService:
             end_index = chunk_data.get("end_index", 0)
             metadata = chunk_data.get("metadata")
 
-            # Compute embedding if requested
+            # Use computed embedding if available
             final_embedding = embedding
-            if compute_embedding and not embedding:
-                final_embedding = self._compute_embedding(text)
+            final_metadata = metadata
+            
+            if compute_embedding and not embedding and embedding_result:
+                final_embedding = embedding_result.embeddings[embedding_index]
+                embedding_index += 1
+                
+                # Update metadata with embedding information
+                if final_metadata is None:
+                    final_metadata = ChunkMetadata()
+                
+                # Create updated metadata with embedding info
+                final_metadata = ChunkMetadata(
+                    # Preserve existing metadata
+                    chunk_type=final_metadata.chunk_type,
+                    section=final_metadata.section,
+                    page_number=final_metadata.page_number,
+                    confidence=final_metadata.confidence,
+                    language=final_metadata.language,
+                    tags=final_metadata.tags,
+                    similarity_threshold=final_metadata.similarity_threshold,
+                    processed_at=final_metadata.processed_at,
+                    # Update embedding metadata
+                    embedding_model=embedding_result.model_name,
+                    embedding_dim=embedding_result.embedding_dim,
+                )
 
             # Create the chunk using domain factory
             chunk = Chunk.create(
@@ -175,7 +213,7 @@ class ChunkService:
                 embedding=final_embedding,
                 start_index=start_index,
                 end_index=end_index or (start_index + len(text.strip())),
-                metadata=metadata,
+                metadata=final_metadata,
             )
 
             # Store the chunk
@@ -224,8 +262,31 @@ class ChunkService:
 
         # Compute new embedding if requested and text changed
         final_embedding = embedding
+        final_metadata = metadata if metadata is not None else existing_chunk.metadata
+        
         if compute_embedding and text is not None and text != existing_chunk.text:
-            final_embedding = self._compute_embedding(text)
+            embedding_result = self._compute_embedding(text)
+            final_embedding = embedding_result.single_embedding
+            
+            # Update metadata with embedding information
+            if final_metadata is None:
+                final_metadata = ChunkMetadata()
+            
+            # Create updated metadata with embedding info
+            final_metadata = ChunkMetadata(
+                # Preserve existing metadata
+                chunk_type=final_metadata.chunk_type,
+                section=final_metadata.section,
+                page_number=final_metadata.page_number,
+                confidence=final_metadata.confidence,
+                language=final_metadata.language,
+                tags=final_metadata.tags,
+                similarity_threshold=final_metadata.similarity_threshold,
+                processed_at=final_metadata.processed_at,
+                # Update embedding metadata
+                embedding_model=embedding_result.model_name,
+                embedding_dim=embedding_result.embedding_dim,
+            )
         elif embedding is None:
             final_embedding = existing_chunk.embedding
 
@@ -235,7 +296,7 @@ class ChunkService:
             embedding=final_embedding,
             start_index=start_index,
             end_index=end_index,
-            metadata=metadata,
+            metadata=final_metadata,
         )
 
         # Store the updated chunk
@@ -343,14 +404,14 @@ class ChunkService:
 
         return self._chunk_repository.count_by_library(library_id)
 
-    def _compute_embedding(self, text: str) -> list[float]:
+    def _compute_embedding(self, text: str) -> EmbeddingResult:
         """Compute embedding for the given text using the embedding client.
 
         Args:
             text: The text to compute embedding for
 
         Returns:
-            The embedding vector computed by the embedding client
+            EmbeddingResult containing the embedding vector and metadata
 
         Raises:
             ValueError: If embedding computation fails

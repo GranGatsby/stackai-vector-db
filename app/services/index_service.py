@@ -29,6 +29,7 @@ from app.clients import EmbeddingClient, create_embedding_client
 from app.core.config import settings
 from app.domain import (
     Chunk,
+    ChunkMetadata,
     EmbeddingDimensionMismatchError,
     IndexBuildError,
     IndexNotBuiltError,
@@ -663,17 +664,34 @@ class IndexService:
             texts = [chunk.text for chunk in chunks_needing_embeddings]
 
             # Generate embeddings in batch
-            embeddings = self._embedding_client.embed_texts(texts)
+            embedding_result = self._embedding_client.embed_texts(texts)
 
-            # Update chunks with new embeddings
+            # Update chunks with new embeddings and metadata
             updated_chunks = []
-            for chunk, embedding in zip(chunks_needing_embeddings, embeddings, strict=False):
-                updated_chunk = chunk.update(embedding=embedding)
+            for chunk, embedding in zip(chunks_needing_embeddings, embedding_result.embeddings, strict=False):
+                # Update metadata with embedding information
+                current_metadata = chunk.metadata or ChunkMetadata()
+                updated_metadata = ChunkMetadata(
+                    # Preserve existing metadata
+                    chunk_type=current_metadata.chunk_type,
+                    section=current_metadata.section,
+                    page_number=current_metadata.page_number,
+                    confidence=current_metadata.confidence,
+                    language=current_metadata.language,
+                    tags=current_metadata.tags,
+                    similarity_threshold=current_metadata.similarity_threshold,
+                    processed_at=current_metadata.processed_at,
+                    # Update embedding metadata
+                    embedding_model=embedding_result.model_name,
+                    embedding_dim=embedding_result.embedding_dim,
+                )
+                
+                updated_chunk = chunk.update(embedding=embedding, metadata=updated_metadata)
                 # Update in repository
                 self._chunk_repo.update(updated_chunk)
                 updated_chunks.append(updated_chunk)
 
-            logger.info(f"Generated {len(embeddings)} embeddings successfully")
+            logger.info(f"Generated {len(embedding_result.embeddings)} embeddings successfully")
 
             # Return all chunks with embeddings
             return chunks_with_embeddings + updated_chunks

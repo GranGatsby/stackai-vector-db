@@ -7,6 +7,7 @@ providers based on configuration.
 """
 
 import logging
+from dataclasses import dataclass
 from http import HTTPStatus
 from typing import Protocol, runtime_checkable
 
@@ -15,6 +16,38 @@ import httpx
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class EmbeddingResult:
+    """Result of embedding computation including metadata.
+    
+    This immutable class encapsulates both the computed embeddings and
+    metadata about the embedding process (model used, dimensions, etc.).
+    Following the principle of returning rich, self-contained results.
+    
+    Attributes:
+        embeddings: List of embedding vectors
+        model_name: Name/identifier of the embedding model used
+        embedding_dim: Dimension of each embedding vector
+    """
+    embeddings: list[list[float]]
+    model_name: str
+    embedding_dim: int
+    
+    @property
+    def single_embedding(self) -> list[float]:
+        """Get single embedding for single-text operations.
+        
+        Returns:
+            The first (and presumably only) embedding vector
+            
+        Raises:
+            ValueError: If result contains != 1 embedding
+        """
+        if len(self.embeddings) != 1:
+            raise ValueError(f"Expected 1 embedding, got {len(self.embeddings)}")
+        return self.embeddings[0]
 
 
 @runtime_checkable
@@ -34,28 +67,28 @@ class EmbeddingClient(Protocol):
         """
         ...
 
-    def embed_text(self, text: str) -> list[float]:
+    def embed_text(self, text: str) -> EmbeddingResult:
         """Compute embedding for the given text.
 
         Args:
             text: The text to embed
 
         Returns:
-            The embedding vector as a list of floats
+            EmbeddingResult containing the embedding vector and metadata
 
         Raises:
             EmbeddingError: If embedding computation fails
         """
         ...
 
-    def embed_texts(self, texts: list[str]) -> list[list[float]]:
+    def embed_texts(self, texts: list[str]) -> EmbeddingResult:
         """Compute embeddings for multiple texts (batch operation).
 
         Args:
             texts: List of texts to embed
 
         Returns:
-            List of embedding vectors
+            EmbeddingResult containing embedding vectors and metadata
 
         Raises:
             EmbeddingError: If embedding computation fails
@@ -92,7 +125,7 @@ class FakeEmbeddingClient:
         """Get the dimension of embeddings produced by this client."""
         return self._embedding_dim
 
-    def embed_text(self, text: str) -> list[float]:
+    def embed_text(self, text: str) -> EmbeddingResult:
         """Generate a deterministic fake embedding for the given text.
 
         The embedding is generated based on text characteristics to ensure
@@ -102,7 +135,7 @@ class FakeEmbeddingClient:
             text: The text to embed
 
         Returns:
-            A deterministic fake embedding vector
+            EmbeddingResult with deterministic fake embedding and metadata
         """
         if not text or not text.strip():
             raise EmbeddingError("Cannot embed empty text")
@@ -127,14 +160,33 @@ class FakeEmbeddingClient:
             embedding.append(component)
 
         logger.debug(f"Generated fake embedding for text length {len(text)}")
-        return embedding
+        
+        return EmbeddingResult(
+            embeddings=[embedding],
+            model_name="fake-embedding-model",
+            embedding_dim=self._embedding_dim,
+        )
 
-    def embed_texts(self, texts: list[str]) -> list[list[float]]:
+    def embed_texts(self, texts: list[str]) -> EmbeddingResult:
         """Generate fake embeddings for multiple texts."""
         if not texts:
-            return []
+            return EmbeddingResult(
+                embeddings=[],
+                model_name="fake-embedding-model", 
+                embedding_dim=self._embedding_dim,
+            )
 
-        return [self.embed_text(text) for text in texts]
+        embeddings = []
+        for text in texts:
+            # Reuse single embedding logic but extract just the embedding vector
+            single_result = self.embed_text(text)
+            embeddings.append(single_result.single_embedding)
+
+        return EmbeddingResult(
+            embeddings=embeddings,
+            model_name="fake-embedding-model",
+            embedding_dim=self._embedding_dim,
+        )
 
 
 class CohereEmbeddingClient:
@@ -188,14 +240,14 @@ class CohereEmbeddingClient:
             return settings.default_embedding_dim
         return self._embedding_dim
 
-    def embed_text(self, text: str) -> list[float]:
+    def embed_text(self, text: str) -> EmbeddingResult:
         """Compute embedding using Cohere API.
 
         Args:
             text: The text to embed
 
         Returns:
-            The embedding vector from Cohere API
+            EmbeddingResult containing the embedding vector and metadata from Cohere API
 
         Raises:
             EmbeddingError: If API call fails or returns invalid data
@@ -204,27 +256,30 @@ class CohereEmbeddingClient:
             raise EmbeddingError("Cannot embed empty text")
 
         try:
-            embeddings = self.embed_texts([text])
-            return embeddings[0]
+            return self.embed_texts([text])
         except EmbeddingError:
             raise
         except Exception as e:
             raise EmbeddingError(f"Failed to embed single text: {e}", e)
 
-    def embed_texts(self, texts: list[str]) -> list[list[float]]:
+    def embed_texts(self, texts: list[str]) -> EmbeddingResult:
         """Compute embeddings for multiple texts using Cohere API.
 
         Args:
             texts: List of texts to embed
 
         Returns:
-            List of embedding vectors from Cohere API
+            EmbeddingResult containing embedding vectors and metadata from Cohere API
 
         Raises:
             EmbeddingError: If API call fails or returns invalid data
         """
         if not texts:
-            return []
+            return EmbeddingResult(
+                embeddings=[],
+                model_name=self._model,
+                embedding_dim=self.embedding_dim,
+            )
 
         # Validate inputs
         clean_texts = []
@@ -283,7 +338,12 @@ class CohereEmbeddingClient:
                 )
 
             logger.debug(f"Successfully embedded {len(clean_texts)} texts")
-            return embeddings
+            
+            return EmbeddingResult(
+                embeddings=embeddings,
+                model_name=self._model,
+                embedding_dim=self._embedding_dim or len(embeddings[0]) if embeddings else 0,
+            )
 
         except EmbeddingError:
             raise

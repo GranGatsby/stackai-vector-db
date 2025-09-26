@@ -49,24 +49,6 @@ class DocumentMetadataSchema(BaseModel):
         )
 
     @classmethod
-    def dict_to_domain(cls, metadata_dict: dict) -> DocumentMetadata:
-        """Convert a dict to domain DocumentMetadata."""
-        return DocumentMetadata(
-            author=metadata_dict.get("author"),
-            source=metadata_dict.get("source"),
-            language=metadata_dict.get("language"),
-            format=metadata_dict.get("format"),
-            created_at=metadata_dict.get("created_at"),
-            modified_at=metadata_dict.get("modified_at"),
-            tags=metadata_dict.get("tags", []),
-            category=metadata_dict.get("category"),
-            is_public=metadata_dict.get("is_public", True),
-            processed=metadata_dict.get("processed"),
-            chunk_count=metadata_dict.get("chunk_count"),
-            word_count=metadata_dict.get("word_count"),
-        )
-
-    @classmethod
     def from_domain(cls, metadata: DocumentMetadata) -> dict:
         """Create a dict from domain DocumentMetadata for API responses.
 

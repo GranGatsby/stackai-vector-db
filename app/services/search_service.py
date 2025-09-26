@@ -177,10 +177,10 @@ class SearchService:
 
         try:
             # Generate embedding for the text query
-            query_embedding = self._embedding_client.embed_text(text.strip())
+            embedding_result = self._embedding_client.embed_text(text.strip())
 
             # Delegate to embedding-based search
-            return self.query_embedding(library_id, query_embedding, k)
+            return self.query_embedding(library_id, embedding_result.single_embedding, k)
 
         except EmbeddingError as e:
             logger.error(f"Failed to generate embedding for text query: {e}")

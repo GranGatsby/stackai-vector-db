@@ -8,6 +8,7 @@ from .embedding import (
     CohereEmbeddingClient,
     EmbeddingClient,
     EmbeddingError,
+    EmbeddingResult,
     FakeEmbeddingClient,
     create_embedding_client,
 )
@@ -16,6 +17,7 @@ __all__ = [
     "CohereEmbeddingClient",
     "EmbeddingClient",
     "EmbeddingError",
+    "EmbeddingResult",
     "FakeEmbeddingClient",
     "create_embedding_client",
 ]

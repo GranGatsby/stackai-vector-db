@@ -1,7 +1,5 @@
 """Search and indexing endpoints."""
 
-import dataclasses
-from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
@@ -18,39 +16,13 @@ from app.schemas import (
     SearchHit,
     SearchResult,
 )
+from app.schemas.chunk import ChunkMetadataSchema
 from app.services import IndexService, SearchService
 from app.services.index_service import IndexAlgo
 
 router = APIRouter(prefix="/libraries", tags=["search"])
 
 
-def _enrich_chunk_metadata_for_search(
-    chunk: Chunk, algorithm: str, embedding_dim: int
-) -> dict[str, Any] | None:
-    """Enrich chunk metadata with current indexing information for search responses.
-    
-    Args:
-        chunk: The chunk entity
-        algorithm: The algorithm used for the search
-        embedding_dim: The dimension of embeddings in the index
-        
-    Returns:
-        Enriched metadata dictionary or None if no metadata
-    """
-    if chunk.metadata is None:
-        return None
-    
-    # Start with the base metadata
-    metadata = dataclasses.asdict(chunk.metadata)
-    
-    # Enrich with current embedding and indexing information
-    metadata.update({
-        "embedding_model": settings.cohere_model if chunk.has_embedding else None,
-        "embedding_dim": embedding_dim if chunk.has_embedding else None,
-        "is_indexed": True,  # If we're getting this from search, it must be indexed
-    })
-    
-    return metadata
 
 
 @router.post(
@@ -135,14 +107,12 @@ async def search_by_text(
     # Execute text-based search
     search_result = search_service.query_text(library_id, request.text, request.k)
 
-    # Convert domain result to response schema with enriched metadata
+    # Convert domain result to response schema
     hits = [
         SearchHit(
             chunk_id=chunk.id,
             score=distance,
-            metadata=_enrich_chunk_metadata_for_search(
-                chunk, search_result.algorithm.value, search_result.embedding_dim
-            ),
+            metadata=ChunkMetadataSchema.from_domain(chunk.metadata) if chunk.metadata else None,
         )
         for chunk, distance in search_result.matches
     ]
@@ -183,14 +153,12 @@ async def search_by_vector(
         library_id, request.embedding, request.k
     )
 
-    # Convert domain result to response schema with enriched metadata
+    # Convert domain result to response schema
     hits = [
         SearchHit(
             chunk_id=chunk.id,
             score=distance,
-            metadata=_enrich_chunk_metadata_for_search(
-                chunk, search_result.algorithm.value, search_result.embedding_dim
-            ),
+            metadata=ChunkMetadataSchema.from_domain(chunk.metadata) if chunk.metadata else None,
         )
         for chunk, distance in search_result.matches
     ]

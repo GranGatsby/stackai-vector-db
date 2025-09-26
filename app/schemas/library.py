@@ -44,23 +44,6 @@ class LibraryMetadataSchema(BaseModel):
         )
 
     @classmethod
-    def dict_to_domain(cls, metadata_dict: dict) -> LibraryMetadata:
-        """Convert a dict to domain LibraryMetadata."""
-        return LibraryMetadata(
-            author=metadata_dict.get("author"),
-            version=metadata_dict.get("version"),
-            tags=metadata_dict.get("tags", []),
-            created_by=metadata_dict.get("created_by"),
-            project=metadata_dict.get("project"),
-            category=metadata_dict.get("category"),
-            is_public=metadata_dict.get("is_public", True),
-            test=metadata_dict.get("test"),
-            updated=metadata_dict.get("updated"),
-            original=metadata_dict.get("original"),
-            workflow=metadata_dict.get("workflow"),
-        )
-
-    @classmethod
     def from_domain(cls, metadata: LibraryMetadata) -> dict:
         """Create a dict from domain LibraryMetadata for API responses.
 
