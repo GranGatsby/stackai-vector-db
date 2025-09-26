@@ -28,7 +28,7 @@ from app.domain import (
     Chunk,
     EmbeddingDimensionMismatchError,
     EmptyLibraryError,
-    IndexNotBuiltError,
+    VectorIndexNotBuiltError,
     InvalidSearchParameterError,
     LibraryNotFoundError,
 )
@@ -158,7 +158,7 @@ class SearchService:
             LibraryNotFoundError: If the library doesn't exist
             InvalidSearchParameterError: If k <= 0 or text is empty
             EmptyLibraryError: If the library contains no chunks
-            IndexNotBuiltError: If index building fails
+            VectorIndexNotBuiltError: If index building fails
             EmbeddingDimensionMismatchError: If embedding dimensions don't match
         """
         # Validate basic parameters
@@ -217,7 +217,7 @@ class SearchService:
             LibraryNotFoundError: If the library doesn't exist
             InvalidSearchParameterError: If k <= 0 or embedding is invalid
             EmptyLibraryError: If the library contains no chunks
-            IndexNotBuiltError: If index building fails
+            VectorIndexNotBuiltError: If index building fails
             EmbeddingDimensionMismatchError: If embedding dimensions don't match
         """
         # Validate basic parameters
@@ -268,9 +268,9 @@ class SearchService:
                 library_id, embedding, effective_k
             )
             logger.debug(f"Index query returned {len(query_results)} results")
-        except IndexNotBuiltError:
+        except VectorIndexNotBuiltError:
             # This shouldn't happen since we built the index above, but handle it
-            raise IndexNotBuiltError(str(library_id))
+            raise VectorIndexNotBuiltError(str(library_id))
 
         # Convert index results to chunk entities and apply similarity threshold filtering
         matches = []

@@ -31,8 +31,8 @@ from app.domain import (
     Chunk,
     ChunkMetadata,
     EmbeddingDimensionMismatchError,
-    IndexBuildError,
-    IndexNotBuiltError,
+    VectorIndexBuildError,
+    VectorIndexNotBuiltError,
     LibraryNotFoundError,
 )
 from app.indexes import VectorIndex, create_index
@@ -352,7 +352,7 @@ class IndexService:
 
         Raises:
             LibraryNotFoundError: If the library doesn't exist
-            IndexBuildError: If index building fails
+            VectorIndexBuildError: If index building fails
             EmbeddingDimensionMismatchError: If embeddings have inconsistent dimensions
         """
         # Verify library exists
@@ -460,7 +460,7 @@ class IndexService:
             except Exception as e:
                 error_msg = f"Failed to build index for library {library_id}: {e}"
                 logger.error(error_msg)
-                raise IndexBuildError(str(library_id), str(e)) from e
+                raise VectorIndexBuildError(str(library_id), str(e)) from e
 
     def query(
         self, library_id: UUID, query_vector: list[float], k: int = 10
@@ -481,7 +481,7 @@ class IndexService:
 
         Raises:
             LibraryNotFoundError: If the library doesn't exist
-            IndexNotBuiltError: If the index hasn't been built
+            VectorIndexNotBuiltError: If the index hasn't been built
             EmbeddingDimensionMismatchError: If query vector dimension doesn't match
         """
         # Verify library exists
@@ -499,7 +499,7 @@ class IndexService:
                 logger.warning(
                     f"Query failed for library {library_id}: index not built"
                 )
-                raise IndexNotBuiltError(str(library_id))
+                raise VectorIndexNotBuiltError(str(library_id))
 
             # Validate embedding dimension
             if len(query_vector) != snapshot.embedding_dim:
@@ -707,4 +707,4 @@ class IndexService:
 
         except Exception as e:
             logger.error(f"Failed to generate embeddings: {e}")
-            raise IndexBuildError("embedding_generation", str(e)) from e
+            raise VectorIndexBuildError("embedding_generation", str(e)) from e

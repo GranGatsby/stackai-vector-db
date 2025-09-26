@@ -56,7 +56,7 @@ class VectorIndex(Protocol):
             vectors: Collection of vectors to index
 
         Raises:
-            IndexError: If vectors have inconsistent dimensions
+            VectorIndexError: If vectors have inconsistent dimensions
             ValueError: If vectors collection is empty
         """
         ...
@@ -74,7 +74,7 @@ class VectorIndex(Protocol):
             List of (index, distance) tuples, sorted by distance (ascending)
 
         Raises:
-            IndexNotBuiltError: If index hasn't been built yet
+            VectorIndexNotBuiltError: If index hasn't been built yet
             ValueError: If query vector dimension doesn't match index dimension
         """
         ...
@@ -111,19 +111,19 @@ class VectorIndex(Protocol):
         ...
 
 
-class IndexError(Exception):
-    """Base exception for index-related errors."""
+class VectorIndexError(Exception):
+    """Base exception for vector index-related errors."""
 
     pass
 
 
-class IndexNotBuiltError(IndexError):
+class VectorIndexNotBuiltError(VectorIndexError):
     """Exception raised when trying to query an index that hasn't been built."""
 
     pass
 
 
-class DimensionMismatchError(IndexError):
+class VectorIndexDimensionMismatchError(VectorIndexError):
     """Exception raised when vector dimensions don't match index expectations."""
 
     pass
@@ -153,7 +153,7 @@ class BaseVectorIndex(ABC):
     def dim(self) -> int:
         """Get the dimension of vectors in this index."""
         if self._dimension is None:
-            raise IndexNotBuiltError("Index dimension not determined yet")
+            raise VectorIndexNotBuiltError("Index dimension not determined yet")
         return self._dimension
 
     @property
@@ -183,11 +183,11 @@ class BaseVectorIndex(ABC):
                 if self._dimension is None:
                     self._dimension = first_dim
                 elif self._dimension != first_dim:
-                    raise DimensionMismatchError(
+                    raise VectorIndexDimensionMismatchError(
                         f"Expected dimension {self._dimension}, got {first_dim}"
                     )
             elif len(np_vector) != first_dim:
-                raise DimensionMismatchError(
+                raise VectorIndexDimensionMismatchError(
                     f"Inconsistent vector dimensions: {first_dim} vs {len(np_vector)} at index {i}"
                 )
 
@@ -220,7 +220,7 @@ class BaseVectorIndex(ABC):
     ) -> list[tuple[int, float]]:
         """Find the k nearest neighbors to the query vector."""
         if not self._is_built:
-            raise IndexNotBuiltError("Index must be built before querying")
+            raise VectorIndexNotBuiltError("Index must be built before querying")
 
         if k <= 0:
             raise ValueError("k must be positive")
@@ -228,7 +228,7 @@ class BaseVectorIndex(ABC):
         # Convert query vector to numpy array and validate dimension
         query_np = np.array(query_vector, dtype=np.float32)
         if len(query_np) != self._dimension:
-            raise DimensionMismatchError(
+            raise VectorIndexDimensionMismatchError(
                 f"Query vector dimension {len(query_np)} doesn't match index dimension {self._dimension}"
             )
 
@@ -269,7 +269,7 @@ class BaseVectorIndex(ABC):
         np_vector = np.array(vector, dtype=np.float32)
 
         if self._dimension is not None and len(np_vector) != self._dimension:
-            raise DimensionMismatchError(
+            raise VectorIndexDimensionMismatchError(
                 f"Vector dimension {len(np_vector)} doesn't match index dimension {self._dimension}"
             )
 

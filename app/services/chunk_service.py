@@ -6,6 +6,7 @@ and the domain/repository layers.
 """
 
 # Import for type hints only - will be injected as dependency
+from contextlib import suppress
 from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID
@@ -240,11 +241,8 @@ class ChunkService:
 
         # Mark index as dirty after chunk creation (once for all chunks)
         if self._index_service and created_chunks:
-            try:
+            with suppress(Exception):
                 self._index_service.mark_dirty(library_id)
-            except Exception:
-                # Don't fail chunk creation if index marking fails
-                pass
 
         return created_chunks
 
@@ -329,11 +327,8 @@ class ChunkService:
 
         # Mark index as dirty after chunk update
         if self._index_service:
-            try:
+            with suppress(Exception):
                 self._index_service.mark_dirty(updated_result.library_id)
-            except Exception:
-                # Don't fail chunk update if index marking fails
-                pass
 
         return updated_result
 
@@ -352,11 +347,8 @@ class ChunkService:
 
         # Mark index as dirty after chunk deletion
         if deleted and chunk and self._index_service:
-            try:
+            with suppress(Exception):
                 self._index_service.mark_dirty(chunk.library_id)
-            except Exception:
-                # Don't fail chunk deletion if index marking fails
-                pass
 
         return deleted
 

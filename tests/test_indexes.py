@@ -8,8 +8,8 @@ import numpy as np
 import pytest
 
 from app.indexes import (
-    DimensionMismatchError,
-    IndexNotBuiltError,
+    VectorIndexDimensionMismatchError,
+    VectorIndexNotBuiltError,
     IVFIndex,
     KDTreeIndex,
     LinearScanIndex,
@@ -80,7 +80,7 @@ class TestIndexBasicFunctionality:
 
     def test_query_before_build_fails(self, index):
         """Test that querying before building fails."""
-        with pytest.raises(IndexNotBuiltError):
+        with pytest.raises(VectorIndexNotBuiltError):
             index.query([1.0, 0.0, 0.0])
 
     def test_dimension_mismatch_fails(self, index, sample_vectors):
@@ -88,7 +88,7 @@ class TestIndexBasicFunctionality:
         index.build(sample_vectors)
 
         # Query with wrong dimension
-        with pytest.raises(DimensionMismatchError):
+        with pytest.raises(VectorIndexDimensionMismatchError):
             index.query([1.0, 0.0])  # 2D instead of 3D
 
     def test_basic_query_functionality(self, index, sample_vectors):
@@ -292,5 +292,5 @@ class TestEdgeCases:
 
         index = LinearScanIndex()
 
-        with pytest.raises(DimensionMismatchError):
+        with pytest.raises(VectorIndexDimensionMismatchError):
             index.build(vectors)

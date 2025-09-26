@@ -6,6 +6,7 @@ and the domain/repository layers.
 """
 
 # Import for type hints only - will be injected as dependency
+from contextlib import suppress
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -134,11 +135,8 @@ class DocumentService:
 
         # Mark index as dirty after document creation
         if self._index_service:
-            try:
+            with suppress(Exception):
                 self._index_service.mark_dirty(library_id)
-            except Exception:
-                # Don't fail document creation if index marking fails
-                pass
 
         return created_document
 
@@ -176,11 +174,8 @@ class DocumentService:
 
         # Mark index as dirty after document update
         if self._index_service:
-            try:
+            with suppress(Exception):
                 self._index_service.mark_dirty(updated_result.library_id)
-            except Exception:
-                # Don't fail document update if index marking fails
-                pass
 
         return updated_result
 
@@ -204,18 +199,15 @@ class DocumentService:
 
         # Perform cascading delete of chunks if repository is available
         if self._chunk_repository:
-            chunks_deleted = self._chunk_repository.delete_by_document(document_id)
+            _ = self._chunk_repository.delete_by_document(document_id)
 
         # Delete the document itself
         deleted = self._document_repository.delete(document_id)
 
         # Mark index as dirty after document deletion
         if deleted and self._index_service:
-            try:
+            with suppress(Exception):
                 self._index_service.mark_dirty(document.library_id)
-            except Exception:
-                # Don't fail document deletion if index marking fails
-                pass
 
         return deleted
 

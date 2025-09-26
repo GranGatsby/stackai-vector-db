@@ -176,10 +176,10 @@ class LibraryService:
 
         # Perform cascading deletes if repositories are available
         if self._chunk_repository:
-            chunks_deleted = self._chunk_repository.delete_by_library(library_id)
+            _ = self._chunk_repository.delete_by_library(library_id)
 
         if self._document_repository:
-            docs_deleted = self._document_repository.delete_by_library(library_id)
+            _ = self._document_repository.delete_by_library(library_id)
 
         # Finally, delete the library itself
         return self._repository.delete(library_id)

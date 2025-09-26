@@ -86,13 +86,13 @@ class ChunkNotFoundError(ChunkError):
         self.chunk_id = chunk_id
 
 
-class IndexError(DomainError):
-    """Base class for index-related errors."""
+class VectorIndexError(DomainError):
+    """Base class for vector index-related errors."""
 
     pass
 
 
-class IndexNotBuiltError(IndexError):
+class VectorIndexNotBuiltError(VectorIndexError):
     """Raised when attempting to query an index that hasn't been built."""
 
     def __init__(self, library_id: str) -> None:
@@ -101,7 +101,7 @@ class IndexNotBuiltError(IndexError):
         self.library_id = library_id
 
 
-class IndexBuildError(IndexError):
+class VectorIndexBuildError(VectorIndexError):
     """Raised when index building fails."""
 
     def __init__(self, library_id: str, reason: str) -> None:

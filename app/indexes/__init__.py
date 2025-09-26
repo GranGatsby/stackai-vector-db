@@ -11,9 +11,9 @@ Available Algorithms:
 
 from .base import (
     BaseVectorIndex,
-    DimensionMismatchError,
-    IndexError,
-    IndexNotBuiltError,
+    VectorIndexDimensionMismatchError,
+    VectorIndexError,
+    VectorIndexNotBuiltError,
     VectorIndex,
 )
 from .ivf import IVFIndex
@@ -23,11 +23,11 @@ from .manager import IndexManager, create_index
 
 __all__ = [
     "BaseVectorIndex",
-    "DimensionMismatchError",
+    "VectorIndexDimensionMismatchError",
     "IVFIndex",
-    "IndexError",
+    "VectorIndexError",
     "IndexManager",
-    "IndexNotBuiltError",
+    "VectorIndexNotBuiltError",
     "KDTreeIndex",
     "LinearScanIndex",
     "VectorIndex",

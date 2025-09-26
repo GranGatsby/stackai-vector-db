@@ -15,8 +15,8 @@ from app.domain import (
     DomainError,
     EmbeddingDimensionMismatchError,
     EmptyLibraryError,
-    IndexBuildError,
-    IndexNotBuiltError,
+    VectorIndexBuildError,
+    VectorIndexNotBuiltError,
     InvalidSearchParameterError,
     LibraryAlreadyExistsError,
     LibraryNotFoundError,
@@ -122,9 +122,9 @@ async def chunk_not_found_handler(
 
 
 async def index_not_built_handler(
-    request: Request, exc: IndexNotBuiltError
+    request: Request, exc: VectorIndexNotBuiltError
 ) -> JSONResponse:
-    """Handle IndexNotBuiltError exceptions."""
+    """Handle VectorIndexNotBuiltError exceptions."""
     return _create_error_response(
         status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         error_code="INDEX_NOT_BUILT",
@@ -133,9 +133,9 @@ async def index_not_built_handler(
 
 
 async def index_build_error_handler(
-    request: Request, exc: IndexBuildError
+    request: Request, exc: VectorIndexBuildError
 ) -> JSONResponse:
-    """Handle IndexBuildError exceptions."""
+    """Handle VectorIndexBuildError exceptions."""
     return _create_error_response(
         status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         error_code="INDEX_BUILD_FAILED",
@@ -238,8 +238,8 @@ ERROR_HANDLERS = {
     DocumentNotFoundError: document_not_found_handler,
     DocumentAlreadyExistsError: document_already_exists_handler,
     ChunkNotFoundError: chunk_not_found_handler,
-    IndexNotBuiltError: index_not_built_handler,
-    IndexBuildError: index_build_error_handler,
+    VectorIndexNotBuiltError: index_not_built_handler,
+    VectorIndexBuildError: index_build_error_handler,
     EmbeddingDimensionMismatchError: embedding_dimension_mismatch_handler,
     EmptyLibraryError: empty_library_error_handler,
     InvalidSearchParameterError: invalid_search_parameter_error_handler,
