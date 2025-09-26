@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query, status
 
 from app.api.v1.deps import get_document_service
 from app.schemas import DocumentList, DocumentRead, DocumentUpdate
-from app.schemas.document import DocumentCreateInLibrary, DocumentMetadataSchema
+from app.schemas.document import DocumentCreateInLibrary
 from app.services import DocumentService
 
 router = APIRouter(prefix="/documents", tags=["documents"])

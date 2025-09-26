@@ -5,8 +5,6 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, status
 
 from app.api.v1.deps import get_index_service, get_search_service
-from app.core.config import settings
-from app.domain import Chunk
 from app.schemas import (
     BuildIndexRequest,
     BuildIndexResponse,

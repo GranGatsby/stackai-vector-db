@@ -5,7 +5,7 @@ import uuid
 import pytest
 from pydantic import ValidationError
 
-from app.schemas import ChunkRead, ChunkUpdate, ChunkCreateInDocument
+from app.schemas import ChunkCreateInDocument, ChunkRead, ChunkUpdate
 from app.schemas.chunk import ChunkMetadataSchema
 
 

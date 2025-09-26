@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query, status
 
 from app.api.v1.deps import get_chunk_service
 from app.schemas import ChunkCreateResponse, ChunkList, ChunkRead, ChunkUpdate
-from app.schemas.chunk import ChunkCreateInDocument, ChunkMetadataSchema
+from app.schemas.chunk import ChunkCreateInDocument
 from app.services import ChunkService
 
 router = APIRouter(prefix="/chunks", tags=["chunks"])

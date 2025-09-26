@@ -7,9 +7,9 @@ from pydantic import ValidationError
 
 from app.schemas.document import (
     DocumentCreateInLibrary,
+    DocumentMetadataSchema,
     DocumentRead,
     DocumentUpdate,
-    DocumentMetadataSchema,
 )
 
 

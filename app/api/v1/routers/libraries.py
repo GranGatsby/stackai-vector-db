@@ -6,7 +6,6 @@ from fastapi import APIRouter, Depends, Query, status
 
 from app.api.v1.deps import get_library_service
 from app.schemas import LibraryCreate, LibraryList, LibraryOut, LibraryUpdate
-from app.schemas.library import LibraryMetadataSchema
 from app.services import LibraryService
 
 router = APIRouter(prefix="/libraries", tags=["libraries"])
