@@ -161,9 +161,7 @@ class ChunkService:
             texts_to_embed = [
                 chunk_data.get("text", "")
                 for chunk_data in chunks_data
-                if not chunk_data.get(
-                    "embedding"
-                )
+                if not chunk_data.get("embedding")
             ]
             if texts_to_embed:
                 try:

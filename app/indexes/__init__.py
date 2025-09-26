@@ -22,18 +22,14 @@ from .linear import LinearScanIndex
 from .manager import IndexManager, create_index
 
 __all__ = [
-    # Base classes and protocols
-    "VectorIndex",
     "BaseVectorIndex",
-    # Exceptions
-    "IndexError",
-    "IndexNotBuiltError",
     "DimensionMismatchError",
-    # Concrete implementations
-    "LinearScanIndex",
-    "KDTreeIndex",
     "IVFIndex",
-    # Factory and management
-    "create_index",
+    "IndexError",
     "IndexManager",
+    "IndexNotBuiltError",
+    "KDTreeIndex",
+    "LinearScanIndex",
+    "VectorIndex",
+    "create_index",
 ]

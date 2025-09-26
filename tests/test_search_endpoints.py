@@ -398,7 +398,7 @@ class TestSearchEndpoints:
             rebuild_future = executor.submit(rebuild_index)
 
             # Wait for all to complete
-            all_futures = query_futures + [rebuild_future]
+            all_futures = [*query_futures, rebuild_future]
             for future in as_completed(all_futures):
                 future.result()
 

@@ -225,7 +225,7 @@ class TestConcurrency:
             write_future = executor.submit(write_operation)
 
             # Wait for all to complete
-            for future in as_completed(read_futures + [write_future]):
+            for future in as_completed([*read_futures, write_future]):
                 future.result()
 
         # Verify that readers ran concurrently (overlapping times)

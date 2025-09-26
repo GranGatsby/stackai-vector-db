@@ -410,7 +410,7 @@ class TestLibrariesAPI:
         assert get_response.status_code == status.HTTP_200_OK
         assert get_response.json()["name"] == create_data["name"]
 
-        # READ (list)
+        # READ (list of libraries)
         list_response = client.get("/api/v1/libraries/")
         assert list_response.status_code == status.HTTP_200_OK
         assert list_response.json()["total"] == 1

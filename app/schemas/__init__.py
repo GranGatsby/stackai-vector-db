@@ -26,37 +26,38 @@ from .library import LibraryBase, LibraryCreate, LibraryList, LibraryOut, Librar
 from .search import SearchByTextRequest, SearchByVectorRequest, SearchHit, SearchResult
 
 __all__ = [
-    # Health
-    "HealthResponse",
-    # Library
-    "LibraryBase",
-    "LibraryCreate",
-    "LibraryUpdate",
-    "LibraryOut",
-    "LibraryList",
-    # Document
-    "DocumentCreateInLibrary",
-    "DocumentUpdate",
-    "DocumentRead",
-    "DocumentList",
+    # Index
+    "BuildIndexRequest",
+    "BuildIndexResponse",
     # Chunk
     "ChunkCreateInDocument",
     "ChunkCreateResponse",
-    "ChunkUpdate",
-    "ChunkRead",
     "ChunkList",
     "ChunkMetadataSchema",
+    "ChunkRead",
+    "ChunkUpdate",
+    # Document
+    "DocumentCreateInLibrary",
+    "DocumentList",
+    "DocumentRead",
+    "DocumentUpdate",
+    # Errors
+    "ErrorDetail",
+    "ErrorResponse",
+    # Health
+    "HealthResponse",
     # Index
     "IndexAlgo",
     "IndexStatus",
-    "BuildIndexRequest",
-    "BuildIndexResponse",
+    # Library
+    "LibraryBase",
+    "LibraryCreate",
+    "LibraryList",
+    "LibraryOut",
+    "LibraryUpdate",
     # Search
     "SearchByTextRequest",
     "SearchByVectorRequest",
     "SearchHit",
     "SearchResult",
-    # Errors
-    "ErrorDetail",
-    "ErrorResponse",
 ]
