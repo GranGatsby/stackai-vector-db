@@ -63,7 +63,7 @@ make docker-build
 make docker-run
 ```
 
-## 🏃‍♂️ Usage
+## Usage
 
 ### Running the Application
 
